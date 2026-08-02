@@ -116,6 +116,11 @@
      (mantida no DOM, só oculta, pra não perder referência/JS de quem
      dependia dela). ===== */
   .navbar { display: none; }
+  /* ⋯ de cada tela ficou redundante com Conta/Sobre na sidebar */
+  .more-menu-btn { display: none; }
+  /* Disquete (salvos), linha de baixar/compartilhar e tile de Customização
+     do Meu Dia — ocultos a pedido, ficam no DOM caso volte depois. */
+  #saved-header-btn, #download-app-row, #custom-tile { display: none; }
 
   .topbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 70;
@@ -123,7 +128,8 @@
     height: 44px; padding: env(safe-area-inset-top, 0px) 8px 0;
     background: var(--c-navbar); border-bottom: 1px solid var(--c-border);
   }
-  .topbar-group { display: flex; align-items: center; gap: 6px; }
+  .topbar-group { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .topbar-brand { flex: 1 1 auto; min-width: 0; text-align: center; font-weight: 700; font-size: 0.8rem; color: var(--c-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 6px; }
   .topbar-btn { width: 34px; height: 34px; border-radius: 8px; background: none; color: var(--c-text-dim); font-size: 1.05rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .topbar-btn.transport { color: var(--c-text); background: var(--c-surface-alt); opacity: 0.35; pointer-events: none; }
   .topbar-btn.transport.tp-active { opacity: 1; pointer-events: auto; }
@@ -139,9 +145,13 @@
     transform: translateX(-100%); transition: transform .2s ease;
   }
   .sidebar.open { transform: translateX(0); }
-  .sidebar-btn { width: 48px; height: 48px; border-radius: 12px; background: none; color: var(--c-text-faint2); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .sidebar-btn { width: 52px; height: 52px; border-radius: 12px; background: none; color: var(--c-text-faint2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex: 0 0 auto; }
   .sidebar-btn.active { color: var(--c-accent-blue); background: var(--c-surface-hover); }
-  .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: #ff9500; color: #0f1115; font-size: 1.5rem; }
+  .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: #ff9500; color: #0f1115; font-size: 1.6rem; }
+  /* .nav-btn tem flex:1 (pensado pra navbar horizontal antiga) — na sidebar
+     vertical isso esticava os botões (viravam oval). flex fixo corrige. */
+  .sidebar-btn.nav-btn { flex: 0 0 auto; padding: 0; }
+  .header-actions [data-action="voice"] { display: none; }
   .sidebar-spacer { flex: 1; }
   .sidebar-star { color: var(--c-yellow); }
 
@@ -161,7 +171,7 @@
   .settings-panel { background: var(--c-surface); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; }
 
   /* ===== Meu Dia: tiles bento (Customização / Briefing automático) ===== */
-  .md-settings-bento { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .md-settings-bento { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
   .md-bento-tile {
     background: linear-gradient(155deg, var(--c-surface-alt), var(--c-surface));
     border: 1px solid var(--c-border2); border-left: 3px solid var(--tile-color, var(--c-accent-blue));
@@ -567,7 +577,8 @@
   <!-- ============ TAB: MEU DIA ============ -->
   <section class="tab active" id="tab-briefing">
     <div class="screen-header">
-      <div style="flex:1; min-width:0;">
+      <!-- Nome "SonorHub" saiu daqui, agora mora na barra de topo -->
+      <div style="flex:1; min-width:0; display:none;">
         <h1>🔊 SonorHub</h1>
       </div>
       <div class="header-actions" style="position: relative;">
@@ -910,7 +921,7 @@
        setinha de voltar), busca fica sempre fixa logo abaixo dele. -->
   <section class="tab" id="tab-player">
     <div class="screen-header" id="player-screen-header">
-      <h1>🎵 MultiSonor</h1>
+      <h1 id="player-screen-title">📻 Rádio</h1>
       <div class="header-actions" style="position: relative;">
         <button class="icon-btn" data-action="voice">🎤</button>
         <button class="icon-btn more-menu-btn">⋯</button>
@@ -923,9 +934,10 @@
       </div>
     </div>
 
-    <div id="player-subtabs-row" style="display:flex; border-bottom: 1px solid var(--c-border2); margin-bottom: 14px;">
-      <!-- Música/Vídeo oculto (mantido no DOM com display:none pra não quebrar
-           o JS que referencia player-tab-btn-media/PLAYER_TABS por id) -->
+    <!-- Rádio/Audiobook agora têm entrada própria na sidebar (cada um com seu
+         título no cabeçalho acima) — não precisa mais desse switcher aqui,
+         mantido no DOM só pra não quebrar o JS que referencia essas ids. -->
+    <div id="player-subtabs-row" style="display:none; border-bottom: 1px solid var(--c-border2); margin-bottom: 14px;">
       <button class="player-tab-btn" id="player-tab-btn-media" style="display:none; flex:1; background:none; color:var(--c-text); padding:10px; opacity:0.5;">🎵 Música/Vídeo</button>
       <button class="player-tab-btn active" id="player-tab-btn-radio" style="flex:1; background:none; color:var(--c-text); padding:10px; opacity:1;">📻 Rádio</button>
       <button class="player-tab-btn" id="player-tab-btn-audiobook" style="flex:1; background:none; color:var(--c-text); padding:10px; opacity:0.5;">📖 Audiobook</button>
@@ -1054,8 +1066,12 @@
   <div class="topbar">
     <div class="topbar-group">
       <button class="topbar-btn" id="sidebar-toggle-btn" title="Menu">▤</button>
-      <button class="topbar-btn" id="topbar-radio-search-btn" title="Buscar rádio">🔍</button>
+      <button class="topbar-btn" id="topbar-radio-search-btn" title="Buscar rádio">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="topbar-btn" data-action="voice" title="Falar">🎤</button>
     </div>
+    <div class="topbar-brand">🔊 SonorHub</div>
     <div class="topbar-group">
       <button class="topbar-btn transport" id="transport-prev-btn">⏮</button>
       <button class="topbar-btn transport transport-play" id="transport-play-btn">▶</button>
@@ -1122,10 +1138,11 @@
       <h2>Central de Contas</h2>
     </div>
 
-    <div class="account-tabs">
+    <div class="account-tabs" style="display:none;">
+      <!-- Só sobrou Email de verdade — Mídia oculta e Sobre virou tela própria,
+           deixa a barra de abas escondida (nada pra trocar com 1 aba só). -->
       <button class="account-tab-btn active" data-account="google" style="--brand-color:#4285f4;"><span class="dot"></span>Email</button>
       <button class="account-tab-btn" data-account="midia" style="--brand-color:#ff0000;"><span class="dot"></span>Mídia</button>
-      <button class="account-tab-btn" data-account="sobre" style="--brand-color: var(--c-accent-blue);"><span class="dot"></span>Sobre</button>
     </div>
 
     <div class="account-panel active" id="account-google">
@@ -1174,41 +1191,49 @@
       </div>
     </div>
 
-    <div class="account-panel" id="account-sobre">
-      <div class="account-card" style="margin-bottom: 12px;">
-        <div class="btn-group" id="theme-options">
-          <button type="button" class="btn-opt" data-theme="dark">🌙 Escuro (padrão)</button>
-          <button type="button" class="btn-opt" data-theme="light">☀️ Claro</button>
-          <button type="button" class="btn-opt" data-theme="high-contrast">◐ Alto contraste</button>
-        </div>
+  </div>
+</div>
+
+<!-- ============ SOBRE (overlay próprio, separado da Central de Contas) ============ -->
+<div class="overlay" id="sobre-overlay">
+  <div class="overlay-inner">
+    <div class="overlay-header">
+      <button class="back-btn" id="sobre-close-btn">←</button>
+      <h2>ℹ️ Sobre</h2>
+    </div>
+    <div class="account-card" style="margin-bottom: 12px;">
+      <div class="btn-group" id="theme-options">
+        <button type="button" class="btn-opt" data-theme="dark">🌙 Escuro (padrão)</button>
+        <button type="button" class="btn-opt" data-theme="light">☀️ Claro</button>
+        <button type="button" class="btn-opt" data-theme="high-contrast">◐ Alto contraste</button>
       </div>
-      <div class="account-card">
-        <div class="title" style="font-weight:600; margin-bottom: 8px;">🔊 Sobre as vozes</div>
-        <div class="scope-list">
-          O SonorHub usa o sistema de voz do próprio aparelho, cada dispositivo tem o
-          seu próprio conjunto de vozes instaladas, então a lista (e a qualidade) muda
-          de celular pra celular e de navegador pra navegador.<br><br>
-          No <b>celular</b>, o navegador <b>Edge</b> pode falhar e nem mostrar nenhuma
-          voz, o <b>Chrome</b> costuma funcionar melhor no Android. No <b>PC</b>,
-          geralmente tem mais opções de voz disponíveis (incluindo vozes neurais mais
-          naturais) do que no celular.
-        </div>
+    </div>
+    <div class="account-card">
+      <div class="title" style="font-weight:600; margin-bottom: 8px;">🔊 Sobre as vozes</div>
+      <div class="scope-list">
+        O SonorHub usa o sistema de voz do próprio aparelho, cada dispositivo tem o
+        seu próprio conjunto de vozes instaladas, então a lista (e a qualidade) muda
+        de celular pra celular e de navegador pra navegador.<br><br>
+        No <b>celular</b>, o navegador <b>Edge</b> pode falhar e nem mostrar nenhuma
+        voz, o <b>Chrome</b> costuma funcionar melhor no Android. No <b>PC</b>,
+        geralmente tem mais opções de voz disponíveis (incluindo vozes neurais mais
+        naturais) do que no celular.
       </div>
-      <div class="account-card">
-        <div class="scope-list">
-          Dúvida, sugestão ou bug pra reportar? Manda um e-mail:<br><br>
-          <b>facincanitech@gmail.com</b>
-        </div>
+    </div>
+    <div class="account-card">
+      <div class="scope-list">
+        Dúvida, sugestão ou bug pra reportar? Manda um e-mail:<br><br>
+        <b>facincanitech@gmail.com</b>
       </div>
-      <div class="account-card">
-        <button class="btn-connect" id="privacy-open-btn" style="background: var(--c-border2); color: var(--c-text);">🔒 Política de Privacidade</button>
-      </div>
-      <div class="account-card">
-        <button class="btn-connect" id="changelog-open-btn" style="background: var(--c-border2); color: var(--c-text);">📋 Versão e novidades</button>
-      </div>
-      <div class="account-card">
-        <a class="btn-connect" href="https://facincanitech.github.io/SonorHub/" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none; background: var(--c-border2); color: var(--c-text);">📲 Baixar app</a>
-      </div>
+    </div>
+    <div class="account-card">
+      <button class="btn-connect" id="privacy-open-btn" style="background: var(--c-border2); color: var(--c-text);">🔒 Política de Privacidade</button>
+    </div>
+    <div class="account-card">
+      <button class="btn-connect" id="changelog-open-btn" style="background: var(--c-border2); color: var(--c-text);">📋 Versão e novidades</button>
+    </div>
+    <div class="account-card">
+      <a class="btn-connect" href="https://facincanitech.github.io/SonorHub/" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none; background: var(--c-border2); color: var(--c-text);">📲 Baixar app</a>
     </div>
   </div>
 </div>
@@ -2794,8 +2819,11 @@ function openAccountsTab(tab) {
   document.querySelectorAll('.account-tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.account === tab));
   document.querySelectorAll('.account-panel').forEach((p) => p.classList.toggle('active', p.id === `account-${tab}`));
 }
-document.querySelectorAll('[data-action="tema"]').forEach((btn) => btn.addEventListener('click', () => openAccountsTab('sobre')));
-document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEventListener('click', () => openAccountsTab('sobre')));
+const sobreOverlay = document.getElementById('sobre-overlay');
+function openSobre() { sobreOverlay.classList.add('open'); updateAccountsUI(); }
+document.querySelectorAll('[data-action="tema"]').forEach((btn) => btn.addEventListener('click', openSobre));
+document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEventListener('click', openSobre));
+document.getElementById('sobre-close-btn').addEventListener('click', () => sobreOverlay.classList.remove('open'));
 document.getElementById('accounts-close-btn').addEventListener('click', () => accountsOverlay.classList.remove('open'));
 
 /* =========================================================================
@@ -2827,7 +2855,7 @@ document.getElementById('sidebar-conta-btn').addEventListener('click', () => {
   accountsOverlay.classList.add('open');
   updateAccountsUI();
 });
-document.getElementById('sidebar-sobre-btn').addEventListener('click', () => openAccountsTab('sobre'));
+document.getElementById('sidebar-sobre-btn').addEventListener('click', openSobre);
 
 /* =========================================================================
    BARRA DE TRANSPORTE (⏮ ▶ ⏭ na barra de topo) — controla o que estiver
@@ -5078,12 +5106,14 @@ function playerBackToSearch() {
 }
 document.getElementById('player-back-to-search-btn').addEventListener('click', playerBackToSearch);
 
+const PLAYER_TAB_TITLES = { media: '🎵 Música/Vídeo', radio: '📻 Rádio', audiobook: '📖 Audiobook' };
 function switchPlayerTab(tab) {
   playerViewTab = tab;
   playerShowResults = false; // trocar de aba volta a mostrar o player dela, se tiver algo tocando
   PLAYER_TABS.forEach((t) => {
     document.getElementById(`player-tab-btn-${t}`).style.opacity = t === tab ? '1' : '0.5';
   });
+  document.getElementById('player-screen-title').textContent = PLAYER_TAB_TITLES[tab] || '';
   updatePlayerBodyVisibility();
 }
 PLAYER_TABS.forEach((t) => {
