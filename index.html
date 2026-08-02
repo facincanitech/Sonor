@@ -1056,6 +1056,11 @@
         <span style="margin:0; text-transform:uppercase; letter-spacing:0.06em; font-size:0.72rem; font-weight:700;">Favoritas</span>
       </button>
       <div id="player-radio-favoritos" style="display:none; margin-bottom: 16px;"></div>
+      <button type="button" class="player-fav-category-btn" id="player-radio-historico-toggle" style="display:flex; align-items:center; gap:4px; width:100%; background:none; color:var(--c-teal); padding:6px 0; text-align:left;">
+        <span class="player-fav-category-arrow" style="display:inline-block; transition:transform 0.15s; font-size:1.1rem;">›</span>
+        <span style="margin:0; text-transform:uppercase; letter-spacing:0.06em; font-size:0.72rem; font-weight:700;">Histórico</span>
+      </button>
+      <div id="player-radio-historico" style="display:none; margin-bottom: 16px;"></div>
       <div id="player-radio-results"></div>
     </div>
 
@@ -5211,6 +5216,7 @@ document.querySelectorAll('.more-menu-btn').forEach((btn) => {
    ========================================================================= */
 document.getElementById('player-nav-btn').addEventListener('click', () => {
   renderPlayerRadioFavoritos();
+  renderPlayerRadioHistorico();
   renderPlayerMediaFavoritos();
   renderPlayerPlaylistFavoritos();
   renderAudiobookContinueButton();
@@ -5237,6 +5243,7 @@ function setupPlayerFavCategoryToggle(toggleId, listId) {
 }
 setupPlayerFavCategoryToggle('player-media-favoritos-toggle', 'player-media-favoritos');
 setupPlayerFavCategoryToggle('player-radio-favoritos-toggle', 'player-radio-favoritos');
+setupPlayerFavCategoryToggle('player-radio-historico-toggle', 'player-radio-historico');
 setupPlayerFavCategoryToggle('player-playlist-favoritos-toggle', 'player-playlist-favoritos');
 let playerActiveTab = null; // qual tipo (media/radio) tá tocando (null = nada)
 let playerShowResults = false; // true = usuário apertou buscar de novo enquanto algo tocava, quer ver a lista de novo
@@ -7145,9 +7152,48 @@ function toggleRadioFavorito(est) {
   renderPlayerRadioFavoritos();
 }
 
+// ── Histórico de rádios ouvidas (últimas 10, separado das favoritas) ──────
+function getRadioHistorico() {
+  try { return JSON.parse(localStorage.getItem('sonorhub_radio_historico') || '[]'); } catch { return []; }
+}
+function addRadioHistorico(est) {
+  const url = est.url_resolved || est.url;
+  const hist = getRadioHistorico().filter((h) => h.url !== url);
+  hist.unshift({ nome: est.name || est.nome, url, country: est.country });
+  localStorage.setItem('sonorhub_radio_historico', JSON.stringify(hist.slice(0, 10)));
+  renderPlayerRadioHistorico();
+}
+function renderPlayerRadioHistorico() {
+  const hist = getRadioHistorico();
+  const listEl = document.getElementById('player-radio-historico');
+  listEl.innerHTML = '';
+  if (!hist.length) {
+    listEl.innerHTML = `<div class="hint">Nenhuma rádio ouvida ainda.</div>`;
+    return;
+  }
+  hist.forEach((h) => {
+    const est = { name: h.nome, url: h.url, url_resolved: h.url, country: h.country };
+    const row = renderPlayerRadioResultRow(est);
+    const favBtn = document.createElement('button');
+    favBtn.type = 'button';
+    favBtn.style.cssText = 'background:none; color:var(--c-text); font-size:1.2rem; padding:4px; flex-shrink:0;';
+    favBtn.textContent = isRadioFavoritada(est) ? '⭐' : '☆';
+    favBtn.addEventListener('click', () => {
+      toggleRadioFavorito(est);
+      const fav = isRadioFavoritada(est);
+      favBtn.textContent = fav ? '⭐' : '☆';
+      row.classList.toggle('is-fav', fav);
+    });
+    row.appendChild(favBtn);
+    listEl.appendChild(row);
+  });
+}
+try { renderPlayerRadioHistorico(); } catch (_) {}
+
 function playRadioStation(est) {
   stopMediaForExclusivity();
   stopPlayerProgressLoop();
+  addRadioHistorico(est);
   if (audiobookIsActiveSource) { speechSynthesis.cancel(); audiobookIsPlaying = false; audiobookIsActiveSource = false; }
   playerActiveTab = 'radio';
   playerViewTab = 'radio';
