@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Permite streams de rádio via HTTP — muitas estações ainda não têm HTTPS -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

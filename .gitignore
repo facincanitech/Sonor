@@ -27,3 +27,6 @@ vozes/
 
 # Dados de sessão do Claude Code (editor AI)
 .claude/
+
+# Backup manual do index.html, não é pra subir
+backup/

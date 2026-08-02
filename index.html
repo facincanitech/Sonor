@@ -66,7 +66,7 @@
     max-width: 420px;
     margin: 0 auto;
     min-height: 100vh;
-    padding: 18px 16px calc(90px + env(safe-area-inset-bottom, 0px));
+    padding: calc(44px + env(safe-area-inset-top, 0px) + 18px) 16px calc(24px + env(safe-area-inset-bottom, 0px));
     position: relative;
   }
   h1 { font-size: 1.3rem; margin: 4px 0 2px; }
@@ -109,6 +109,41 @@
   .nav-btn { flex: 1; background: none; color: var(--c-text-faint2); padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 0.72rem; border-radius: 0; }
   .nav-btn .ic { font-size: 1.2rem; }
   .nav-btn.active { color: var(--c-accent-blue); }
+
+  /* ===== Navegação nova: barra de topo fixa (toggle da gaveta lateral,
+     busca de rádio, transporte) + gaveta lateral que abre por cima do
+     conteúdo e fecha sozinha ao escolher algo. Substitui a navbar de baixo
+     (mantida no DOM, só oculta, pra não perder referência/JS de quem
+     dependia dela). ===== */
+  .navbar { display: none; }
+
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 70;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 44px; padding: env(safe-area-inset-top, 0px) 8px 0;
+    background: var(--c-navbar); border-bottom: 1px solid var(--c-border);
+  }
+  .topbar-group { display: flex; align-items: center; gap: 6px; }
+  .topbar-btn { width: 34px; height: 34px; border-radius: 8px; background: none; color: var(--c-text-dim); font-size: 1.05rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .topbar-btn.transport { color: var(--c-text); background: var(--c-surface-alt); opacity: 0.35; pointer-events: none; }
+  .topbar-btn.transport.tp-active { opacity: 1; pointer-events: auto; }
+  .topbar-btn.transport-play.tp-active { background: var(--c-green); color: #fff; }
+
+  .sidebar-backdrop { display: none; position: fixed; inset: 44px 0 0 0; background: rgba(0,0,0,0.45); z-index: 60; }
+  .sidebar-backdrop.show { display: block; }
+  .sidebar {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: fixed; left: 0; top: 44px; bottom: 0; width: 76px;
+    background: var(--c-navbar); border-right: 1px solid var(--c-border);
+    padding: 18px 0; z-index: 61;
+    transform: translateX(-100%); transition: transform .2s ease;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-btn { width: 48px; height: 48px; border-radius: 12px; background: none; color: var(--c-text-faint2); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+  .sidebar-btn.active { color: var(--c-accent-blue); background: var(--c-surface-hover); }
+  .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: #ff9500; color: #0f1115; font-size: 1.5rem; }
+  .sidebar-spacer { flex: 1; }
+  .sidebar-star { color: var(--c-yellow); }
 
   /* ===== Tabs / screens ===== */
   .tab { display: none; }
@@ -889,21 +924,23 @@
     </div>
 
     <div id="player-subtabs-row" style="display:flex; border-bottom: 1px solid var(--c-border2); margin-bottom: 14px;">
-      <button class="player-tab-btn active" id="player-tab-btn-media" style="flex:1; background:none; color:var(--c-text); padding:10px; opacity:1;">🎵 Música/Vídeo</button>
-      <button class="player-tab-btn" id="player-tab-btn-radio" style="flex:1; background:none; color:var(--c-text); padding:10px; opacity:0.5;">📻 Rádio</button>
+      <!-- Música/Vídeo oculto (mantido no DOM com display:none pra não quebrar
+           o JS que referencia player-tab-btn-media/PLAYER_TABS por id) -->
+      <button class="player-tab-btn" id="player-tab-btn-media" style="display:none; flex:1; background:none; color:var(--c-text); padding:10px; opacity:0.5;">🎵 Música/Vídeo</button>
+      <button class="player-tab-btn active" id="player-tab-btn-radio" style="flex:1; background:none; color:var(--c-text); padding:10px; opacity:1;">📻 Rádio</button>
       <button class="player-tab-btn" id="player-tab-btn-audiobook" style="flex:1; background:none; color:var(--c-text); padding:10px; opacity:0.5;">📖 Audiobook</button>
     </div>
 
     <audio id="player-radio-audio" style="display:none;"></audio>
 
-    <div id="player-media-searchbar" style="display:flex; gap:8px; margin-bottom: 6px;">
+    <div id="player-media-searchbar" style="display:none; gap:8px; margin-bottom: 6px;">
       <input type="text" id="player-media-search" placeholder="Buscar artista, música ou vídeo" enterkeyhint="search" style="flex:1; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 9px 10px;">
     </div>
     <div id="player-yt-attribution-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:0.72rem; color: var(--c-text-dim);">
       <span>▶️ Busca e reprodução fornecidas pelo YouTube</span>
       <a href="https://facincanitech.github.io/SonorHub/privacidade.html" target="_blank" id="player-privacy-link" style="color: var(--c-accent-blue); text-decoration:underline;">Política de Privacidade</a>
     </div>
-    <div id="player-radio-searchbar" style="display:none; gap:8px; margin-bottom: 14px;">
+    <div id="player-radio-searchbar" style="display:flex; gap:8px; margin-bottom: 14px;">
       <input type="text" id="player-radio-search" placeholder="Buscar rádio (nome, cidade, gênero)" enterkeyhint="search" style="flex:1; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 9px 10px;">
     </div>
     <div id="player-audiobook-searchbar" style="display:none;"></div>
@@ -1013,6 +1050,32 @@
     </div>
   </nav>
 
+  <!-- ============ BARRA DE TOPO (toggle da gaveta, busca de rádio, transporte) ============ -->
+  <div class="topbar">
+    <div class="topbar-group">
+      <button class="topbar-btn" id="sidebar-toggle-btn" title="Menu">▤</button>
+      <button class="topbar-btn" id="topbar-radio-search-btn" title="Buscar rádio">🔍</button>
+    </div>
+    <div class="topbar-group">
+      <button class="topbar-btn transport" id="transport-prev-btn">⏮</button>
+      <button class="topbar-btn transport transport-play" id="transport-play-btn">▶</button>
+      <button class="topbar-btn transport" id="transport-next-btn">⏭</button>
+    </div>
+  </div>
+
+  <!-- ============ GAVETA LATERAL (abre por cima do conteúdo, some sozinha ao escolher algo) ============ -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <nav class="sidebar" id="sidebar">
+    <button class="nav-btn sidebar-btn sidebar-home active" data-tab="briefing">▶</button>
+    <button class="nav-btn sidebar-btn" data-tab="gratis">🎚️</button>
+    <button class="sidebar-btn" id="sidebar-radio-btn">📻</button>
+    <button class="sidebar-btn" id="sidebar-ebook-btn">📖</button>
+    <div class="sidebar-spacer"></div>
+    <button class="sidebar-btn" id="sidebar-conta-btn">⚙️</button>
+    <button class="sidebar-btn" id="sidebar-sobre-btn">ℹ️</button>
+    <button class="nav-btn sidebar-btn sidebar-star" data-tab="premium">⭐</button>
+  </nav>
+
   <div id="voice-toast" class="voice-toast"></div>
   <div id="yt-snippet-player" style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden;"></div>
 </div>
@@ -1062,8 +1125,7 @@
     <div class="account-tabs">
       <button class="account-tab-btn active" data-account="google" style="--brand-color:#4285f4;"><span class="dot"></span>Email</button>
       <button class="account-tab-btn" data-account="midia" style="--brand-color:#ff0000;"><span class="dot"></span>Mídia</button>
-      <button class="account-tab-btn" data-account="tema" style="--brand-color: var(--c-accent-blue);"><span class="dot"></span>Tema</button>
-      <button class="account-tab-btn" data-account="contato" style="--brand-color: var(--c-accent-blue);"><span class="dot"></span>Contato</button>
+      <button class="account-tab-btn" data-account="sobre" style="--brand-color: var(--c-accent-blue);"><span class="dot"></span>Sobre</button>
     </div>
 
     <div class="account-panel active" id="account-google">
@@ -1112,7 +1174,7 @@
       </div>
     </div>
 
-    <div class="account-panel" id="account-tema">
+    <div class="account-panel" id="account-sobre">
       <div class="account-card" style="margin-bottom: 12px;">
         <div class="btn-group" id="theme-options">
           <button type="button" class="btn-opt" data-theme="dark">🌙 Escuro (padrão)</button>
@@ -1132,9 +1194,6 @@
           naturais) do que no celular.
         </div>
       </div>
-    </div>
-
-    <div class="account-panel" id="account-contato">
       <div class="account-card">
         <div class="scope-list">
           Dúvida, sugestão ou bug pra reportar? Manda um e-mail:<br><br>
@@ -1146,6 +1205,9 @@
       </div>
       <div class="account-card">
         <button class="btn-connect" id="changelog-open-btn" style="background: var(--c-border2); color: var(--c-text);">📋 Versão e novidades</button>
+      </div>
+      <div class="account-card">
+        <a class="btn-connect" href="https://facincanitech.github.io/SonorHub/" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none; background: var(--c-border2); color: var(--c-text);">📲 Baixar app</a>
       </div>
     </div>
   </div>
@@ -1777,15 +1839,15 @@ const CATEGORY_DEFS = [
       { id: 'jogos', label: 'Jogos', icon: '🕹️', fields: [
         { id: 'tipos', kind: 'buttons', options: ['Lançamentos', 'Curiosidades', 'Mais aguardados'] },
       ], hint: 'Lançamentos/Mais aguardados só falam se achar matéria de verdade sobre isso' },
-      { id: 'youtube', label: 'Canais do YouTube', icon: '▶️', fields: [
-        { id: 'canais', kind: 'tags', placeholder: 'Nome do canal, digite e aperte Enter (até 5)' },
-      ], hint: 'Vídeo mais recente de cada canal. Cuidado com erro de digitação, se o nome não bater certinho, o canal não é encontrado.' },
-      { id: 'podcasts', label: 'Podcasts', icon: '🎙️', fields: [
-        { id: 'nomes', kind: 'tags', placeholder: 'Digite e aperte Enter (até 5)' },
-      ], hint: 'Busca pelo nome' },
-      { id: 'musica', label: 'Música', icon: '🎧', fields: [
-        { id: 'nomes', kind: 'tags', placeholder: 'Nome, artista ou gênero, digite e aperte Enter (até 5)' },
-      ] },
+      // { id: 'youtube', label: 'Canais do YouTube', icon: '▶️', fields: [
+      //   { id: 'canais', kind: 'tags', placeholder: 'Nome do canal, digite e aperte Enter (até 5)' },
+      // ], hint: 'Vídeo mais recente de cada canal. Cuidado com erro de digitação, se o nome não bater certinho, o canal não é encontrado.' },
+      // { id: 'podcasts', label: 'Podcasts', icon: '🎙️', fields: [
+      //   { id: 'nomes', kind: 'tags', placeholder: 'Digite e aperte Enter (até 5)' },
+      // ], hint: 'Busca pelo nome' },
+      // { id: 'musica', label: 'Música', icon: '🎧', fields: [
+      //   { id: 'nomes', kind: 'tags', placeholder: 'Nome, artista ou gênero, digite e aperte Enter (até 5)' },
+      // ] },
       { id: 'jogo-esportivo', label: 'Esportes: resultado e próximo jogo', icon: '⚽', fields: [
         { id: 'competicao', kind: 'text', placeholder: 'Competição, ex: Brasileirão, Copa do Mundo' },
         { id: 'time', kind: 'text', placeholder: 'Time/seleção, ex: Flamengo, Brasil' },
@@ -2732,9 +2794,106 @@ function openAccountsTab(tab) {
   document.querySelectorAll('.account-tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.account === tab));
   document.querySelectorAll('.account-panel').forEach((p) => p.classList.toggle('active', p.id === `account-${tab}`));
 }
-document.querySelectorAll('[data-action="tema"]').forEach((btn) => btn.addEventListener('click', () => openAccountsTab('tema')));
-document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEventListener('click', () => openAccountsTab('contato')));
+document.querySelectorAll('[data-action="tema"]').forEach((btn) => btn.addEventListener('click', () => openAccountsTab('sobre')));
+document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEventListener('click', () => openAccountsTab('sobre')));
 document.getElementById('accounts-close-btn').addEventListener('click', () => accountsOverlay.classList.remove('open'));
+
+/* =========================================================================
+   GAVETA LATERAL (nova navegação, substitui a navbar de baixo) — abre com
+   o ▤ da barra de topo, fecha sozinha ao escolher qualquer item ou ao tocar
+   fora dela.
+   ========================================================================= */
+const sidebarEl = document.getElementById('sidebar');
+const sidebarBackdropEl = document.getElementById('sidebar-backdrop');
+function openSidebar() { sidebarEl.classList.add('open'); sidebarBackdropEl.classList.add('show'); }
+function closeSidebar() { sidebarEl.classList.remove('open'); sidebarBackdropEl.classList.remove('show'); }
+document.getElementById('sidebar-toggle-btn').addEventListener('click', () => {
+  sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+sidebarBackdropEl.addEventListener('click', closeSidebar);
+sidebarEl.addEventListener('click', (ev) => { if (ev.target.closest('button')) closeSidebar(); });
+
+// Ícones da sidebar — Rádio/Ebook abrem o MultiSonor já no sub-tab certo,
+// Conta abre direto no Email/Google, Sobre no tab unificado.
+document.getElementById('sidebar-radio-btn').addEventListener('click', () => {
+  document.getElementById('player-nav-btn').click();
+  switchPlayerTab('radio');
+});
+document.getElementById('sidebar-ebook-btn').addEventListener('click', () => {
+  document.getElementById('player-nav-btn').click();
+  switchPlayerTab('audiobook');
+});
+document.getElementById('sidebar-conta-btn').addEventListener('click', () => {
+  accountsOverlay.classList.add('open');
+  updateAccountsUI();
+});
+document.getElementById('sidebar-sobre-btn').addEventListener('click', () => openAccountsTab('sobre'));
+
+/* =========================================================================
+   BARRA DE TRANSPORTE (⏮ ▶ ⏭ na barra de topo) — controla o que estiver
+   ativo no momento (rádio, ebook ou música/vídeo), fica cinza/travada se
+   não tiver nada rolando. A busca de rádio (🔍) é atalho pra já cair no
+   campo de busca do sub-tab Rádio, sem precisar abrir a gaveta primeiro.
+   ========================================================================= */
+document.getElementById('topbar-radio-search-btn').addEventListener('click', () => {
+  document.getElementById('player-nav-btn').click();
+  switchPlayerTab('radio');
+  document.getElementById('player-radio-search').focus();
+});
+
+function transportContext() {
+  if (typeof audiobookIsActiveSource !== 'undefined' && audiobookIsActiveSource) return 'audiobook';
+  if (typeof playerActiveTab !== 'undefined' && playerActiveTab === 'radio') return 'radio';
+  if (typeof playerActiveTab !== 'undefined' && playerActiveTab === 'media') return 'media';
+  return null;
+}
+
+function updateTransportBar() {
+  const ctx = transportContext();
+  const active = !!ctx;
+  document.getElementById('transport-play-btn').classList.toggle('tp-active', active);
+  document.getElementById('transport-prev-btn').classList.toggle('tp-active', active);
+  document.getElementById('transport-next-btn').classList.toggle('tp-active', active);
+  const playBtn = document.getElementById('transport-play-btn');
+  if (ctx === 'radio' || ctx === 'media') {
+    playBtn.textContent = (typeof playerIsPaused !== 'undefined' && playerIsPaused) || (playerRadioAudio && playerRadioAudio.paused) ? '▶' : '⏸';
+  } else if (ctx === 'audiobook') {
+    playBtn.textContent = (typeof audiobookIsPlaying !== 'undefined' && audiobookIsPlaying) ? '⏸' : '▶';
+  } else {
+    playBtn.textContent = '▶';
+  }
+}
+
+function skipFavoriteRadio(direction) {
+  const fs = getFeatureState('player', 'radio');
+  const favoritos = Array.isArray(fs.fields.estacoes) ? fs.fields.estacoes : [];
+  if (!favoritos.length || !playerCurrentRadioObj) return;
+  const curUrl = playerCurrentRadioObj.url_resolved || playerCurrentRadioObj.url;
+  const idx = favoritos.findIndex((f) => f.url === curUrl);
+  const nextIdx = ((idx === -1 ? 0 : idx) + direction + favoritos.length) % favoritos.length;
+  const fav = favoritos[nextIdx];
+  playRadioStation({ name: fav.nome, url: fav.url, country: fav.country });
+}
+
+document.getElementById('transport-play-btn').addEventListener('click', () => {
+  const ctx = transportContext();
+  if (ctx === 'radio' || ctx === 'media') playerTogglePlayPause();
+  else if (ctx === 'audiobook') (state.premiumUnlocked ? premiumAudiobookTogglePlayPause : audiobookTogglePlayPause)();
+  updateTransportBar();
+});
+document.getElementById('transport-prev-btn').addEventListener('click', () => {
+  const ctx = transportContext();
+  if (ctx === 'radio') skipFavoriteRadio(-1);
+  else if (ctx === 'audiobook') (state.premiumUnlocked ? premiumAudiobookSkipPage : audiobookSkipPage)(-1);
+  updateTransportBar();
+});
+document.getElementById('transport-next-btn').addEventListener('click', () => {
+  const ctx = transportContext();
+  if (ctx === 'radio') skipFavoriteRadio(1);
+  else if (ctx === 'audiobook') (state.premiumUnlocked ? premiumAudiobookSkipPage : audiobookSkipPage)(1);
+  updateTransportBar();
+});
+setInterval(updateTransportBar, 1000);
 
 document.getElementById('privacy-open-btn').addEventListener('click', () => {
   document.getElementById('privacy-overlay').classList.add('open');
@@ -4864,14 +5023,14 @@ document.getElementById('player-nav-btn').addEventListener('click', () => {
   renderPlayerMediaFavoritos();
   renderPlayerPlaylistFavoritos();
   renderAudiobookContinueButton();
-  switchPlayerTab(playerActiveTab || 'media');
+  switchPlayerTab(playerActiveTab || 'radio');
 });
 
 // Só uma aba toca por vez (Música/Vídeo unificados vs Rádio) — playerActiveTab
 // vale tanto pra "qual aba mostrar" quanto "o que tá tocando agora", já que
 // cada aba corresponde a exatamente um tipo de player.
 const PLAYER_TABS = ['media', 'radio', 'audiobook'];
-let playerViewTab = 'media'; // qual aba o usuário tá vendo agora
+let playerViewTab = 'radio'; // qual aba o usuário tá vendo agora (media oculto por ora)
 
 // Favoritos como categoria em cascata (recolhida por padrão) em vez de uma
 // lista sempre aberta tomando espaço acima dos resultados de busca.
