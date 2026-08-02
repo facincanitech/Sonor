@@ -19,7 +19,7 @@
     --c-accent-blue: #8ab4f8; --c-green: #34a853; --c-red: #ea4335;
     --c-green-bg: #1f3a2a; --c-green-text: #8ee6a8;
     --c-google-blue: #4285f4; --c-google-blue-hover: #3367d6; --c-yellow: #fbbc04;
-    --c-on-accent: #0f1115;
+    --c-on-accent: #0f1115; --c-teal: #45b8a8;
   }
   [data-theme='light'] {
     --c-bg: #f5f5f7; --c-surface: #ffffff; --c-surface-hover: #ececed; --c-surface-alt: #eef0f3;
@@ -28,7 +28,7 @@
     --c-accent-blue: #1a73e8; --c-green: #1e8e3e; --c-red: #d33828;
     --c-green-bg: #d7f0de; --c-green-text: #166f33;
     --c-google-blue: #1a73e8; --c-google-blue-hover: #1558b0; --c-yellow: #b06000;
-    --c-on-accent: #ffffff;
+    --c-on-accent: #ffffff; --c-teal: #2f9e8f;
   }
   [data-theme='high-contrast'] {
     --c-bg: #000000; --c-surface: #000000; --c-surface-hover: #1a1a1a; --c-surface-alt: #000000;
@@ -37,7 +37,7 @@
     --c-accent-blue: #66b2ff; --c-green: #00ff66; --c-red: #ff5555;
     --c-green-bg: #003311; --c-green-text: #00ff66;
     --c-google-blue: #66b2ff; --c-google-blue-hover: #99ccff; --c-yellow: #ffff00;
-    --c-on-accent: #000000;
+    --c-on-accent: #000000; --c-teal: #00e6cc;
   }
 
   * { box-sizing: border-box; }
@@ -140,6 +140,17 @@
   .topbar-btn.transport.tp-active { opacity: 1; pointer-events: auto; }
   .topbar-btn.transport-play.tp-active { background: var(--c-green); color: #fff; }
 
+  .topbar-search-panel {
+    display: none; position: fixed; left: 0; right: 0;
+    top: calc(44px + env(safe-area-inset-top, 0px)); z-index: 104;
+    background: var(--c-navbar); border-bottom: 1px solid var(--c-border);
+    padding: 10px 12px; max-height: 60vh; overflow-y: auto;
+  }
+  .topbar-search-panel.open { display: block; }
+  .topbar-search-panel input {
+    width: 100%; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text);
+    border-radius: 8px; padding: 9px 10px; margin-bottom: 8px;
+  }
   .sidebar-backdrop { display: none; position: fixed; inset: 44px 0 0 0; background: rgba(0,0,0,0.45); z-index: 60; }
   .sidebar-backdrop.show { display: block; }
   .sidebar {
@@ -985,7 +996,7 @@
       </div>
       <div id="player-controls-row" style="display:flex; justify-content:center; align-items:center; gap:26px; margin-top:8px;">
         <button id="player-ctrl-prev" style="background:none; font-size:1.6rem; color:var(--c-text);">⏮</button>
-        <button id="player-ctrl-playpause" style="background: var(--c-accent-blue); color: var(--c-on-accent); width:58px; height:58px; border-radius:50%; font-size:1.3rem;">⏸</button>
+        <button id="player-ctrl-playpause" style="background: var(--c-teal); color: #fff; width:58px; height:58px; border-radius:50%; font-size:1.3rem;">⏸</button>
         <button id="player-ctrl-next" style="background:none; font-size:1.6rem; color:var(--c-text);">⏭</button>
       </div>
     </div>
@@ -1077,6 +1088,12 @@
       <button class="topbar-btn transport transport-play" id="transport-play-btn">▶</button>
       <button class="topbar-btn transport" id="transport-next-btn">⏭</button>
     </div>
+  </div>
+
+  <!-- ============ BUSCA DE RÁDIO INLINE (abre com a lupa, funciona de qualquer tela) ============ -->
+  <div class="topbar-search-panel" id="topbar-search-panel">
+    <input type="text" id="topbar-radio-search-input" placeholder="Buscar rádio (nome, cidade, gênero)" enterkeyhint="search">
+    <div id="topbar-radio-search-results"></div>
   </div>
 
   <!-- ============ GAVETA LATERAL (abre por cima do conteúdo, some sozinha ao escolher algo) ============ -->
@@ -2872,10 +2889,48 @@ document.getElementById('sidebar-sobre-btn').addEventListener('click', openSobre
    não tiver nada rolando. A busca de rádio (🔍) é atalho pra já cair no
    campo de busca do sub-tab Rádio, sem precisar abrir a gaveta primeiro.
    ========================================================================= */
+const topbarSearchPanel = document.getElementById('topbar-search-panel');
+const topbarSearchInput = document.getElementById('topbar-radio-search-input');
+const topbarSearchResults = document.getElementById('topbar-radio-search-results');
+function openTopbarSearch() {
+  topbarSearchPanel.classList.add('open');
+  topbarSearchInput.focus();
+}
+function closeTopbarSearch() {
+  topbarSearchPanel.classList.remove('open');
+}
 document.getElementById('topbar-radio-search-btn').addEventListener('click', () => {
-  document.getElementById('player-nav-btn').click();
-  switchPlayerTab('radio');
-  document.getElementById('player-radio-search').focus();
+  topbarSearchPanel.classList.contains('open') ? closeTopbarSearch() : openTopbarSearch();
+});
+
+function renderTopbarRadioResults(estacoes, error) {
+  topbarSearchResults.innerHTML = '';
+  if (!estacoes.length) {
+    topbarSearchResults.innerHTML = `<div class="hint">${error || 'Nenhuma rádio encontrada.'}</div>`;
+    return;
+  }
+  estacoes.forEach((est) => {
+    const row = renderPlayerRadioResultRow(est);
+    row.querySelector('button').addEventListener('click', closeTopbarSearch);
+    const favBtn = document.createElement('button');
+    favBtn.type = 'button';
+    favBtn.style.cssText = 'background:none; color:var(--c-text); font-size:1.2rem; padding:4px; flex-shrink:0;';
+    favBtn.textContent = isRadioFavoritada(est) ? '⭐' : '☆';
+    favBtn.addEventListener('click', () => {
+      toggleRadioFavorito(est);
+      favBtn.textContent = isRadioFavoritada(est) ? '⭐' : '☆';
+    });
+    row.appendChild(favBtn);
+    topbarSearchResults.appendChild(row);
+  });
+}
+topbarSearchInput.addEventListener('keydown', async (ev) => {
+  if (ev.key !== 'Enter') return;
+  const termo = topbarSearchInput.value.trim();
+  if (!termo) return;
+  topbarSearchResults.innerHTML = `<div class="hint">Buscando...</div>`;
+  const { estacoes, error } = await buscarRadios(termo);
+  renderTopbarRadioResults(estacoes, error);
 });
 
 function transportContext() {
@@ -6956,7 +7011,8 @@ function playRadioStation(est) {
   setPlayerNowPlaying(est.name || est.nome, `📻 Rádio${est.country ? ' · ' + est.country : ''}`);
   updatePlayerBodyVisibility();
   // Rádio não tem capa nem vídeo — mostra um ícone simples no lugar da capa.
-  document.getElementById('player-cover-img').src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#222"/><text x="50" y="62" font-size="46" text-anchor="middle">📻</text></svg>');
+  // Silhueta de rádio (linha), não emoji — mesma direção da lupa da topbar.
+  document.getElementById('player-cover-img').src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="14" fill="#242830"/><g fill="none" stroke="#6f7480" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="42" width="40" height="28" rx="4"/><circle cx="42" cy="56" r="5"/><path d="M58 56h6"/><path d="M40 42 L58 26"/><circle cx="58" cy="26" r="3" fill="#6f7480" stroke="none"/></g></svg>');
   document.getElementById('player-cover-img').style.display = 'block';
   document.getElementById('player-yt-container').style.display = 'none';
   document.getElementById('player-cover-wrap').style.aspectRatio = '1/1';
