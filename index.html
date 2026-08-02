@@ -949,7 +949,10 @@
        setinha de voltar), busca fica sempre fixa logo abaixo dele. -->
   <section class="tab" id="tab-player">
     <div class="screen-header" id="player-screen-header">
-      <h1 id="player-screen-title">📻 Rádio</h1>
+      <h1 id="player-screen-title" style="display:flex; align-items:center; gap:8px;">
+        <span id="player-screen-title-icon" style="display:flex;"></span>
+        <span id="player-screen-title-text">Rádio</span>
+      </h1>
       <div class="header-actions" style="position: relative;">
         <button class="icon-btn" data-action="voice">🎤</button>
         <button class="icon-btn more-menu-btn">⋯</button>
@@ -981,7 +984,7 @@
       <a href="https://facincanitech.github.io/SonorHub/privacidade.html" target="_blank" id="player-privacy-link" style="color: var(--c-accent-blue); text-decoration:underline;">Política de Privacidade</a>
     </div>
     <div id="player-radio-searchbar" style="display:flex; gap:8px; margin-bottom: 14px;">
-      <input type="text" id="player-radio-search" placeholder="Buscar rádio (nome, cidade, gênero)" enterkeyhint="search" style="flex:1; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 9px 10px;">
+      <input type="text" id="player-radio-search" placeholder="Buscar rádio, cidade, gênero" enterkeyhint="search" style="flex:1; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 9px 10px;">
     </div>
     <div id="player-audiobook-searchbar" style="display:none;"></div>
 
@@ -1012,9 +1015,9 @@
         <span id="player-time-total" style="font-size:0.72rem; opacity:0.7; min-width:34px; text-align:right;">0:00</span>
       </div>
       <div id="player-controls-row" style="display:flex; justify-content:center; align-items:center; gap:26px; margin-top:8px;">
-        <button id="player-ctrl-prev" style="background:none; font-size:1.6rem; color:var(--c-text);">⏮</button>
-        <button id="player-ctrl-playpause" style="background: var(--c-teal); color: #fff; width:58px; height:58px; border-radius:50%; font-size:1.3rem;">⏸</button>
-        <button id="player-ctrl-next" style="background:none; font-size:1.6rem; color:var(--c-text);">⏭</button>
+        <button id="player-ctrl-prev" style="background:none; font-size:1.6rem; color:var(--c-text); display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M11 19V5l-8 7 8 7zm9 0V5l-8 7 8 7z"/></svg></button>
+        <button id="player-ctrl-playpause" style="background: var(--c-teal); color: #fff; width:58px; height:58px; border-radius:50%; font-size:1.3rem; display:flex; align-items:center; justify-content:center;"></button>
+        <button id="player-ctrl-next" style="background:none; font-size:1.6rem; color:var(--c-text); display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M13 5v14l8-7-8-7zM4 5v14l8-7-8-7z"/></svg></button>
       </div>
     </div>
 
@@ -1033,6 +1036,13 @@
     </div>
 
     <div id="player-tab-radio" class="player-tab-content" style="display:none;">
+      <button type="button" id="radio-now-playing-mini" class="alarm-item radio-row is-fav" style="display:none; width:100%; text-align:left; cursor:pointer; margin-bottom:14px;">
+        <span class="radio-row-play">▶</span>
+        <div style="flex:1; min-width:0;">
+          <div class="time">Tocando agora</div>
+          <div id="radio-now-playing-mini-name" style="font-size:0.78rem; color:var(--c-text-dim);"></div>
+        </div>
+      </button>
       <button type="button" id="radio-discover-btn" class="radio-discover-card">
         <span class="radio-discover-star">☆</span>
         <div style="flex:1; min-width:0; text-align:left;">
@@ -1094,9 +1104,9 @@
           </select>
         </div>
         <div style="display:flex; justify-content:center; align-items:center; gap:26px;">
-          <button id="audiobook-ctrl-prev" style="background:none; font-size:1.6rem; color:var(--c-text);">⏮</button>
-          <button id="audiobook-ctrl-playpause" style="background: var(--c-accent-blue); color: var(--c-on-accent); width:58px; height:58px; border-radius:50%; font-size:1.3rem;">▶️</button>
-          <button id="audiobook-ctrl-next" style="background:none; font-size:1.6rem; color:var(--c-text);">⏭</button>
+          <button id="audiobook-ctrl-prev" style="background:none; font-size:1.6rem; color:var(--c-text); display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M11 19V5l-8 7 8 7zm9 0V5l-8 7 8 7z"/></svg></button>
+          <button id="audiobook-ctrl-playpause" style="background: var(--c-teal); color: #fff; width:58px; height:58px; border-radius:50%; font-size:1.3rem; display:flex; align-items:center; justify-content:center;"></button>
+          <button id="audiobook-ctrl-next" style="background:none; font-size:1.6rem; color:var(--c-text); display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M13 5v14l8-7-8-7zM4 5v14l8-7-8-7z"/></svg></button>
         </div>
       </div>
     </div>
@@ -1123,9 +1133,9 @@
     </div>
     <div class="topbar-brand">SonorHub</div>
     <div class="topbar-group">
-      <button class="topbar-btn transport" id="transport-prev-btn">⏮</button>
-      <button class="topbar-btn transport transport-play" id="transport-play-btn">▶</button>
-      <button class="topbar-btn transport" id="transport-next-btn">⏭</button>
+      <button class="topbar-btn transport" id="transport-prev-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M11 19V5l-8 7 8 7zm9 0V5l-8 7 8 7z"/></svg></button>
+      <button class="topbar-btn transport transport-play" id="transport-play-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
+      <button class="topbar-btn transport" id="transport-next-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M13 5v14l8-7-8-7zM4 5v14l8-7-8-7z"/></svg></button>
     </div>
   </div>
 
@@ -2631,6 +2641,9 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+    // Conta/Sobre (e qualquer outro overlay) ficam por cima de tudo — trocar
+    // de aba por trás não adianta nada se a tela não fechar junto.
+    document.querySelectorAll('.overlay.open').forEach((o) => o.classList.remove('open'));
   });
 });
 
@@ -2940,10 +2953,22 @@ sidebarEl.addEventListener('click', (ev) => { if (ev.target.closest('button')) c
 document.getElementById('sidebar-radio-btn').addEventListener('click', () => {
   document.getElementById('player-nav-btn').click();
   switchPlayerTab('radio');
+  // Ícone da sidebar sempre cai na tela principal (busca/lista), mesmo com
+  // uma rádio tocando — pra voltar ao player grande usa o mini-player.
+  playerShowResults = true;
+  updatePlayerBodyVisibility();
 });
 document.getElementById('sidebar-ebook-btn').addEventListener('click', () => {
   document.getElementById('player-nav-btn').click();
   switchPlayerTab('audiobook');
+});
+// Reforço explícito pro Premium — evita depender só do handler genérico
+// de .nav-btn caso algo (gaveta fechando, etc.) interfira no clique.
+document.querySelector('.sidebar-star').addEventListener('click', () => {
+  document.querySelectorAll('.nav-btn').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+  document.querySelector('.sidebar-star').classList.add('active');
+  document.getElementById('tab-premium').classList.add('active');
 });
 document.getElementById('sidebar-conta-btn').addEventListener('click', () => {
   accountsOverlay.classList.add('open');
@@ -3018,11 +3043,12 @@ function updateTransportBar() {
   document.getElementById('transport-next-btn').classList.toggle('tp-active', active);
   const playBtn = document.getElementById('transport-play-btn');
   if (ctx === 'radio' || ctx === 'media') {
-    playBtn.textContent = (typeof playerIsPaused !== 'undefined' && playerIsPaused) || (playerRadioAudio && playerRadioAudio.paused) ? '▶' : '⏸';
+    const paused = (typeof playerIsPaused !== 'undefined' && playerIsPaused) || (playerRadioAudio && playerRadioAudio.paused);
+    playBtn.innerHTML = paused ? ICON_PLAY : ICON_PAUSE;
   } else if (ctx === 'audiobook') {
-    playBtn.textContent = (typeof audiobookIsPlaying !== 'undefined' && audiobookIsPlaying) ? '⏸' : '▶';
+    playBtn.innerHTML = (typeof audiobookIsPlaying !== 'undefined' && audiobookIsPlaying) ? ICON_PAUSE : ICON_PLAY;
   } else {
-    playBtn.textContent = '▶';
+    playBtn.innerHTML = ICON_PLAY;
   }
 }
 
@@ -5226,6 +5252,15 @@ function updatePlayerBodyVisibility() {
   });
   const showPlayer = (playerActiveTab === playerViewTab) && !playerShowResults;
   document.getElementById('player-now-playing').style.display = showPlayer ? 'block' : 'none';
+  // Mini-player do Rádio: aparece na tela de busca quando tem rádio tocando
+  // de fundo — clica pra ir pro player grande sem recarregar a estação.
+  const showRadioMini = (playerViewTab === 'radio') && (playerActiveTab === 'radio') && playerShowResults;
+  const radioMini = document.getElementById('radio-now-playing-mini');
+  radioMini.style.display = showRadioMini ? 'flex' : 'none';
+  if (showRadioMini && playerCurrentRadioObj) {
+    document.getElementById('radio-now-playing-mini-name').textContent =
+      `${playerCurrentRadioObj.name || playerCurrentRadioObj.nome}${playerCurrentRadioObj.country ? ' · ' + playerCurrentRadioObj.country : ''}`;
+  }
   // Atribuição ao YouTube/link de privacidade só faz sentido na tela de
   // busca (aba Música/Vídeo) — esconde com o player grande tocando e na aba Rádio.
   document.getElementById('player-yt-attribution-row').style.display = (playerViewTab === 'media' && !showPlayer) ? 'flex' : 'none';
@@ -5244,14 +5279,33 @@ function playerBackToSearch() {
 }
 document.getElementById('player-back-to-search-btn').addEventListener('click', playerBackToSearch);
 
-const PLAYER_TAB_TITLES = { media: '🎵 Música/Vídeo', radio: '📻 Rádio', audiobook: '📖 Audiobook' };
+// Ícones de transporte em SVG — ⏮⏸⏭ como texto renderizam coloridos
+// (quadrado azul/verde) em vários Androids, isso aqui é sempre monocromático.
+const ICON_PLAY = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';
+function setPlayPauseIcon(id, playing) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = playing ? ICON_PAUSE : ICON_PLAY;
+}
+setPlayPauseIcon('player-ctrl-playpause', false);
+setPlayPauseIcon('audiobook-ctrl-playpause', false);
+
+const PLAYER_TAB_TITLES = { media: 'Música/Vídeo', radio: 'Rádio', audiobook: 'Audiobook' };
+// Mesmos ícones (SVG de linha) usados nos botões da sidebar, pra manter
+// consistência em vez de emoji colorido.
+const PLAYER_TAB_ICONS = {
+  radio: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="10" rx="2"/><circle cx="8" cy="15" r="1.4" fill="currentColor" stroke="none"/><path d="M8 10 12 4 16 7"/></svg>',
+  audiobook: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1-4-1.5-8-1v13c4-.5 6.5 0 8 1 1.5-1 4-1.5 8-1V5c-4-.5-6.5 0-8 1z"/><path d="M12 6v13"/></svg>',
+  media: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>',
+};
 function switchPlayerTab(tab) {
   playerViewTab = tab;
   playerShowResults = false; // trocar de aba volta a mostrar o player dela, se tiver algo tocando
   PLAYER_TABS.forEach((t) => {
     document.getElementById(`player-tab-btn-${t}`).style.opacity = t === tab ? '1' : '0.5';
   });
-  document.getElementById('player-screen-title').textContent = PLAYER_TAB_TITLES[tab] || '';
+  document.getElementById('player-screen-title-icon').innerHTML = PLAYER_TAB_ICONS[tab] || '';
+  document.getElementById('player-screen-title-text').textContent = PLAYER_TAB_TITLES[tab] || '';
   updatePlayerBodyVisibility();
 }
 PLAYER_TABS.forEach((t) => {
@@ -5401,7 +5455,7 @@ async function processAudiobookPdf(pdf, displayName, fileKey, statusEl) {
   document.getElementById('audiobook-title').textContent = displayName;
   audiobookShowReader();
   audiobookUpdateProgress();
-  document.getElementById('audiobook-ctrl-playpause').textContent = '▶️';
+  setPlayPauseIcon('audiobook-ctrl-playpause', false);
 }
 
 async function handleAudiobookFileSelected(file) {
@@ -5625,7 +5679,7 @@ function audiobookSpeakCurrentChunk() {
       audiobookSpeakCurrentChunk();
     } else {
       audiobookIsPlaying = false;
-      document.getElementById('audiobook-ctrl-playpause').textContent = '▶️';
+      setPlayPauseIcon('audiobook-ctrl-playpause', false);
     }
   };
   speechSynthesis.speak(utter);
@@ -5638,12 +5692,12 @@ function audiobookTogglePlayPause() {
     speechSynthesis.cancel();
     audiobookIsPlaying = false;
     audiobookIsPaused = true;
-    document.getElementById('audiobook-ctrl-playpause').textContent = '▶️';
+    setPlayPauseIcon('audiobook-ctrl-playpause', false);
     if (nativePlayerPip) nativePlayerPip.setPaused({ paused: true });
   } else {
     audiobookIsPlaying = true;
     audiobookIsPaused = false;
-    document.getElementById('audiobook-ctrl-playpause').textContent = '⏸';
+    setPlayPauseIcon('audiobook-ctrl-playpause', true);
     if (nativePlayerPip) { nativePlayerPip.setActive({ active: true, notificationCapable: true }); nativePlayerPip.setPaused({ paused: false }); }
     audiobookSpeakCurrentChunk();
   }
@@ -6856,7 +6910,7 @@ async function playInEmbeddedPlayer(video, tipoLabel, lista, index, tab) {
   player.loadVideoById(video.videoId);
   player.playVideo();
   playerIsPaused = false;
-  document.getElementById('player-ctrl-playpause').textContent = '⏸';
+  setPlayPauseIcon('player-ctrl-playpause', true);
   setPlayerVideoVisible(false); // sempre começa só com a capa/áudio
   startPlayerProgressLoop();
   // keepScreenOn: vídeo do YouTube não sobrevive a tela apagar (decodificador
@@ -6882,7 +6936,7 @@ function syncPlayerPlayPauseState() {
   if (state !== 1 && state !== 2) return; // buffering/cued/etc — não dá pra saber, não muda nada
   if (reallyPaused !== playerIsPaused) {
     playerIsPaused = reallyPaused;
-    document.getElementById('player-ctrl-playpause').textContent = playerIsPaused ? '▶️' : '⏸';
+    setPlayPauseIcon('player-ctrl-playpause', !playerIsPaused);
     if (nativePlayerPip) nativePlayerPip.setPaused({ paused: playerIsPaused });
   }
 }
@@ -6912,14 +6966,14 @@ document.addEventListener('visibilitychange', () => {
 function playerTogglePlayPause() {
   if (playerActiveTab === 'radio') {
     if (playerRadioAudio.paused) playerRadioAudio.play(); else playerRadioAudio.pause();
-    document.getElementById('player-ctrl-playpause').textContent = playerRadioAudio.paused ? '▶️' : '⏸';
+    setPlayPauseIcon('player-ctrl-playpause', !playerRadioAudio.paused);
     if (nativePlayerPip) nativePlayerPip.setPaused({ paused: playerRadioAudio.paused });
     return;
   }
   if (!playerYtInstance) return;
   playerIsPaused = !playerIsPaused;
   if (playerIsPaused) playerYtInstance.pauseVideo(); else playerYtInstance.playVideo();
-  document.getElementById('player-ctrl-playpause').textContent = playerIsPaused ? '▶️' : '⏸';
+  setPlayPauseIcon('player-ctrl-playpause', !playerIsPaused);
   if (nativePlayerPip) nativePlayerPip.setPaused({ paused: playerIsPaused });
 }
 
@@ -7051,7 +7105,7 @@ function stopMediaForExclusivity() {
   if (playerYtInstance && !playerIsPaused) {
     playerYtInstance.pauseVideo();
     playerIsPaused = true;
-    document.getElementById('player-ctrl-playpause').textContent = '▶️';
+    setPlayPauseIcon('player-ctrl-playpause', false);
     if (nativePlayerPip) nativePlayerPip.setPaused({ paused: true });
   }
 }
@@ -7098,7 +7152,7 @@ function playRadioStation(est) {
   playerCurrentRadioObj = est;
   playerRadioAudio.src = url;
   playerRadioAudio.play().catch((e) => console.error('radio play:', e));
-  setPlayerNowPlaying(est.name || est.nome, `📻 Rádio${est.country ? ' · ' + est.country : ''}`);
+  setPlayerNowPlaying(est.name || est.nome, `Rádio${est.country ? ' · ' + est.country : ''}`);
   updatePlayerBodyVisibility();
   // Rádio não tem capa nem vídeo — mostra um ícone simples no lugar da capa.
   // Silhueta de rádio (linha), não emoji — mesma direção da lupa da topbar.
@@ -7113,19 +7167,39 @@ function playRadioStation(est) {
   document.getElementById('player-ctrl-share').style.display = 'flex';
   updateRadioFavoriteIcon();
   document.getElementById('player-progress-row').style.display = 'none';
-  document.getElementById('player-ctrl-playpause').textContent = '⏸';
+  setPlayPauseIcon('player-ctrl-playpause', true);
   // notificationCapable: rádio sobrevive à tela travada (áudio puro), então
   // a notificação faz sentido aqui — diferente do YouTube, que para de
   // qualquer jeito quando a tela trava.
   if (nativePlayerPip) { nativePlayerPip.setActive({ active: true, notificationCapable: true }); nativePlayerPip.setPaused({ paused: false }); }
 }
 
+// Pool de descoberta: top ~5 rádios (mais ouvidas) de ~40 países — Brasil,
+// EUA e mais uma leva de outros, dá pra chegar perto de 200 estações.
+// Busca uma vez só e guarda em memória; sortear depois é instantâneo.
+const DISCOVERY_COUNTRIES = [
+  'BR', 'US', 'PT', 'ES', 'AR', 'MX', 'CO', 'CL', 'PE', 'UY',
+  'PY', 'GB', 'FR', 'DE', 'IT', 'NL', 'BE', 'SE', 'NO', 'DK',
+  'FI', 'PL', 'RU', 'TR', 'GR', 'JP', 'KR', 'CN', 'IN', 'ID',
+  'TH', 'PH', 'VN', 'AU', 'NZ', 'CA', 'ZA', 'EG', 'NG', 'SA',
+];
+let discoveryPoolCache = null;
+async function buildDiscoveryPool() {
+  if (discoveryPoolCache) return discoveryPoolCache;
+  const results = await Promise.all(DISCOVERY_COUNTRIES.map((cc) =>
+    fetch(`https://de1.api.radio-browser.info/json/stations/search?limit=5&hidebroken=true&order=clickcount&reverse=true&countrycode=${cc}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => [])
+  ));
+  const pool = results.flat();
+  if (pool.length) discoveryPoolCache = pool;
+  return pool;
+}
 async function sortearRadioAleatoria() {
   try {
-    const resp = await fetch('https://de1.api.radio-browser.info/json/stations/search?limit=1&hidebroken=true&order=random&countrycode=BR');
-    if (!resp.ok) return null;
-    const lista = await resp.json();
-    return lista[0] || null;
+    const pool = await buildDiscoveryPool();
+    if (!pool.length) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
   } catch (e) {
     console.error('sortear rádio:', e);
     return null;
