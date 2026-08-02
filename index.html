@@ -220,6 +220,22 @@
   }
   .alarm-item .time { font-size: 0.95rem; font-weight: 600; }
   .alarm-item button { background: var(--c-bg); color: var(--c-text-dim); width: 30px; height: 30px; border-radius: 50%; font-size: 0.85rem; padding: 0; }
+  .radio-row { border-left: 3px solid transparent; }
+  .radio-row.is-fav { border-left-color: var(--c-teal); }
+  .radio-row .radio-row-play { background: var(--c-teal); color: #fff; width: 36px; height: 36px; border-radius: 9px; padding: 0; flex-shrink: 0; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+  .ab-choice-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--c-surface); border: 1px solid var(--c-border2); border-radius: 12px;
+    padding: 14px 8px; color: var(--c-text-dim); font-size: 0.85rem; font-weight: 600;
+  }
+  .ab-choice-btn.active { background: rgba(69,184,168,0.12); border-color: var(--c-teal); color: var(--c-teal); }
+  .radio-discover-card {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    background: rgba(69,184,168,0.08); border: 1.5px dashed var(--c-teal); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 16px; color: var(--c-teal);
+  }
+  .radio-discover-star { font-size: 1.2rem; color: var(--c-teal); flex-shrink: 0; }
+  .radio-discover-card.loading { opacity: 0.6; pointer-events: none; }
   select {
     background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text);
     border-radius: 8px; padding: 7px 8px; font-size: 0.82rem; font-family: inherit;
@@ -703,12 +719,13 @@
   <section class="tab" id="tab-gratis">
     <div id="gratis-list-view">
       <div class="screen-header">
-        <h1>🔊 SonorHub</h1>
+        <!-- Nome "SonorHub" saiu daqui também, já mora na barra de topo -->
+        <h1 style="display:none;">🔊 SonorHub</h1>
         <div class="header-actions" style="position: relative;">
           <button class="icon-btn" data-action="voice">🎤</button>
           <button class="icon-btn more-menu-btn">⋯</button>
           <div class="item-action-menu more-menu-panel">
-  
+
             <button type="button" class="item-action-menu-opt" data-action="gear">⚙️ Configurações</button>
             <button type="button" class="item-action-menu-opt" data-action="tema">🎨 Tema</button>
             <button type="button" class="item-action-menu-opt" data-action="contato">✉️ Contato</button>
@@ -1016,9 +1033,17 @@
     </div>
 
     <div id="player-tab-radio" class="player-tab-content" style="display:none;">
-      <button type="button" class="player-fav-category-btn" id="player-radio-favoritos-toggle" style="display:flex; align-items:center; gap:6px; width:100%; background:none; color:var(--c-text); padding:6px 0; text-align:left;">
-        <span class="player-fav-category-arrow" style="display:inline-block; transition:transform 0.15s;">▸</span>
-        <span class="hint" style="margin:0;">⭐ Favoritas</span>
+      <button type="button" id="radio-discover-btn" class="radio-discover-card">
+        <span class="radio-discover-star">☆</span>
+        <div style="flex:1; min-width:0; text-align:left;">
+          <div style="color:var(--c-teal); font-weight:700;">Descoberta</div>
+          <div style="font-size:0.78rem; color:var(--c-text-dim);">Sorteia uma rádio nova</div>
+        </div>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+      </button>
+      <button type="button" class="player-fav-category-btn" id="player-radio-favoritos-toggle" style="display:flex; align-items:center; gap:4px; width:100%; background:none; color:var(--c-teal); padding:6px 0; text-align:left;">
+        <span class="player-fav-category-arrow" style="display:inline-block; transition:transform 0.15s; font-size:1.1rem;">›</span>
+        <span style="margin:0; text-transform:uppercase; letter-spacing:0.06em; font-size:0.72rem; font-weight:700;">Favoritas</span>
       </button>
       <div id="player-radio-favoritos" style="display:none; margin-bottom: 16px;"></div>
       <div id="player-radio-results"></div>
@@ -1028,14 +1053,28 @@
       <!-- Área de seleção — esconde quando o leitor está aberto -->
       <div id="audiobook-input-area">
         <div id="audiobook-continue-wrap" style="display:none; margin-bottom:14px;">
-          <button type="button" id="audiobook-continue-btn" class="btn-connect" style="width:100%; background: var(--c-green); color: var(--c-on-accent);">▶️ Continuar de onde parei</button>
-          <div id="audiobook-continue-info" class="hint" style="text-align:center; margin-top:4px;"></div>
+          <button type="button" id="audiobook-continue-btn" class="alarm-item radio-row is-fav" style="width:100%; text-align:left; cursor:pointer;">
+            <span class="radio-row-play" style="display:flex;">▶</span>
+            <div style="flex:1; min-width:0;">
+              <div class="time">Continuar de onde parei</div>
+              <div id="audiobook-continue-info" style="font-size:0.78rem; color:var(--c-text-dim); margin-top:2px;"></div>
+            </div>
+          </button>
         </div>
         <input type="file" id="audiobook-file-input" accept="application/pdf" style="display:none;">
-        <button type="button" id="audiobook-pick-btn" class="btn-connect" style="margin-bottom:10px;">📂 Selecionar PDF do celular</button>
-        <div style="display:flex; gap:8px; margin-bottom:14px;">
-          <input type="text" id="audiobook-drive-input" placeholder="Ou cola link do Google Drive (arquivo ou pasta)" enterkeyhint="done" style="flex:1; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 9px 10px;">
-          <button type="button" id="audiobook-drive-btn" class="btn-connect" style="flex-shrink:0;">🔗 Usar</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+          <button type="button" id="audiobook-pick-btn" class="ab-choice-btn">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+            <span>Selecionar PDF</span>
+          </button>
+          <button type="button" id="audiobook-history-toggle-btn" class="ab-choice-btn">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1-4-1.5-8-1v13c4-.5 6.5 0 8 1 1.5-1 4-1.5 8-1V5c-4-.5-6.5 0-8 1z"/><path d="M12 6v13"/></svg>
+            <span>Minha Estante</span>
+          </button>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:14px; background:var(--c-bg); border:1px solid var(--c-border2); border-radius:24px; padding:4px 4px 4px 14px; align-items:center;">
+          <input type="text" id="audiobook-drive-input" placeholder="Ou cola link do Drive" enterkeyhint="done" style="flex:1; background:none; border:none; color: var(--c-text); padding: 8px 0;">
+          <button type="button" id="audiobook-drive-btn" style="flex-shrink:0; background:none; color:var(--c-teal); font-weight:700; padding:8px 14px;">Usar</button>
         </div>
         <div id="audiobook-status" class="hint"></div>
         <div id="audiobook-drive-history" style="display:none; margin-top:8px;"></div>
@@ -1496,7 +1535,7 @@
         </div>
         <div class="help-section-body">
           Na aba Guia, clica em cada categoria (Pessoal, Clima, Entretenimento,
-          Notícias e Curiosidades, Financeiro, Místico) e ativa só o que você quer ouvir.
+          Notícias, Místico) e ativa só o que você quer ouvir.
           Cada feature tem um toggle, quando ligado, aparecem os campos pra configurar
           (cidade, time, palavras-chave, etc). Veja a explicação de cada categoria no
           item "Guia completo e configuração" abaixo.
@@ -1549,11 +1588,11 @@
           ⚽ <b>Esportes</b>: Competição + Time/seleção, resultado do último jogo e
           data do próximo.<br><br>
 
-          <b>📰 Notícias e Curiosidades</b><br>
+          <b>📰 Notícias</b><br>
           🔍 <b>Notícias por palavra-chave</b>: digite até 5 termos (até 5), o app lê
-          as notícias mais recentes sobre cada um.<br><br>
-
-          <b>💰 Financeiro</b><br>
+          as notícias mais recentes sobre cada um.<br>
+          💡 <b>Curiosidades por palavra-chave</b>: mesma ideia, termos que rendam
+          matéria mais curiosa/inusitada em vez de notícia factual.<br><br>
           💱 <b>Cotações</b>: marque moedas (Dólar, Euro, Libra, Peso) e/ou
           criptomoedas (Bitcoin, Ethereum, Solana, BNB).<br>
           🏠 <b>Índices econômicos</b>: Inflação (IPCA) e/ou Juros (Selic) como
@@ -1901,11 +1940,24 @@ const CATEGORY_DEFS = [
     ],
   },
   {
-    id: 'noticias', icon: '📰', title: 'Notícias e Curiosidades', color: 'var(--cat-noticias)',
+    id: 'noticias', icon: '📰', title: 'Notícias', color: 'var(--cat-noticias)',
     features: [
       { id: 'keyword', label: 'Notícias por palavra-chave', icon: '🔍', fields: [
         { id: 'termos', kind: 'tags', placeholder: 'Digite e aperte Enter (até 5)' },
       ] },
+      { id: 'curiosidades', label: 'Curiosidades por palavra-chave', icon: '💡', fields: [
+        { id: 'termos', kind: 'tags', placeholder: 'Digite e aperte Enter (até 5)' },
+      ] },
+      // Financeiro se fundiu aqui dentro — mesmas features, categoria própria
+      // escondida da grade (ver renderCategoryCards).
+      { id: 'cotacoes', label: 'Cotações', icon: '💱', fields: [
+        { id: 'moedas', kind: 'buttons', options: ['Dólar', 'Euro', 'Libra', 'Peso'] },
+        { id: 'criptos', kind: 'buttons', options: ['Bitcoin', 'Ethereum', 'Solana', 'BNB'] },
+      ] },
+      { id: 'indices', label: 'Índices econômicos', icon: '🏠', fields: [
+        { id: 'tipos', kind: 'buttons', options: ['Inflação (IPCA)', 'Juros (Selic)'] },
+        { id: 'tickers', kind: 'tags', placeholder: 'Código da ação/FII, ex: HGLG11 (digite e aperte Enter, até 5)' },
+      ], hint: 'Cotação real do código que você digitar, direto da B3' },
     ],
   },
   {
@@ -2171,7 +2223,9 @@ const CAT_HERO_BG = {
 
 function renderCategoryCards() {
   categoryCardsEl.innerHTML = '';
-  CATEGORY_DEFS.forEach((cat) => {
+  // Financeiro se fundiu em "Notícias e Curiosidades" — some da grade, mas
+  // o card/gráfico animado (mó trampo pra fazer) fica no código intacto.
+  CATEGORY_DEFS.filter((cat) => cat.id !== 'financeiro').forEach((cat) => {
     const card = document.createElement('div');
     card.className = 'cat-hero';
     card.style.setProperty('--cat-color', cat.color);
@@ -2918,7 +2972,9 @@ function renderTopbarRadioResults(estacoes, error) {
     favBtn.textContent = isRadioFavoritada(est) ? '⭐' : '☆';
     favBtn.addEventListener('click', () => {
       toggleRadioFavorito(est);
-      favBtn.textContent = isRadioFavoritada(est) ? '⭐' : '☆';
+      const fav = isRadioFavoritada(est);
+      favBtn.textContent = fav ? '⭐' : '☆';
+      row.classList.toggle('is-fav', fav);
     });
     row.appendChild(favBtn);
     topbarSearchResults.appendChild(row);
@@ -5037,8 +5093,11 @@ async function buildQueue(featureKeys) {
       else if (s.catId === 'clima' && s.featId === 'alertas') items = await fetchAlertasClimaticosItems(s.fields.cidade);
       else if (s.catId === 'clima' && s.featId === 'previsao-dias') items = await fetchPrevisaoDiasItems(s.fields.cidade);
       else if (s.catId === 'noticias' && s.featId === 'keyword') items = await fetchNewsItems(s.fields.termos, limit);
+      else if (s.catId === 'noticias' && s.featId === 'curiosidades') items = await fetchNewsItems(s.fields.termos, limit);
       else if (s.catId === 'financeiro' && s.featId === 'cotacoes') items = await fetchCotacoesItems(s.fields.moedas, s.fields.criptos);
       else if (s.catId === 'financeiro' && s.featId === 'indices') items = await fetchIndicesEconomicosItems(s.fields.tipos, s.fields.tickers);
+      else if (s.catId === 'noticias' && s.featId === 'cotacoes') items = await fetchCotacoesItems(s.fields.moedas, s.fields.criptos);
+      else if (s.catId === 'noticias' && s.featId === 'indices') items = await fetchIndicesEconomicosItems(s.fields.tipos, s.fields.tickers);
       else if (s.catId === 'entretenimento' && s.featId === 'filmes') items = await fetchFilmesItems(limit);
       else if (s.catId === 'entretenimento' && s.featId === 'series') items = await fetchSeriesItems(limit);
       else if (s.catId === 'entretenimento' && s.featId === 'musica') items = await fetchMusicaItems(s.fields.nomes, limit);
@@ -5283,7 +5342,6 @@ function renderAudiobookContinueButton() {
   // carregado nessa sessão (audiobookChunks populado). Caso contrário,
   // mostra só o texto genérico sem número de página.
   const page = (typeof savedIdx === 'number' && audiobookChunks[savedIdx]) ? audiobookChunks[savedIdx].page : savedIdx || null;
-  document.getElementById('audiobook-continue-btn').textContent = '▶️ Continuar de onde parei';
   document.getElementById('audiobook-continue-info').textContent = page ? `Última posição: página ${page}` : '';
 }
 document.getElementById('audiobook-continue-btn').addEventListener('click', () => {
@@ -5357,6 +5415,13 @@ document.getElementById('audiobook-pick-btn').addEventListener('click', () => {
 document.getElementById('audiobook-file-input').addEventListener('change', (ev) => {
   const file = ev.target.files && ev.target.files[0];
   if (file) handleAudiobookFileSelected(file);
+});
+document.getElementById('audiobook-history-toggle-btn').addEventListener('click', function () {
+  const panel = document.getElementById('audiobook-drive-history');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  this.classList.toggle('active', !isOpen);
+  if (!isOpen) renderAbDriveHistory();
 });
 
 // URL do proxy de download do Drive (edge function) — mais confiável que
@@ -5489,17 +5554,28 @@ function saveAbDriveHistory(id, name) {
 function renderAbDriveHistory() {
   const hist = getAbDriveHistory();
   const el = document.getElementById('audiobook-drive-history');
-  if (!hist.length) { el.style.display = 'none'; return; }
-  el.style.display = 'block';
-  el.innerHTML = '<div style="font-size:0.72rem; color:var(--c-text-dim); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.05em;">Recentes</div>' +
-    hist.map(h =>
-      `<button type="button" data-id="${h.id}" data-name="${encodeURIComponent(h.name)}" style="display:block; width:100%; text-align:left; background:var(--c-surface); color:var(--c-text); border-radius:6px; padding:7px 10px; margin-bottom:4px; font-size:0.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🕒 ${h.name}</button>`
-    ).join('');
-  el.querySelectorAll('button[data-id]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      carregarAudiobookDoGoogleDrive(btn.dataset.id, decodeURIComponent(btn.dataset.name));
-    });
+  if (!hist.length) {
+    el.innerHTML = '<div class="hint">Nenhum PDF na estante ainda — abre um link do Drive pra começar.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px;';
+  hist.forEach((h) => {
+    const tile = document.createElement('div');
+    tile.style.cssText = 'flex:0 0 calc(33% - 6px); background: var(--c-surface); border-radius:8px; padding:0; cursor:pointer; text-align:center; font-size:0.75rem; overflow:hidden;';
+    tile.title = h.name;
+    const shortName = h.name.replace(/\.pdf$/i, '').slice(0, 26) + (h.name.replace(/\.pdf$/i, '').length > 26 ? '…' : '');
+    tile.innerHTML = `
+      <img src="https://drive.google.com/thumbnail?id=${h.id}&sz=w200-h200" loading="lazy"
+           onerror="this.style.display='none'"
+           style="width:100%; height:90px; object-fit:cover; display:block; border-radius:8px 8px 0 0;">
+      <div style="padding:6px 4px; line-height:1.3;">${shortName}</div>
+    `;
+    tile.addEventListener('click', () => carregarAudiobookDoGoogleDrive(h.id, h.name));
+    grid.appendChild(tile);
   });
+  el.appendChild(grid);
 }
 try { renderAbDriveHistory(); } catch (_) {}
 
@@ -7030,6 +7106,25 @@ function playRadioStation(est) {
   if (nativePlayerPip) { nativePlayerPip.setActive({ active: true, notificationCapable: true }); nativePlayerPip.setPaused({ paused: false }); }
 }
 
+async function sortearRadioAleatoria() {
+  try {
+    const resp = await fetch('https://de1.api.radio-browser.info/json/stations/search?limit=1&hidebroken=true&order=random&countrycode=BR');
+    if (!resp.ok) return null;
+    const lista = await resp.json();
+    return lista[0] || null;
+  } catch (e) {
+    console.error('sortear rádio:', e);
+    return null;
+  }
+}
+document.getElementById('radio-discover-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('radio-discover-btn');
+  btn.classList.add('loading');
+  const est = await sortearRadioAleatoria();
+  btn.classList.remove('loading');
+  if (est) playRadioStation(est);
+});
+
 async function buscarRadios(termo) {
   if (!termo) return { estacoes: [], error: null };
   try {
@@ -7044,18 +7139,28 @@ async function buscarRadios(termo) {
 
 function renderPlayerRadioResultRow(est) {
   const row = document.createElement('div');
-  row.className = 'alarm-item';
+  row.className = 'alarm-item radio-row';
+  if (isRadioFavoritada(est)) row.classList.add('is-fav');
   const playBtn = document.createElement('button');
   playBtn.type = 'button';
-  playBtn.textContent = '▶️';
-  playBtn.style.cssText = 'background: var(--c-green); width: 30px; height: 30px; border-radius: 50%; padding: 0; flex-shrink: 0;';
+  playBtn.textContent = '▶';
+  playBtn.className = 'radio-row-play';
   playBtn.addEventListener('click', () => playRadioStation(est));
-  const span = document.createElement('span');
-  span.className = 'time';
-  span.style.flex = '1';
-  span.textContent = `${est.name || est.nome}${est.country ? ' · ' + est.country : ''}`;
+  const info = document.createElement('div');
+  info.style.cssText = 'flex:1; min-width:0;';
+  const nameEl = document.createElement('div');
+  nameEl.className = 'time';
+  nameEl.style.cssText = 'white-space:nowrap; overflow:hidden; text-overflow:ellipsis;';
+  nameEl.textContent = est.name || est.nome;
+  info.appendChild(nameEl);
+  if (est.country) {
+    const subEl = document.createElement('div');
+    subEl.style.cssText = 'font-size:0.78rem; color:var(--c-text-dim); margin-top:2px;';
+    subEl.textContent = est.country;
+    info.appendChild(subEl);
+  }
   row.appendChild(playBtn);
-  row.appendChild(span);
+  row.appendChild(info);
   return row;
 }
 
@@ -7074,7 +7179,9 @@ function renderPlayerRadioResults(estacoes, error) {
     favBtn.textContent = isRadioFavoritada(est) ? '⭐' : '☆';
     favBtn.addEventListener('click', () => {
       toggleRadioFavorito(est);
-      favBtn.textContent = isRadioFavoritada(est) ? '⭐' : '☆';
+      const fav = isRadioFavoritada(est);
+      favBtn.textContent = fav ? '⭐' : '☆';
+      row.classList.toggle('is-fav', fav);
     });
     row.appendChild(favBtn);
     container.appendChild(row);
