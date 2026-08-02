@@ -151,28 +151,28 @@
     width: 100%; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text);
     border-radius: 8px; padding: 9px 10px; margin-bottom: 8px;
   }
-  .sidebar-backdrop { display: none; position: fixed; inset: 44px 0 0 0; background: rgba(0,0,0,0.45); z-index: 60; }
+  .sidebar-backdrop { display: none; position: fixed; inset: 44px 0 0 0; background: rgba(0,0,0,0.45); z-index: 106; }
   .sidebar-backdrop.show { display: block; }
   .sidebar {
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     position: fixed; left: 0; top: 44px; bottom: 0; width: 76px;
     background: var(--c-navbar); border-right: 1px solid var(--c-border);
-    padding: 18px 0; z-index: 61;
+    padding: 18px 0; z-index: 107;
     transform: translateX(-100%); transition: transform .2s ease;
   }
   .sidebar.open { transform: translateX(0); }
   .sidebar-btn { width: 52px; height: 52px; border-radius: 12px; background: none; color: var(--c-text-faint2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex: 0 0 auto; }
-  .sidebar-btn.active { color: var(--c-accent-blue); background: var(--c-surface-hover); }
-  .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: #ff9500; color: #0f1115; font-size: 1.6rem; }
-  /* Meu Dia é sempre o círculo laranja, ativo ou não — sem isso o .active
-     genérico (azul) ganhava do laranja quando essa aba tava selecionada. */
-  .sidebar-home.active { background: #ff9500; color: #0f1115; }
+  .sidebar-btn.active { color: var(--c-teal); background: var(--c-surface-hover); }
+  .sidebar-btn svg { display: block; }
+  .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: var(--c-teal); color: #fff; font-size: 1.6rem; }
+  /* Meu Dia é sempre o círculo teal, ativo ou não — sem isso o .active
+     genérico ganhava dele quando essa aba tava selecionada. */
+  .sidebar-home.active { background: var(--c-teal); color: #fff; }
   /* .nav-btn tem flex:1 (pensado pra navbar horizontal antiga) — na sidebar
      vertical isso esticava os botões (viravam oval). flex fixo corrige. */
   .sidebar-btn.nav-btn { flex: 0 0 auto; padding: 0; }
   .header-actions [data-action="voice"] { display: none; }
   .sidebar-spacer { flex: 1; }
-  .sidebar-star { color: var(--c-yellow); }
 
   /* ===== Tabs / screens ===== */
   .tab { display: none; }
@@ -1138,14 +1138,28 @@
   <!-- ============ GAVETA LATERAL (abre por cima do conteúdo, some sozinha ao escolher algo) ============ -->
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
   <nav class="sidebar" id="sidebar">
-    <button class="nav-btn sidebar-btn sidebar-home active" data-tab="briefing">▶</button>
-    <button class="nav-btn sidebar-btn" data-tab="gratis">🎚️</button>
-    <button class="sidebar-btn" id="sidebar-radio-btn">📻</button>
-    <button class="sidebar-btn" id="sidebar-ebook-btn">📖</button>
+    <button class="nav-btn sidebar-btn sidebar-home active" data-tab="briefing">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+    </button>
+    <button class="nav-btn sidebar-btn" data-tab="gratis">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="sidebar-btn" id="sidebar-radio-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="10" rx="2"/><circle cx="8" cy="15" r="1.4" fill="currentColor" stroke="none"/><path d="M8 10 12 4 16 7"/></svg>
+    </button>
+    <button class="sidebar-btn" id="sidebar-ebook-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1-4-1.5-8-1v13c4-.5 6.5 0 8 1 1.5-1 4-1.5 8-1V5c-4-.5-6.5 0-8 1z"/><path d="M12 6v13"/></svg>
+    </button>
     <div class="sidebar-spacer"></div>
-    <button class="sidebar-btn" id="sidebar-conta-btn">⚙️</button>
-    <button class="sidebar-btn" id="sidebar-sobre-btn">ℹ️</button>
-    <button class="nav-btn sidebar-btn sidebar-star" data-tab="premium">⭐</button>
+    <button class="sidebar-btn" id="sidebar-conta-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="sidebar-btn" id="sidebar-sobre-btn">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="nav-btn sidebar-btn sidebar-star" data-tab="premium">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
+    </button>
   </nav>
 
   <div id="voice-toast" class="voice-toast"></div>
