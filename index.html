@@ -120,10 +120,15 @@
   .more-menu-btn { display: none; }
   /* Disquete (salvos), linha de baixar/compartilhar e tile de Customização
      do Meu Dia — ocultos a pedido, ficam no DOM caso volte depois. */
-  #saved-header-btn, #download-app-row, #custom-tile { display: none; }
+  #saved-header-btn, #custom-tile { display: none; }
+  /* Conta e Sobre mantêm a barra de topo visível (fica abaixo dela, não por
+     cima) e perdem a setinha de voltar própria — no cell, some com o botão
+     físico de Voltar (volta pro Meu Dia). */
+  #accounts-close-btn, #sobre-close-btn { display: none; }
+  #accounts-overlay, #sobre-overlay { top: calc(44px + env(safe-area-inset-top, 0px)); }
 
   .topbar {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 70;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 105;
     display: flex; align-items: center; justify-content: space-between;
     height: 44px; padding: env(safe-area-inset-top, 0px) 8px 0;
     background: var(--c-navbar); border-bottom: 1px solid var(--c-border);
@@ -148,6 +153,9 @@
   .sidebar-btn { width: 52px; height: 52px; border-radius: 12px; background: none; color: var(--c-text-faint2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex: 0 0 auto; }
   .sidebar-btn.active { color: var(--c-accent-blue); background: var(--c-surface-hover); }
   .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: #ff9500; color: #0f1115; font-size: 1.6rem; }
+  /* Meu Dia é sempre o círculo laranja, ativo ou não — sem isso o .active
+     genérico (azul) ganhava do laranja quando essa aba tava selecionada. */
+  .sidebar-home.active { background: #ff9500; color: #0f1115; }
   /* .nav-btn tem flex:1 (pensado pra navbar horizontal antiga) — na sidebar
      vertical isso esticava os botões (viravam oval). flex fixo corrige. */
   .sidebar-btn.nav-btn { flex: 0 0 auto; padding: 0; }
@@ -600,14 +608,6 @@
         <button id="update-banner-download" type="button" style="background: var(--c-on-accent); color: var(--c-accent-blue); padding: 6px 10px; font-size: 0.78rem; border-radius: 6px; font-weight: 600; border:none; cursor:pointer;">Baixar</button>
       </div>
     </div>
-
-    <button type="button" id="download-app-row" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--c-surface); border-radius:10px; margin-bottom:14px; cursor:pointer; border:none; text-align:left;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <span style="font-size:1rem; flex-shrink:0;">📲</span>
-        <span style="font-size:13px; color:var(--c-text);">Baixar / compartilhar o app</span>
-      </div>
-      <span style="font-size:0.85rem; color:var(--c-text-dim);">›</span>
-    </button>
 
     <div class="md-settings-bento">
       <div class="md-bento-tile" id="custom-tile" style="--tile-color: var(--c-accent-blue);">
@@ -1071,7 +1071,7 @@
       </button>
       <button class="topbar-btn" data-action="voice" title="Falar">🎤</button>
     </div>
-    <div class="topbar-brand">🔊 SonorHub</div>
+    <div class="topbar-brand">SonorHub</div>
     <div class="topbar-group">
       <button class="topbar-btn transport" id="transport-prev-btn">⏮</button>
       <button class="topbar-btn transport transport-play" id="transport-play-btn">▶</button>
@@ -1201,6 +1201,13 @@
       <button class="back-btn" id="sobre-close-btn">←</button>
       <h2>ℹ️ Sobre</h2>
     </div>
+    <button type="button" id="download-app-row" style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:var(--c-surface); border-radius:10px; margin-bottom:14px; cursor:pointer; border:none; text-align:left;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:1rem; flex-shrink:0;">📲</span>
+        <span style="font-size:13px; color:var(--c-text);">Baixar / compartilhar o app</span>
+      </div>
+      <span style="font-size:0.85rem; color:var(--c-text-dim);">›</span>
+    </button>
     <div class="account-card" style="margin-bottom: 12px;">
       <div class="btn-group" id="theme-options">
         <button type="button" class="btn-opt" data-theme="dark">🌙 Escuro (padrão)</button>
@@ -1231,9 +1238,6 @@
     </div>
     <div class="account-card">
       <button class="btn-connect" id="changelog-open-btn" style="background: var(--c-border2); color: var(--c-text);">📋 Versão e novidades</button>
-    </div>
-    <div class="account-card">
-      <a class="btn-connect" href="https://facincanitech.github.io/SonorHub/" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none; background: var(--c-border2); color: var(--c-text);">📲 Baixar app</a>
     </div>
   </div>
 </div>
@@ -2561,6 +2565,11 @@ if (nativeApp) {
     const openOverlay = document.querySelector('.overlay.open');
     if (openOverlay) {
       openOverlay.classList.remove('open');
+      // Conta e Sobre perderam a setinha própria — o físico assume, e leva
+      // direto pro Meu Dia (não fica preso na aba que tava aberta atrás).
+      if (openOverlay.id === 'accounts-overlay' || openOverlay.id === 'sobre-overlay') {
+        document.querySelector('.nav-btn[data-tab="briefing"]').click();
+      }
       return;
     }
     if (openCategoryId) {
@@ -5095,7 +5104,8 @@ function updatePlayerBodyVisibility() {
   // Com o player grande ocupando a tela, o cabeçalho/abas só tomam espaço —
   // troca pela setinha de voltar (mesma função do botão físico de Voltar).
   document.getElementById('player-screen-header').style.display = showPlayer ? 'none' : 'flex';
-  document.getElementById('player-subtabs-row').style.display = showPlayer ? 'none' : 'flex';
+  // Rádio e Audiobook agora são telas próprias (entrada só pela sidebar) —
+  // essa barra de switcher não deve mais voltar a aparecer.
   document.getElementById('player-back-to-search-btn').style.display = showPlayer ? 'block' : 'none';
 }
 
