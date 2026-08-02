@@ -5272,6 +5272,11 @@ function updatePlayerBodyVisibility() {
   document.getElementById('player-back-to-search-btn').style.display = showPlayer ? 'block' : 'none';
 }
 
+document.getElementById('radio-now-playing-mini').addEventListener('click', () => {
+  playerShowResults = false;
+  updatePlayerBodyVisibility();
+});
+
 function playerBackToSearch() {
   if (playerActiveTab !== playerViewTab) return;
   playerShowResults = true;
