@@ -9454,7 +9454,6 @@ function renderLembreteTagGroup(alarm, wrap) {
 
 function renderAlarmsList() {
   alarmsListEl.innerHTML = '';
-  const tags = getEnabledFeatureTags();
   state.alarmTimes.slice().sort((a, b) => a.time.localeCompare(b.time)).forEach((alarm) => {
     const expanded = expandedAlarmTime === alarm.time;
     const row = document.createElement('div');
@@ -9511,29 +9510,6 @@ function renderAlarmsList() {
     profileRow.appendChild(profileLabel);
     profileRow.appendChild(profileSelect);
     alarmsListEl.appendChild(profileRow);
-
-    const tagWrap = document.createElement('div');
-    tagWrap.className = 'btn-group';
-    tagWrap.style.margin = '4px 0 14px';
-    if (tags.length === 0) {
-      tagWrap.innerHTML = '<div class="desc" style="opacity:0.6;">Nenhuma categoria ativa no Guia ainda.</div>';
-    } else {
-      tags.forEach((tag) => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'btn-opt' + (alarm.features.includes(tag.key) ? ' selected' : '');
-        chip.textContent = tag.label;
-        chip.addEventListener('click', () => {
-          if (alarm.features.includes(tag.key)) alarm.features = alarm.features.filter((k) => k !== tag.key);
-          else alarm.features.push(tag.key);
-          saveState();
-          renderAlarmsList();
-        });
-        tagWrap.appendChild(chip);
-      });
-    }
-    renderLembreteTagGroup(alarm, tagWrap);
-    alarmsListEl.appendChild(tagWrap);
   });
 }
 
