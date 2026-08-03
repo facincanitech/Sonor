@@ -125,7 +125,7 @@
      cima) e perdem a setinha de voltar própria — no cell, some com o botão
      físico de Voltar (volta pro Meu Dia). */
   #accounts-close-btn, #sobre-close-btn { display: none; }
-  #accounts-overlay, #sobre-overlay, #perfil-picker-overlay { top: calc(44px + env(safe-area-inset-top, 0px)); }
+  #accounts-overlay, #sobre-overlay, #perfil-picker-overlay, #drive-photos-overlay { top: calc(44px + env(safe-area-inset-top, 0px)); }
 
   .topbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 105;
@@ -1297,6 +1297,14 @@
         <div class="scope-list">Hotmail / Outlook, acesso de leitura aos e-mails.</div>
         <button class="btn-connect" id="outlook-connect-btn">Entrar com Microsoft</button>
       </div>
+      <div class="account-card" style="--brand-color: var(--c-red);">
+        <div class="acc-top">
+          <div class="acc-icon-badge">🗑️</div>
+          <div class="status">Apagar conta</div>
+        </div>
+        <div class="scope-list">Apaga tudo salvo neste aparelho — perfis, favoritos, histórico, configurações do Guia. Não afeta sua conta Google/Microsoft nem arquivos já salvos no Drive.</div>
+        <button class="btn-connect" id="delete-account-btn" style="background: var(--c-red); color:#fff;">Apagar conta</button>
+      </div>
     </div>
 
     <div class="account-panel" id="account-midia">
@@ -1326,6 +1334,18 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ============ FOTOS SALVAS NO DRIVE (overlay, grid com apagar) ============ -->
+<div class="overlay" id="drive-photos-overlay">
+  <div class="overlay-inner">
+    <div class="overlay-header">
+      <button class="back-btn" id="drive-photos-close-btn">←</button>
+      <h2>📷 Fotos salvas</h2>
+    </div>
+    <button type="button" id="drive-photos-open-drive-btn" class="btn-connect" style="width:100%; margin-bottom:14px; background:var(--c-surface); color:var(--c-text);">📂 Abrir no Drive</button>
+    <div id="drive-photos-grid" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
   </div>
 </div>
 
@@ -3290,6 +3310,13 @@ document.querySelectorAll('[data-action="tema"]').forEach((btn) => btn.addEventL
 document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEventListener('click', openSobre));
 document.getElementById('sobre-close-btn').addEventListener('click', () => { sobreOverlay.classList.remove('open'); updateOverlaySidebarActive(); });
 document.getElementById('accounts-close-btn').addEventListener('click', () => { accountsOverlay.classList.remove('open'); updateOverlaySidebarActive(); });
+
+document.getElementById('delete-account-btn').addEventListener('click', () => {
+  const ok = confirm('Isso apaga TUDO salvo neste aparelho (perfis, favoritos, histórico, configurações) de vez, sem volta. Sua conta Google/Microsoft e arquivos no Drive não são afetados. Confirma?');
+  if (!ok) return;
+  localStorage.clear();
+  location.reload();
+});
 
 /* =========================================================================
    GAVETA LATERAL (nova navegação, substitui a navbar de baixo) — abre com
@@ -9138,19 +9165,50 @@ document.getElementById('drive-backup-input').addEventListener('change', async (
   }
 });
 
-document.getElementById('drive-view-btn').addEventListener('click', async () => {
-  const resultEl = document.getElementById('drive-backup-result');
-  // Não precisa de tela própria pra listar/remover: a pasta já é do Google
-  // Drive de verdade, então só abre ela direto no app/site do Drive — lá já
-  // tem visualização, exclusão, tudo. O app só guarda o ID da pasta.
-  resultEl.textContent = 'Abrindo a pasta no Drive...';
+async function renderDrivePhotosGrid() {
+  const gridEl = document.getElementById('drive-photos-grid');
+  gridEl.innerHTML = '<div class="hint">Carregando...</div>';
   try {
     const folderId = await ensureDriveBackupFolder();
-    window.open(`https://drive.google.com/drive/folders/${folderId}`, '_blank');
-    resultEl.textContent = '';
+    const q = encodeURIComponent(`'${folderId}' in parents and mimeType contains 'image/' and trashed=false`);
+    const resp = await googleApiFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,thumbnailLink)&pageSize=100&orderBy=createdTime desc`);
+    const files = resp.files || [];
+    gridEl.innerHTML = '';
+    if (!files.length) { gridEl.innerHTML = '<div class="hint">Nenhuma foto salva ainda.</div>'; return; }
+    files.forEach((f) => {
+      const tile = document.createElement('div');
+      tile.style.cssText = 'position:relative; flex:0 0 calc(33% - 6px); border-radius:8px; overflow:hidden; background:var(--c-surface); aspect-ratio:1/1;';
+      tile.innerHTML = `<img src="${f.thumbnailLink}" style="width:100%; height:100%; object-fit:cover; display:block;">`;
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.textContent = '✕';
+      delBtn.style.cssText = 'position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; width:22px; height:22px; border-radius:50%; font-size:11px; padding:0; line-height:1;';
+      delBtn.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        if (!confirm(`Apagar "${f.name}" do Drive? Não tem volta.`)) return;
+        try {
+          await fetch(`https://www.googleapis.com/drive/v3/files/${f.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } });
+          tile.remove();
+        } catch (e) { alert('Erro ao apagar: ' + e.message); }
+      });
+      tile.appendChild(delBtn);
+      gridEl.appendChild(tile);
+    });
   } catch (e) {
-    resultEl.textContent = 'Erro ao abrir a pasta: ' + e.message;
+    gridEl.innerHTML = `<div class="hint">Erro ao carregar: ${e.message}</div>`;
   }
+}
+
+document.getElementById('drive-view-btn').addEventListener('click', () => {
+  openOverlayExclusive(document.getElementById('drive-photos-overlay'));
+  renderDrivePhotosGrid();
+});
+document.getElementById('drive-photos-close-btn').addEventListener('click', () => {
+  document.getElementById('drive-photos-overlay').classList.remove('open');
+});
+document.getElementById('drive-photos-open-drive-btn').addEventListener('click', async () => {
+  const folderId = await ensureDriveBackupFolder();
+  window.open(`https://drive.google.com/drive/folders/${folderId}`, '_blank');
 });
 
 /* =========================================================================
