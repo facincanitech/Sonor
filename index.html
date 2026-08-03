@@ -2163,6 +2163,7 @@ function getAllProfiles() {
 }
 
 function applyProfile(profileId) {
+  if (!accessToken) { alert('Conecta com o Google em ⚙️ Central de Contas pra usar Perfis.'); return; }
   const profile = getAllProfiles().find((p) => p.id === profileId);
   if (!profile) return;
   Object.keys(state.features).forEach((key) => { state.features[key].enabled = false; });
@@ -2174,6 +2175,7 @@ function applyProfile(profileId) {
 }
 
 function createProfileFromCurrent() {
+  if (!accessToken) { alert('Conecta com o Google em ⚙️ Central de Contas pra usar Perfis.'); return; }
   const nome = prompt('Nome do novo perfil:');
   if (!nome || !nome.trim()) return;
   const keys = Object.keys(state.features).filter((k) => state.features[k].enabled);
@@ -2224,6 +2226,17 @@ let perfilDrag = null; // { id, startY }
 function renderPerfis() {
   const listEl = document.getElementById('perfis-list');
   if (!listEl) return;
+  if (!accessToken) {
+    listEl.className = '';
+    listEl.innerHTML = '';
+    const msg = document.createElement('button');
+    msg.type = 'button';
+    msg.className = 'perfil-card-new';
+    msg.textContent = '🔒 Conecta com o Google pra usar Perfis';
+    msg.addEventListener('click', () => { openOverlayExclusive(accountsOverlay); updateAccountsUI(); });
+    listEl.appendChild(msg);
+    return;
+  }
   listEl.className = 'perfis-grid';
   listEl.innerHTML = '';
   getAllProfiles().forEach((profile) => {
@@ -4132,6 +4145,7 @@ document.querySelectorAll('.account-tab-btn').forEach(btn => {
 function updateAccountsUI() {
   renderPremiumLock();
   revalidatePremiumIfNeeded();
+  if (typeof renderPerfis === 'function') renderPerfis();
   const googleOn = !!accessToken;
   document.getElementById('google-status-dot').classList.toggle('on', googleOn);
   document.getElementById('google-status-text').textContent = googleOn ? 'Conectado' : 'Desconectado';
@@ -9382,6 +9396,35 @@ function renderAlarmsList() {
     alarmsListEl.appendChild(row);
 
     if (!expanded) return;
+
+    const profileRow = document.createElement('div');
+    profileRow.style.cssText = 'display:flex; align-items:center; gap:8px; margin:4px 0 10px;';
+    const profileLabel = document.createElement('span');
+    profileLabel.style.cssText = 'font-size:0.78rem; color:var(--c-text-dim); flex-shrink:0;';
+    profileLabel.textContent = 'Perfil:';
+    const profileSelect = document.createElement('select');
+    profileSelect.style.cssText = 'flex:1; background:var(--c-bg); border:1px solid var(--c-border2); color:var(--c-text); border-radius:8px; padding:6px 8px; font-size:0.82rem;';
+    const noneOpt = document.createElement('option');
+    noneOpt.value = '';
+    noneOpt.textContent = 'Escolher manualmente';
+    profileSelect.appendChild(noneOpt);
+    getAllProfiles().forEach((p) => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.icon} ${p.label}`;
+      if (alarm.profileId === p.id) opt.selected = true;
+      profileSelect.appendChild(opt);
+    });
+    profileSelect.addEventListener('change', () => {
+      const profile = getAllProfiles().find((p) => p.id === profileSelect.value);
+      alarm.profileId = profileSelect.value || null;
+      alarm.features = profile ? [...profile.keys] : alarm.features;
+      saveState();
+      renderAlarmsList();
+    });
+    profileRow.appendChild(profileLabel);
+    profileRow.appendChild(profileSelect);
+    alarmsListEl.appendChild(profileRow);
 
     const tagWrap = document.createElement('div');
     tagWrap.className = 'btn-group';
