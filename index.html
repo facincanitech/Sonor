@@ -2355,16 +2355,27 @@ function renderPerfis() {
     card.appendChild(top);
 
     const isActive = state.activeProfileId === profile.id;
-    const activateBtn = document.createElement('button');
-    activateBtn.type = 'button';
-    activateBtn.className = 'perfil-card-activate';
-    activateBtn.textContent = isActive ? 'Desativar' : 'Ativar';
-    activateBtn.style.cssText = `background:${isActive ? 'var(--c-teal)' : 'var(--c-surface-hover)'}; color:${isActive ? '#fff' : 'var(--c-text)'};`;
-    activateBtn.addEventListener('click', () => {
-      if (isActive) deactivateProfile();
-      else applyProfile(profile.id);
+    const activateRow = document.createElement('div');
+    activateRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between;';
+    const activateLabel = document.createElement('span');
+    activateLabel.style.cssText = 'font-size:0.8rem; color:var(--c-text-dim);';
+    activateLabel.textContent = isActive ? 'Ativo' : 'Ativar';
+    const activateSwitch = document.createElement('label');
+    activateSwitch.className = 'switch';
+    const activateCheckbox = document.createElement('input');
+    activateCheckbox.type = 'checkbox';
+    activateCheckbox.checked = isActive;
+    activateCheckbox.addEventListener('change', () => {
+      if (activateCheckbox.checked) applyProfile(profile.id);
+      else deactivateProfile();
     });
-    card.appendChild(activateBtn);
+    const activateSlider = document.createElement('span');
+    activateSlider.className = 'slider';
+    activateSwitch.appendChild(activateCheckbox);
+    activateSwitch.appendChild(activateSlider);
+    activateRow.appendChild(activateLabel);
+    activateRow.appendChild(activateSwitch);
+    card.appendChild(activateRow);
 
     listEl.appendChild(card);
   });
