@@ -1,6 +1,6 @@
 {
   "appId": "com.facincanitech.sonorhub",
-  "appName": "SonorHub",
+  "appName": "Sonor",
   "webDir": "www",
   "plugins": {
     "SocialLogin": {

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">SonorHub</string>
-    <string name="title_activity_main">SonorHub</string>
+    <string name="app_name">Sonor</string>
+    <string name="title_activity_main">Sonor</string>
     <string name="package_name">com.facincanitech.sonorhub</string>
     <string name="custom_url_scheme">com.facincanitech.sonorhub</string>
 </resources>

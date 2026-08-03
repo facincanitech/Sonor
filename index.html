@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>SonorHub, Seu dia em voz alta</title>
+<title>Sonor, Seu dia em voz alta</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔊</text></svg>">
 <link rel="manifest" href="manifest.json">
 <style>
@@ -224,7 +224,7 @@
   .alarm-item {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     padding: 10px 12px; border: 1px solid var(--c-border2); border-radius: 10px;
-    margin-bottom: 8px; background: var(--c-surface);
+    margin-bottom: 8px; background: var(--c-surface); color: var(--c-text);
   }
   .alarm-item .time { font-size: 0.95rem; font-weight: 600; }
   .alarm-item button { background: var(--c-bg); color: var(--c-text-dim); width: 30px; height: 30px; border-radius: 50%; font-size: 0.85rem; padding: 0; }
@@ -622,7 +622,7 @@
     <div class="screen-header">
       <!-- Nome "SonorHub" saiu daqui, agora mora na barra de topo -->
       <div style="flex:1; min-width:0; display:none;">
-        <h1>🔊 SonorHub</h1>
+        <h1>🔊 Sonor</h1>
       </div>
       <div class="header-actions" style="position: relative;">
         <button class="icon-btn" id="saved-header-btn">💾</button>
@@ -733,7 +733,7 @@
     <div id="gratis-list-view">
       <div class="screen-header">
         <!-- Nome "SonorHub" saiu daqui também, já mora na barra de topo -->
-        <h1 style="display:none;">🔊 SonorHub</h1>
+        <h1 style="display:none;">🔊 Sonor</h1>
         <div class="header-actions" style="position: relative;">
           <button class="icon-btn" data-action="voice">🎤</button>
           <button class="icon-btn more-menu-btn">⋯</button>
@@ -1151,7 +1151,7 @@
       </button>
       <button class="topbar-btn" data-action="voice" title="Falar">🎤</button>
     </div>
-    <div class="topbar-brand">SonorHub</div>
+    <div class="topbar-brand">Sonor</div>
     <div class="topbar-group">
       <button class="topbar-btn transport" id="transport-prev-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M11 19V5l-8 7 8 7zm9 0V5l-8 7 8 7z"/></svg></button>
       <button class="topbar-btn transport transport-play" id="transport-play-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg></button>
@@ -1202,7 +1202,7 @@
     <div class="overlay-header">
       <button class="back-btn" id="download-share-back">←</button>
       <div style="flex:1; min-width:0;">
-        <div style="font-weight:700; font-size:1rem;">SonorHub <span id="dl-overlay-version" style="font-weight:400; font-size:0.75rem; color:var(--c-text-dim);"></span></div>
+        <div style="font-weight:700; font-size:1rem;">Sonor <span id="dl-overlay-version" style="font-weight:400; font-size:0.75rem; color:var(--c-text-dim);"></span></div>
         <div style="font-size:0.72rem; color:var(--c-text-dim); margin-top:2px;">Briefings · Música · Rádio · Seu dia completo em áudio.</div>
       </div>
     </div>
@@ -1318,7 +1318,7 @@
     <div class="account-card">
       <div class="title" style="font-weight:600; margin-bottom: 8px;">🔊 Sobre as vozes</div>
       <div class="scope-list">
-        O SonorHub usa o sistema de voz do próprio aparelho, cada dispositivo tem o
+        O Sonor usa o sistema de voz do próprio aparelho, cada dispositivo tem o
         seu próprio conjunto de vozes instaladas, então a lista (e a qualidade) muda
         de celular pra celular e de navegador pra navegador.<br><br>
         No <b>celular</b>, o navegador <b>Edge</b> pode falhar e nem mostrar nenhuma
@@ -1365,10 +1365,10 @@
       <div class="scope-list">
         <b>Última atualização: junho de 2026</b><br><br>
 
-        <b>Resumo direto:</b> o SonorHub não tem servidor próprio guardando seus dados
+        <b>Resumo direto:</b> o Sonor não tem servidor próprio guardando seus dados
         pessoais. Suas configurações, histórico e itens salvos ficam só no seu
         celular/navegador (armazenamento local). Contas externas (Google, Microsoft,
-        Mercado Livre) você conecta diretamente com cada serviço — o SonorHub nunca vê
+        Mercado Livre) você conecta diretamente com cada serviço — o Sonor nunca vê
         nem guarda sua senha, e só usa o acesso concedido pra ler e falar a informação
         que você pediu pra ativar.<br><br>
 
@@ -1396,7 +1396,7 @@
         quando você conecta essa conta.<br><br>
 
         💳 <b>Pagamento (Mercado Pago)</b>: o processamento da assinatura Premium é
-        feito inteiramente pelo Mercado Pago — o SonorHub não vê nem guarda número de
+        feito inteiramente pelo Mercado Pago — o Sonor não vê nem guarda número de
         cartão nenhum.<br><br>
 
         ⚙️ <b>Configurações, histórico e itens salvos</b>: tudo isso (categorias
@@ -1485,12 +1485,12 @@
   <div class="overlay-inner">
     <div class="overlay-header">
       <button class="back-btn" id="help-close-btn">←</button>
-      <h2>Como usar o SonorHub</h2>
+      <h2>Como usar o Sonor</h2>
     </div>
 
     <div class="account-card" style="margin-bottom: 14px;">
       <div class="scope-list">
-        🧪 O SonorHub está em <b>beta aberto</b>, algumas coisas podem mudar ou dar erro
+        🧪 O Sonor está em <b>beta aberto</b>, algumas coisas podem mudar ou dar erro
         enquanto a gente ajusta. Qualquer problema, é só avisar.
       </div>
     </div>
@@ -1681,7 +1681,7 @@
           continua disponível pro play manual). Isso por si só não faz nada ainda: você
           precisa <b>ativar</b> o toggle "Briefing automático" pra ligar o cronômetro
           que de fato dispara nesses horários.<br><br>
-          Quando um horário chega: se a aba do SonorHub já estiver aberta e em foco,
+          Quando um horário chega: se a aba do Sonor já estiver aberta e em foco,
           ele toca <b>direto</b>, sem precisar de nada. Se estiver minimizada ou em
           segundo plano, ele manda uma <b>notificação</b>, toca nela pra abrir o app
           e já tentar dar o play sozinho.<br><br>
@@ -1692,12 +1692,12 @@
           Se você está usando o <b>app instalado</b> (não pelo navegador), o alarme é
           de verdade: dispara mesmo com o app fechado, igual um despertador — com a tela
           bloqueada ele abre sozinho e fala tudo; usando outro app, fala um aviso curto
-          sem abrir nada; e com o SonorHub já aberto, fala o briefing completo na hora.<br><br>
+          sem abrir nada; e com o Sonor já aberto, fala o briefing completo na hora.<br><br>
           Pelo <b>navegador</b> (PC ou celular sem instalar o app), funciona bem no PC
           (o navegador continua rodando minimizado). No celular pelo navegador, depende
           do aparelho: se o Android suspender a aba em segundo plano pra economizar
           bateria, o alarme pode atrasar ou não disparar até você abrir o app de novo —
-          nesse caso, <b>precisa de uma aba do SonorHub aberta</b>, fechando o navegador
+          nesse caso, <b>precisa de uma aba do Sonor aberta</b>, fechando o navegador
           por completo, os alarmes param.<br><br>
           <b>Deu "Permissão de notificação negada"?</b> Isso normalmente significa que o
           navegador já tinha negado notificação pra esse site antes (de propósito ou não),
@@ -7500,7 +7500,7 @@ document.getElementById('player-ctrl-share').addEventListener('click', async () 
   if (playerActiveTab === 'radio') {
     if (!playerCurrentRadioObj) return;
     const url = playerCurrentRadioObj.url_resolved || playerCurrentRadioObj.url;
-    const attribution = `📲 Compartilhado usando o app SonorHub — ${APP_DOWNLOAD_LINK}`;
+    const attribution = `📲 Compartilhado usando o app Sonor — ${APP_DOWNLOAD_LINK}`;
     text = [attribution, `📻 ${playerCurrentRadioObj.name || playerCurrentRadioObj.nome}`].join('\n\n');
     link = url;
   } else {
@@ -7510,7 +7510,7 @@ document.getElementById('player-ctrl-share').addEventListener('click', async () 
     // app instalado e o App Link verificado (assetlinks.json), abre o
     // SonorHub direto em vez do navegador.
     link = `https://facincanitech.github.io/SonorHub/?play=${playerCurrentVideoObj.videoId}`;
-    const attribution = `📲 Compartilhado usando o app SonorHub — ${APP_DOWNLOAD_LINK}`;
+    const attribution = `📲 Compartilhado usando o app Sonor — ${APP_DOWNLOAD_LINK}`;
     text = [attribution, `${playerCurrentVideoObj.title} — ${playerCurrentVideoObj.channelTitle}`].join('\n\n');
   }
   if (nativeShare) {
@@ -7548,7 +7548,7 @@ function buildItemActionsRow(category, sub, text, title, showSave, link) {
 
   // Assinatura do app fica no topo, com um link real pra baixar o SonorHub —
   // tanto compartilhar quanto copiar usam esse texto, não só o título.
-  const attribution = `📲 Compartilhado usando o app SonorHub — ${APP_DOWNLOAD_LINK}`;
+  const attribution = `📲 Compartilhado usando o app Sonor — ${APP_DOWNLOAD_LINK}`;
   // Quando tem nativeShare, o link do item (notícia/vídeo) vai separado no
   // campo "url" — o plugin já concatena ele no texto, então NÃO repete aqui
   // dentro (era isso que duplicava o link no compartilhamento).
@@ -7652,7 +7652,7 @@ function renderHistory(currentIndex) {
       linkEl.rel = 'noopener noreferrer';
       linkEl.className = 'history-link';
       linkEl.textContent = '🎵 Ouvir completo no YouTube Music';
-      linkEl.title = 'Abre o app do YouTube Music (ou o site, se não tiver instalado) — o trecho aqui no SonorHub é só uma prévia.';
+      linkEl.title = 'Abre o app do YouTube Music (ou o site, se não tiver instalado) — o trecho aqui no Sonor é só uma prévia.';
       div.appendChild(linkEl);
     } else if (item.link) {
       const linkEl = document.createElement('a');
@@ -9232,7 +9232,7 @@ async function scheduleAllAlarmsNative() {
     await nativeAlarm.schedule({ times: state.alarmTimes.map((a) => a.time) });
   } catch (e) {
     console.error('BriefingAlarm.schedule:', e);
-    alert('Não foi possível agendar o briefing automático: ' + (e.message || 'permissão de alarme exato pode ter sido revogada, confere em Configurações > Apps > SonorHub > Alarmes e lembretes.'));
+    alert('Não foi possível agendar o briefing automático: ' + (e.message || 'permissão de alarme exato pode ter sido revogada, confere em Configurações > Apps > Sonor > Alarmes e lembretes.'));
   }
 }
 
@@ -9274,7 +9274,7 @@ function scheduleAlarm(time) {
       } else {
         try {
           const reg = await navigator.serviceWorker.ready;
-          reg.showNotification('SonorHub, Meu Dia', {
+          reg.showNotification('Sonor, Meu Dia', {
             body: `Seu briefing das ${time} está pronto. Toca aqui pra ouvir.`,
             icon: 'icon.svg',
             tag: 'infohub-briefing-' + time,
@@ -9384,7 +9384,7 @@ async function checkAlarmPermissions() {
     try {
       const { granted } = await nativeAlarm.checkExactAlarmPermission();
       if (!granted) {
-        alert('Pra funcionar de verdade, o SonorHub precisa de permissão de "Alarmes e lembretes" no Android. Vai abrir a tela de configuração — procura o SonorHub e libera, depois volta aqui e adiciona o horário de novo.');
+        alert('Pra funcionar de verdade, o Sonor precisa de permissão de "Alarmes e lembretes" no Android. Vai abrir a tela de configuração — procura o Sonor e libera, depois volta aqui e adiciona o horário de novo.');
         await nativeAlarm.openExactAlarmSettings();
         return false;
       }
@@ -9458,7 +9458,7 @@ document.getElementById('dl-pwa-btn').addEventListener('click', async () => {
 document.getElementById('dl-share-btn').addEventListener('click', () => {
   const url = 'https://facincanitech.github.io/SonorHub/';
   if (navigator.share) {
-    navigator.share({ title: 'SonorHub', text: 'Seu dia completo em áudio — Briefings, Música, Rádio e mais.', url });
+    navigator.share({ title: 'Sonor', text: 'Seu dia completo em áudio — Briefings, Música, Rádio e mais.', url });
   } else {
     navigator.clipboard.writeText(url).then(() => {
       const btn = document.getElementById('dl-share-btn');
@@ -9773,7 +9773,7 @@ const VOICE_QA = [
   },
   {
     triggers: ['qual seu nome', 'qual é seu nome', 'qual o seu nome', 'você tem nome', 'como você se chama', 'seu nome é'],
-    response: 'Eu sou o assistente de voz do SonorHub. Pode me chamar assim mesmo.',
+    response: 'Eu sou o assistente de voz do Sonor. Pode me chamar assim mesmo.',
   },
   {
     triggers: [
