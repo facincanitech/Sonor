@@ -171,7 +171,7 @@
   }
   /* Play/Prev/Next e o mic saíram da tela Meu Dia — o play do menu lateral
      assumiu as duas funções (ir pro Meu Dia + tocar o briefing). */
-  .play-controls, .progress-bar { display: none; }
+  .progress-bar { display: none; }
   #mic-badge-btn { display: none; }
   /* Meu Dia é sempre o círculo teal, ativo ou não — sem isso o .active
      genérico ganhava dele quando essa aba tava selecionada. */
@@ -398,7 +398,7 @@
   .briefing-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 16px; }
   #briefing-label { font-size: 1.05rem; min-height: 1.4em; text-align: center; margin-bottom: 6px; color: var(--c-text); }
   #briefing-sub { font-size: 0.8rem; color: var(--c-text-dim); min-height: 1.2em; margin-bottom: 24px; text-align: center; }
-  .play-controls { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+  .play-controls { display: none; align-items: center; gap: 16px; margin-bottom: 22px; }
   .play-wrap { position: relative; width: 130px; height: 130px; }
   .play-ring {
     position: absolute; inset: -10px; border-radius: 50%; border: 2px solid rgba(52,168,83,0.45);
@@ -4421,7 +4421,7 @@ async function fetchOutlookEmailItems(quantidade) {
 }
 
 async function fetchEmailItems(contas, quantidadeStr) {
-  const selected = contas && contas.length ? contas : ['Google', 'Hotmail'];
+  const selected = contas || [];
   const quantidade = parseInt(quantidadeStr, 10) || 5;
   let all = [];
   if (selected.includes('Google')) all = all.concat(await fetchGmailEmailItems(quantidade));
