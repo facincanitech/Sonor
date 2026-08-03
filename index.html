@@ -211,10 +211,14 @@
   .perfil-card-label { flex: 1; font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .perfil-card-del { background: none; padding: 0; font-size: 0.9rem; color: var(--c-text-faint); flex-shrink: 0; }
   .perfil-card-activate { width: 100%; padding: 6px; font-size: 0.8rem; border-radius: 8px; }
+  .perfil-popup-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 120;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
   .perfil-popup {
-    position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; z-index: 20;
-    background: var(--c-surface-hover); border: 1px solid var(--c-border2); border-radius: 10px;
-    padding: 10px 12px; font-size: 0.78rem; color: var(--c-text); box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    width: 100%; max-width: 340px; max-height: 70vh; overflow-y: auto;
+    background: var(--c-surface-hover); border: 1px solid var(--c-border2); border-radius: 14px;
+    padding: 18px 20px; font-size: 0.95rem; color: var(--c-text); box-shadow: 0 8px 28px rgba(0,0,0,0.4);
   }
   .perfil-card-new {
     grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -2279,22 +2283,26 @@ function getFeatureLabel(key) {
 }
 
 function closeAllPerfilPopups() {
-  document.querySelectorAll('.perfil-popup').forEach((p) => p.remove());
+  document.querySelectorAll('.perfil-popup-backdrop').forEach((p) => p.remove());
 }
-document.addEventListener('click', closeAllPerfilPopups);
 
 function togglePerfilPopup(card, profile) {
-  const existing = card.querySelector('.perfil-popup');
+  const alreadyOpenForThis = document.querySelector(`.perfil-popup-backdrop[data-profile-id="${profile.id}"]`);
   closeAllPerfilPopups();
-  if (existing) return; // já tava aberto nesse card, só fecha (clique de novo)
+  if (alreadyOpenForThis) return; // já tava aberto pra esse perfil, só fecha (clique de novo)
+  const backdrop = document.createElement('div');
+  backdrop.className = 'perfil-popup-backdrop';
+  backdrop.dataset.profileId = profile.id;
+  backdrop.addEventListener('click', closeAllPerfilPopups);
   const popup = document.createElement('div');
   popup.className = 'perfil-popup';
   popup.addEventListener('click', (ev) => ev.stopPropagation());
-  popup.innerHTML = `<div style="font-weight:700; margin-bottom:6px;">Briefings selecionados</div>` +
+  popup.innerHTML = `<div style="font-weight:700; font-size:1.05rem; margin-bottom:12px;">${profile.icon} ${profile.label} — Briefings selecionados</div>` +
     (profile.keys.length
-      ? profile.keys.map((k) => `<div style="padding:3px 0;">${getFeatureLabel(k)}</div>`).join('')
+      ? profile.keys.map((k) => `<div style="padding:6px 0; border-bottom:1px solid var(--c-border);">${getFeatureLabel(k)}</div>`).join('')
       : `<div class="hint">Nenhum ainda.</div>`);
-  card.appendChild(popup);
+  backdrop.appendChild(popup);
+  document.body.appendChild(backdrop);
 }
 
 let perfilDrag = null; // { id, startY }
