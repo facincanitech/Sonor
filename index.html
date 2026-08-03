@@ -704,10 +704,7 @@
     <div class="briefing-wrap">
       <div id="briefing-label">Configure suas categorias na aba Guia</div>
       <div id="briefing-sub"></div>
-      <div class="sos-mic-row">
-        <button class="icon-btn" id="sos-badge-btn" style="color: var(--c-red, #e53935);">🆘</button>
-        <button class="icon-btn" id="mic-badge-btn">🎤</button>
-      </div>
+      <button class="icon-btn" id="mic-badge-btn" style="display:none;">🎤</button>
       <div class="play-controls">
         <button class="skip-btn" id="prev-btn">⏮</button>
         <div class="play-wrap" id="play-wrap">
@@ -722,6 +719,11 @@
       <div id="meudia-weather-widget" style="display:none; align-items:center; gap:8px; background:var(--c-surface); border-radius:10px; padding:8px 12px; margin:14px auto 0; max-width:260px; font-size:0.85rem; color:var(--c-text-dim); justify-content:center;">
         <span id="meudia-weather-icon">☁️</span>
         <span id="meudia-weather-text"></span>
+      </div>
+
+      <div id="perfis-section" style="margin-top:18px;">
+        <div style="font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--c-text-dim); margin-bottom:8px;">Perfis</div>
+        <div id="perfis-list"></div>
       </div>
 
       <div id="history-list" class="history-list"></div>
@@ -1179,6 +1181,9 @@
     </button>
     <button class="sidebar-btn" id="sidebar-ebook-btn">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1-4-1.5-8-1v13c4-.5 6.5 0 8 1 1.5-1 4-1.5 8-1V5c-4-.5-6.5 0-8 1z"/><path d="M12 6v13"/></svg>
+    </button>
+    <button class="sidebar-btn" id="sos-badge-btn" style="touch-action:none; color:var(--c-red);">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.9" fill="currentColor" stroke="none"/></svg>
     </button>
     <div class="sidebar-spacer"></div>
     <button class="sidebar-btn" id="sidebar-conta-btn">
@@ -2074,6 +2079,9 @@ function loadState() {
     }),
     alarmLastFired: saved.alarmLastFired || {},
     savedItems: saved.savedItems || [], // itens do briefing salvos manualmente pelo botão 💾
+    customProfiles: saved.customProfiles || [], // perfis criados pelo usuário: { id, icon, label, keys }
+    profileOrder: saved.profileOrder || null, // ordem de exibição (ids) — null = ordem padrão dos presets + customs
+    activeProfileId: saved.activeProfileId || null,
   };
 }
 
@@ -2105,6 +2113,141 @@ function getFeatureState(catId, featId) {
   if (!state.features[key]) state.features[key] = { enabled: false, fields: {} };
   return state.features[key];
 }
+
+/* =========================================================================
+   PERFIS — preenchimento rápido do Guia (etapa 1: só liga/desliga features,
+   não mexe em Briefing Automático ainda). Aplicar um perfil é "cópia", não
+   vínculo vivo: desliga tudo, liga só as chaves do perfil. Dá pra ligar
+   coisa extra por cima depois, mas isso não fica salvo no perfil — só some
+   quando você aplicar de novo (do jeito, ou outro).
+   ========================================================================= */
+const PROFILE_PRESETS = [
+  { id: 'executivo', icon: '👔', label: 'Executivo', keys: ['pessoal.email', 'pessoal.agenda', 'clima.previsao', 'noticias.keyword', 'noticias.cotacoes', 'noticias.indices'] },
+  { id: 'estudante', icon: '🎓', label: 'Estudante', keys: ['pessoal.lembretes', 'pessoal.agenda', 'clima.previsao', 'noticias.keyword'] },
+  { id: 'gamer', icon: '🎮', label: 'Gamer', keys: ['entretenimento.jogos', 'entretenimento.filmes', 'entretenimento.series', 'clima.previsao'] },
+  { id: 'familia', icon: '👨‍👩‍👧', label: 'Família', keys: ['pessoal.aniversarios', 'pessoal.feriados', 'clima.previsao', 'clima.alertas', 'noticias.keyword'] },
+];
+
+function getAllProfiles() {
+  const all = [...PROFILE_PRESETS, ...state.customProfiles];
+  if (!state.profileOrder) return all;
+  const byId = new Map(all.map((p) => [p.id, p]));
+  const ordered = state.profileOrder.map((id) => byId.get(id)).filter(Boolean);
+  all.forEach((p) => { if (!ordered.includes(p)) ordered.push(p); }); // novo perfil que ainda não tá na ordem salva
+  return ordered;
+}
+
+function applyProfile(profileId) {
+  const profile = getAllProfiles().find((p) => p.id === profileId);
+  if (!profile) return;
+  Object.keys(state.features).forEach((key) => { state.features[key].enabled = false; });
+  profile.keys.forEach((key) => { getFeatureState(...key.split('.')).enabled = true; });
+  state.activeProfileId = profileId;
+  saveState();
+  renderPerfis();
+  if (typeof renderCategoryCards === 'function') renderCategoryCards();
+}
+
+function createProfileFromCurrent() {
+  const nome = prompt('Nome do novo perfil:');
+  if (!nome || !nome.trim()) return;
+  const keys = Object.keys(state.features).filter((k) => state.features[k].enabled);
+  if (!keys.length) { alert('Liga alguma coisa no Guia antes de salvar como perfil.'); return; }
+  const id = 'custom_' + Date.now();
+  state.customProfiles.push({ id, icon: '⭐', label: nome.trim(), keys });
+  if (state.profileOrder) state.profileOrder.push(id);
+  state.activeProfileId = id;
+  saveState();
+  renderPerfis();
+}
+
+function deleteCustomProfile(id) {
+  state.customProfiles = state.customProfiles.filter((p) => p.id !== id);
+  if (state.profileOrder) state.profileOrder = state.profileOrder.filter((pid) => pid !== id);
+  if (state.activeProfileId === id) state.activeProfileId = null;
+  saveState();
+  renderPerfis();
+}
+
+let perfilDrag = null; // { id, startY, row }
+function renderPerfis() {
+  const listEl = document.getElementById('perfis-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  getAllProfiles().forEach((profile) => {
+    const isCustom = profile.id.startsWith('custom_');
+    const row = document.createElement('div');
+    row.className = 'alarm-item';
+    row.dataset.profileId = profile.id;
+    row.style.cssText = 'gap:10px;';
+
+    const grip = document.createElement('span');
+    grip.textContent = '☰';
+    grip.style.cssText = 'cursor:grab; color:var(--c-text-faint); flex-shrink:0; touch-action:none;';
+    grip.addEventListener('pointerdown', (ev) => {
+      perfilDrag = { id: profile.id, startY: ev.clientY, row };
+      row.style.opacity = '0.6';
+    });
+
+    const label = document.createElement('span');
+    label.style.cssText = 'flex:1; font-weight:600;';
+    label.textContent = `${profile.icon} ${profile.label}`;
+
+    const activateBtn = document.createElement('button');
+    activateBtn.type = 'button';
+    const isActive = state.activeProfileId === profile.id;
+    activateBtn.textContent = isActive ? 'Ativo' : 'Ativar';
+    activateBtn.style.cssText = `flex-shrink:0; padding:6px 14px; font-size:0.82rem; background:${isActive ? 'var(--c-teal)' : 'var(--c-surface-hover)'}; color:${isActive ? '#fff' : 'var(--c-text)'};`;
+    activateBtn.addEventListener('click', () => applyProfile(profile.id));
+
+    row.appendChild(grip);
+    row.appendChild(label);
+    row.appendChild(activateBtn);
+
+    if (isCustom) {
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.textContent = '✕';
+      delBtn.style.flexShrink = '0';
+      delBtn.addEventListener('click', () => deleteCustomProfile(profile.id));
+      row.appendChild(delBtn);
+    }
+    listEl.appendChild(row);
+  });
+
+  const addRow = document.createElement('button');
+  addRow.type = 'button';
+  addRow.className = 'alarm-item';
+  addRow.style.cssText = 'width:100%; justify-content:center; color:var(--c-teal); font-weight:700;';
+  addRow.textContent = '➕ Novo Perfil';
+  addRow.addEventListener('click', createProfileFromCurrent);
+  listEl.appendChild(addRow);
+}
+
+document.addEventListener('pointermove', (ev) => {
+  if (!perfilDrag) return;
+  const listEl = document.getElementById('perfis-list');
+  const rows = [...listEl.querySelectorAll('[data-profile-id]')];
+  const draggedIdx = rows.findIndex((r) => r.dataset.profileId === perfilDrag.id);
+  const target = rows.find((r) => {
+    if (r.dataset.profileId === perfilDrag.id) return false;
+    const rect = r.getBoundingClientRect();
+    return ev.clientY >= rect.top && ev.clientY <= rect.bottom;
+  });
+  if (!target) return;
+  const targetIdx = rows.findIndex((r) => r === target);
+  if (targetIdx === draggedIdx) return;
+  const order = getAllProfiles().map((p) => p.id);
+  const [moved] = order.splice(draggedIdx, 1);
+  order.splice(targetIdx, 0, moved);
+  state.profileOrder = order;
+  renderPerfis();
+});
+document.addEventListener('pointerup', () => {
+  if (!perfilDrag) return;
+  perfilDrag = null;
+  saveState();
+});
 
 /* =========================================================================
    RENDER, TELA CONFIGURAR (lista de cards + tela de detalhe)
@@ -9303,6 +9446,7 @@ function updateAlarmsTileStatus() {
 
 renderAlarmsList();
 updateAlarmsTileStatus();
+renderPerfis();
 
 // Widget rápido de clima no Meu Dia (pego de outro app do dev, o Cronos) —
 // só aparece se a cidade já estiver configurada em Clima na aba Guia,
