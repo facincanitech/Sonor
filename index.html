@@ -896,6 +896,7 @@
 
       <div id="premium-screen-drive-backup" style="display:none;">
         <div class="desc">Escolhe as fotos/vídeos do celular e o app envia direto pro seu Google Drive, numa pasta "SonorHub Backup". Precisa estar com o Google conectado em 👤 Minha Conta.</div>
+        <div class="hint" id="drive-backup-autosync-status" style="margin-bottom:10px;"></div>
         <input type="file" id="drive-backup-input" accept="image/*,video/*" multiple style="display:none;">
         <button id="drive-backup-btn">Escolher fotos/vídeos</button>
         <button id="drive-view-btn" style="margin-top: 8px; background: var(--c-surface); color: var(--c-text);">📂 Ver/gerenciar o que já tá salvo</button>
@@ -9119,6 +9120,7 @@ function openPremiumScreen(featureId) {
     abSwitchTab('lib');
     renderAudiobookShelf('');
   }
+  if (featureId === 'drive-backup' && typeof autoSyncRecentPhotos === 'function') autoSyncRecentPhotos();
 }
 
 document.querySelectorAll('.premium-nav-btn[data-premium-screen]').forEach((btn) => {
@@ -9173,6 +9175,59 @@ document.getElementById('drive-backup-btn').addEventListener('click', () => {
   }
   document.getElementById('drive-backup-input').click();
 });
+
+/* ── Sincronização automática das últimas fotos (plugin nativo PhotoSync) ──
+   Só funciona no app instalado (Android) — no navegador não tem como ler a
+   galeria do celular, então esse bloco todo vira no-op silencioso lá.
+   Roda quando o usuário abre a tela "Salvar fotos na nuvem" (não é um
+   serviço de segundo plano de verdade, precisaria de WorkManager). Guarda
+   os IDs (do MediaStore) já enviados no localStorage pra nunca repetir. ─── */
+const nativePhotoSync = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PhotoSync;
+
+function getSyncedPhotoIds() {
+  try { return JSON.parse(localStorage.getItem('infohub_photosync_ids') || '[]'); } catch { return []; }
+}
+function markPhotoSynced(id) {
+  const ids = getSyncedPhotoIds();
+  ids.push(id);
+  localStorage.setItem('infohub_photosync_ids', JSON.stringify(ids.slice(-200))); // não cresce pra sempre
+}
+function base64ToBlob(base64, mimeType) {
+  const bytes = atob(base64);
+  const arr = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  return new Blob([arr], { type: mimeType });
+}
+
+async function autoSyncRecentPhotos() {
+  const statusEl = document.getElementById('drive-backup-autosync-status');
+  if (!nativePhotoSync) { if (statusEl) statusEl.textContent = ''; return; }
+  if (!accessToken) { if (statusEl) statusEl.textContent = 'Conecte sua conta Google pra sincronizar automaticamente.'; return; }
+  try {
+    const { photos } = await nativePhotoSync.getRecentPhotos({ limit: 10 });
+    const synced = getSyncedPhotoIds();
+    const novas = (photos || []).filter((p) => !synced.includes(p.id));
+    if (novas.length === 0) { if (statusEl) statusEl.textContent = 'Tudo sincronizado — nenhuma foto nova.'; return; }
+    const folderId = await ensureDriveBackupFolder();
+    let ok = 0;
+    for (const p of novas) {
+      if (statusEl) statusEl.textContent = `Sincronizando ${ok + 1} de ${novas.length}...`;
+      try {
+        const blob = base64ToBlob(p.base64, p.mimeType);
+        blob.name = p.name; // uploadFileToDrive espera .name (igual um File)
+        await uploadFileToDrive(blob, folderId);
+        markPhotoSynced(p.id);
+        ok++;
+      } catch (e) {
+        console.error('autosync foto:', p.name, e);
+      }
+    }
+    if (statusEl) statusEl.textContent = `${ok} foto${ok === 1 ? '' : 's'} nova${ok === 1 ? '' : 's'} sincronizada${ok === 1 ? '' : 's'} automaticamente.`;
+  } catch (e) {
+    console.error('autoSyncRecentPhotos:', e);
+    if (statusEl) statusEl.textContent = 'Erro ao sincronizar automaticamente: ' + e.message;
+  }
+}
 
 document.getElementById('drive-backup-input').addEventListener('change', async (ev) => {
   const files = Array.from(ev.target.files || []);

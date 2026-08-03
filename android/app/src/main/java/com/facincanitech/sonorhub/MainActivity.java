@@ -35,6 +35,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
         registerPlugin(BriefingAlarmPlugin.class);
         registerPlugin(SmsPlugin.class);
         registerPlugin(PlayerPipPlugin.class);
+        registerPlugin(PhotoSyncPlugin.class);
         super.onCreate(savedInstanceState);
         // Registrado aqui (e só desfeito em onDestroy) em vez de onStart/onStop:
         // os botões da notificação (visíveis na tela de bloqueio) precisam

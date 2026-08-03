@@ -93,4 +93,11 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- Salvar fotos na nuvem (Premium): lê as fotos recentes da galeria pra
+         comparar com o que já subiu pro Drive. READ_MEDIA_IMAGES é a
+         permissão nova (Android 13+, API 33); READ_EXTERNAL_STORAGE cobre
+         versões anteriores (maxSdkVersion evita pedir ela à toa no 13+). -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 </manifest>
