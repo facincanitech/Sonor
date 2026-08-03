@@ -199,6 +199,22 @@
 
   /* ===== Meu Dia: tiles bento (Customização / Briefing automático) ===== */
   .md-settings-bento { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
+  .perfis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .perfil-card {
+    background: linear-gradient(155deg, var(--c-surface-alt), var(--c-surface));
+    border: 1px solid var(--c-border2); border-left: 3px solid var(--c-teal);
+    border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .perfil-card-top { display: flex; align-items: center; gap: 6px; }
+  .perfil-card-grip { cursor: grab; color: var(--c-text-faint); touch-action: none; flex-shrink: 0; }
+  .perfil-card-label { flex: 1; font-weight: 600; font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .perfil-card-del { background: none; padding: 0; font-size: 0.9rem; color: var(--c-text-faint); flex-shrink: 0; }
+  .perfil-card-activate { width: 100%; padding: 6px; font-size: 0.8rem; border-radius: 8px; }
+  .perfil-card-new {
+    grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    color: var(--c-teal); font-weight: 700; border: 1.5px dashed var(--c-teal); border-radius: 14px;
+    padding: 14px; background: none;
+  }
   .md-bento-tile {
     background: linear-gradient(155deg, var(--c-surface-alt), var(--c-surface));
     border: 1px solid var(--c-border2); border-left: 3px solid var(--tile-color, var(--c-accent-blue));
@@ -2169,59 +2185,60 @@ function deleteCustomProfile(id) {
   renderPerfis();
 }
 
-let perfilDrag = null; // { id, startY, row }
+let perfilDrag = null; // { id, startY }
 function renderPerfis() {
   const listEl = document.getElementById('perfis-list');
   if (!listEl) return;
+  listEl.className = 'perfis-grid';
   listEl.innerHTML = '';
   getAllProfiles().forEach((profile) => {
     const isCustom = profile.id.startsWith('custom_');
-    const row = document.createElement('div');
-    row.className = 'alarm-item';
-    row.dataset.profileId = profile.id;
-    row.style.cssText = 'gap:10px;';
+    const card = document.createElement('div');
+    card.className = 'perfil-card';
+    card.dataset.profileId = profile.id;
 
+    const top = document.createElement('div');
+    top.className = 'perfil-card-top';
     const grip = document.createElement('span');
+    grip.className = 'perfil-card-grip';
     grip.textContent = '☰';
-    grip.style.cssText = 'cursor:grab; color:var(--c-text-faint); flex-shrink:0; touch-action:none;';
     grip.addEventListener('pointerdown', (ev) => {
-      perfilDrag = { id: profile.id, startY: ev.clientY, row };
-      row.style.opacity = '0.6';
+      perfilDrag = { id: profile.id, startY: ev.clientY };
+      card.style.opacity = '0.6';
     });
-
     const label = document.createElement('span');
-    label.style.cssText = 'flex:1; font-weight:600;';
+    label.className = 'perfil-card-label';
     label.textContent = `${profile.icon} ${profile.label}`;
-
-    const activateBtn = document.createElement('button');
-    activateBtn.type = 'button';
-    const isActive = state.activeProfileId === profile.id;
-    activateBtn.textContent = isActive ? 'Ativo' : 'Ativar';
-    activateBtn.style.cssText = `flex-shrink:0; padding:6px 14px; font-size:0.82rem; background:${isActive ? 'var(--c-teal)' : 'var(--c-surface-hover)'}; color:${isActive ? '#fff' : 'var(--c-text)'};`;
-    activateBtn.addEventListener('click', () => applyProfile(profile.id));
-
-    row.appendChild(grip);
-    row.appendChild(label);
-    row.appendChild(activateBtn);
-
+    top.appendChild(grip);
+    top.appendChild(label);
     if (isCustom) {
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
+      delBtn.className = 'perfil-card-del';
       delBtn.textContent = '✕';
-      delBtn.style.flexShrink = '0';
-      delBtn.addEventListener('click', () => deleteCustomProfile(profile.id));
-      row.appendChild(delBtn);
+      delBtn.addEventListener('click', (ev) => { ev.stopPropagation(); deleteCustomProfile(profile.id); });
+      top.appendChild(delBtn);
     }
-    listEl.appendChild(row);
+    card.appendChild(top);
+
+    const isActive = state.activeProfileId === profile.id;
+    const activateBtn = document.createElement('button');
+    activateBtn.type = 'button';
+    activateBtn.className = 'perfil-card-activate';
+    activateBtn.textContent = isActive ? 'Ativo' : 'Ativar';
+    activateBtn.style.cssText = `background:${isActive ? 'var(--c-teal)' : 'var(--c-surface-hover)'}; color:${isActive ? '#fff' : 'var(--c-text)'};`;
+    activateBtn.addEventListener('click', () => applyProfile(profile.id));
+    card.appendChild(activateBtn);
+
+    listEl.appendChild(card);
   });
 
-  const addRow = document.createElement('button');
-  addRow.type = 'button';
-  addRow.className = 'alarm-item';
-  addRow.style.cssText = 'width:100%; justify-content:center; color:var(--c-teal); font-weight:700;';
-  addRow.textContent = '➕ Novo Perfil';
-  addRow.addEventListener('click', createProfileFromCurrent);
-  listEl.appendChild(addRow);
+  const addCard = document.createElement('button');
+  addCard.type = 'button';
+  addCard.className = 'perfil-card-new';
+  addCard.textContent = '➕ Novo Perfil';
+  addCard.addEventListener('click', createProfileFromCurrent);
+  listEl.appendChild(addCard);
 }
 
 document.addEventListener('pointermove', (ev) => {
