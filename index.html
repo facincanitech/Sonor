@@ -459,7 +459,7 @@
     font-size: 0.78rem; padding: 0; margin-top: 10px;
   }
 
-  /* ===== Central de Contas (overlay) ===== */
+  /* ===== Minha Conta (overlay) ===== */
   .overlay { position: fixed; inset: 0; background: var(--c-bg); z-index: 100; display: none; overflow-y: auto; }
   .overlay.open { display: block; }
   .overlay-inner { max-width: 420px; margin: 0 auto; padding: 18px 16px 40px; }
@@ -827,7 +827,7 @@
       <button id="subscribe-btn">Assinar</button>
       <button id="check-subscription-btn" style="background: var(--c-surface); color: var(--c-text); margin-top: 10px; width: 100%; padding: 12px;">Já assinei, verificar</button>
       <div class="result" id="subscribe-result" style="text-align:center; margin-top: 8px;"></div>
-      <div class="premium-note">Pagamento via Mercado Pago. Conecte sua conta Google (⚙️ Central de Contas) antes, é assim que identificamos sua assinatura.</div>
+      <div class="premium-note">Pagamento via Mercado Pago. Conecte sua conta Google (👤 Minha Conta) antes, é assim que identificamos sua assinatura.</div>
     </div>
 
     <div id="premium-unlocked" style="display:none;">
@@ -877,7 +877,7 @@
       </div>
 
       <div id="premium-screen-drive-backup" style="display:none;">
-        <div class="desc">Escolhe as fotos/vídeos do celular e o app envia direto pro seu Google Drive, numa pasta "SonorHub Backup". Precisa estar com o Google conectado em ⚙️ Central de Contas.</div>
+        <div class="desc">Escolhe as fotos/vídeos do celular e o app envia direto pro seu Google Drive, numa pasta "SonorHub Backup". Precisa estar com o Google conectado em 👤 Minha Conta.</div>
         <input type="file" id="drive-backup-input" accept="image/*,video/*" multiple style="display:none;">
         <button id="drive-backup-btn">Escolher fotos/vídeos</button>
         <button id="drive-view-btn" style="margin-top: 8px; background: var(--c-surface); color: var(--c-text);">📂 Ver/gerenciar o que já tá salvo</button>
@@ -1173,7 +1173,7 @@
   <!-- ============ BARRA DE TOPO (toggle da gaveta, busca de rádio, transporte) ============ -->
   <div class="topbar">
     <div class="topbar-group">
-      <button class="topbar-btn" id="sidebar-toggle-btn" title="Menu">▤</button>
+      <button class="topbar-btn" id="sidebar-toggle-btn" title="Menu"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
       <button class="topbar-btn" id="topbar-radio-search-btn" title="Buscar rádio">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
@@ -1217,10 +1217,10 @@
       <span id="sidebar-weather-temp" style="font-size:0.62rem; color:var(--c-text-dim); font-weight:600;"></span>
     </button>
     <button class="sidebar-btn" id="sidebar-conta-btn">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
     </button>
     <button class="sidebar-btn" id="sidebar-sobre-btn">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
     </button>
     <button class="nav-btn sidebar-btn sidebar-star" data-tab="premium">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
@@ -1270,7 +1270,7 @@
   <div class="overlay-inner">
     <div class="overlay-header">
       <button class="back-btn" id="accounts-close-btn">←</button>
-      <h2>Central de Contas</h2>
+      <h2>Minha Conta</h2>
     </div>
 
     <div class="account-tabs" style="display:none;">
@@ -1329,7 +1329,7 @@
   </div>
 </div>
 
-<!-- ============ SOBRE (overlay próprio, separado da Central de Contas) ============ -->
+<!-- ============ SOBRE (overlay próprio, separado da Minha Conta) ============ -->
 <div class="overlay" id="sobre-overlay">
   <div class="overlay-inner">
     <div class="overlay-header">
@@ -1642,7 +1642,7 @@
         <div class="help-section-body">
           <b>👤 Pessoal</b><br>
           📧 <b>Últimos e-mails (resumo)</b>: escolhe Google e/ou Hotmail (conecta em
-          ⚙️ Central de Contas) e quantos e-mails ler, sempre os mais recentes de cada
+          👤 Minha Conta) e quantos e-mails ler, sempre os mais recentes de cada
           conta marcada.<br>
           📝 <b>Lembretes personalizados</b>: escreve o que quer lembrar e marca a
           data, sem precisar de conta nenhuma — fala uma vez, no dia marcado.<br>
@@ -1984,7 +1984,7 @@ const CATEGORY_DEFS = [
       { id: 'email', label: 'Últimos e-mails (resumo)', icon: '📧', fields: [
         { id: 'contas', kind: 'buttons', options: ['Google', 'Hotmail'], disabledOptions: OUTLOOK_CLIENT_ID ? [] : ['Hotmail'] },
         { id: 'quantidade', kind: 'dropdown', label: 'Quantidade de e-mails', options: ['5', '10', '15', '20'] },
-      ], hint: 'Sempre resumo, dos mais recentes de cada conta selecionada, conecta em ⚙️ Central de Contas' },
+      ], hint: 'Sempre resumo, dos mais recentes de cada conta selecionada, conecta em 👤 Minha Conta' },
       { id: 'lembretes', label: 'Lembretes personalizados', icon: '📝', fields: [
         { id: 'itens', kind: 'lembretes' },
       ], hint: 'Cada lembrete fala no dia marcado, dentro do seu briefing' },
@@ -1993,8 +1993,8 @@ const CATEGORY_DEFS = [
         { id: 'email', kind: 'text', placeholder: 'E-mail de contato' },
         { id: 'holdSeconds', kind: 'dropdown', label: 'Segurar quantos segundos pra disparar', options: ['1', '2', '3', '4', '5'] },
       ], hint: 'O ícone 🆘 fica na barra lateral: cinza enquanto não tiver telefone/e-mail configurado aqui, vermelho quando estiver pronto pra disparar. Toque nele abre essa tela de novo; segurar pelo tempo escolhido acima dispara de verdade.' },
-      { id: 'agenda', label: 'Agenda de hoje', icon: '📅', fields: [], hint: 'Conecta em ⚙️ Central de Contas' },
-      { id: 'aniversarios', label: 'Aniversários', icon: '🎂', fields: [], hint: 'Conecta em ⚙️ Central de Contas' },
+      { id: 'agenda', label: 'Agenda de hoje', icon: '📅', fields: [], hint: 'Conecta em 👤 Minha Conta' },
+      { id: 'aniversarios', label: 'Aniversários', icon: '🎂', fields: [], hint: 'Conecta em 👤 Minha Conta' },
       { id: 'feriados', label: 'Feriados próximos', icon: '🎉', fields: [] },
     ],
   },
@@ -2186,7 +2186,7 @@ function getAllProfiles() {
 }
 
 function applyProfile(profileId) {
-  if (!accessToken) { alert('Conecta com o Google em ⚙️ Central de Contas pra usar Perfis.'); return; }
+  if (!accessToken) { alert('Conecta com o Google em 👤 Minha Conta pra usar Perfis.'); return; }
   const profile = getAllProfiles().find((p) => p.id === profileId);
   if (!profile) return;
   Object.keys(state.features).forEach((key) => { state.features[key].enabled = false; });
@@ -2209,7 +2209,7 @@ function deactivateProfile() {
 // categoria (igual o Guia), ativa na hora (fica salvo de verdade no
 // Guia, não só dentro do perfil) e vira as chaves do perfil ao salvar.
 function openPerfilPicker() {
-  if (!accessToken) { alert('Conecta com o Google em ⚙️ Central de Contas pra usar Perfis.'); return; }
+  if (!accessToken) { alert('Conecta com o Google em 👤 Minha Conta pra usar Perfis.'); return; }
   document.getElementById('perfil-picker-name').value = '';
   renderPerfilPickerCategories();
   openOverlayExclusive(document.getElementById('perfil-picker-overlay'));
@@ -8154,9 +8154,11 @@ function getHorarioFalado() {
 async function startBriefingPlayback(automatic = false, featureKeys) {
   const summaries = getEnabledFeatureSummaries(featureKeys);
   if (summaries.length === 0) {
-    briefingLabel.textContent = (featureKeys && featureKeys.length === 0)
+    const msg = (featureKeys && featureKeys.length === 0)
       ? 'Esse horário não tem nenhuma tag selecionada. Vá em ⚙️ Briefing automático e marque o que quer ouvir nele.'
-      : 'Nenhuma categoria ativa. Vá na aba Guia e ative algo.';
+      : 'Nada tocou porque não tem perfil ativo nem categoria ligada no Guia.';
+    briefingLabel.textContent = msg;
+    if (!automatic) showVoiceToast(msg);
     return;
   }
   setPlayingVisual(true);
@@ -8169,6 +8171,7 @@ async function startBriefingPlayback(automatic = false, featureKeys) {
     setPlayingVisual(false);
     briefingLabel.textContent = 'Nada novo para ler agora';
     briefingSub.textContent = 'Verifique as configurações das suas categorias ativas';
+    if (!automatic) showVoiceToast('Nada novo pra ler agora — confere as configurações das categorias ativas.');
     return;
   }
   // Guarda o texto completo desse briefing pro nativo poder falar ele
@@ -8257,7 +8260,7 @@ document.getElementById('subscribe-btn').addEventListener('click', async () => {
   const resultEl = document.getElementById('subscribe-result');
   const email = await getGoogleEmail();
   if (!email) {
-    resultEl.textContent = 'Conecte sua conta Google em ⚙️ Central de Contas primeiro, usamos o e-mail dela pra identificar sua assinatura.';
+    resultEl.textContent = 'Conecte sua conta Google em 👤 Minha Conta primeiro, usamos o e-mail dela pra identificar sua assinatura.';
     return;
   }
   resultEl.textContent = 'Criando assinatura...';
@@ -8275,7 +8278,7 @@ document.getElementById('check-subscription-btn').addEventListener('click', asyn
   const resultEl = document.getElementById('subscribe-result');
   const email = await getGoogleEmail();
   if (!email) {
-    resultEl.textContent = 'Conecte sua conta Google em ⚙️ Central de Contas primeiro.';
+    resultEl.textContent = 'Conecte sua conta Google em 👤 Minha Conta primeiro.';
     return;
   }
   resultEl.textContent = 'Verificando assinatura...';
@@ -9103,7 +9106,7 @@ async function uploadFileToDrive(file, folderId) {
 document.getElementById('drive-backup-btn').addEventListener('click', () => {
   const resultEl = document.getElementById('drive-backup-result');
   if (!accessToken) {
-    resultEl.textContent = 'Conecte sua conta Google em ⚙️ Central de Contas primeiro.';
+    resultEl.textContent = 'Conecte sua conta Google em 👤 Minha Conta primeiro.';
     return;
   }
   document.getElementById('drive-backup-input').click();
@@ -9226,7 +9229,7 @@ async function sendSosMessage(mensagem, audioBlob) {
     } catch (e) { falhas.push('SMS: ' + e.message); }
   }
   if (email) {
-    if (!accessToken) falhas.push('E-mail: conecte sua conta Google em ⚙️ Central de Contas primeiro.');
+    if (!accessToken) falhas.push('E-mail: conecte sua conta Google em 👤 Minha Conta primeiro.');
     else {
       const attachment = audioBlob ? { blob: audioBlob, filename: 'audio-sos.webm', mimeType: audioBlob.type || 'audio/webm' } : undefined;
       try { await sendEmailViaGmail(email, '🆘 SOS - Preciso de ajuda', mensagem, attachment); }
@@ -9988,13 +9991,13 @@ async function tryAnswerNoticias(texto) {
 const GUIA_VOICE_TOPICS = [
   { keywords: ['e-mail', 'email', 'caixa de entrada'], catId: 'pessoal', featId: 'email',
     fetch: (fields) => fetchEmailItems(fields.contas, fields.quantidade || '5'), spokenLimit: Infinity,
-    checkAccount: () => (accessToken || localStorage.getItem('infohub_outlook_token')) ? null : 'Você ainda não conectou nenhuma conta de e-mail. Vá em Central de Contas, clique na engrenagem e vincule o e-mail.' },
+    checkAccount: () => (accessToken || localStorage.getItem('infohub_outlook_token')) ? null : 'Você ainda não conectou nenhuma conta de e-mail. Vá em Minha Conta (ícone de pessoa na barra lateral) e vincule o e-mail.' },
   { keywords: ['agenda', 'compromisso'], catId: 'pessoal', featId: 'agenda',
     fetch: () => fetchAgendaItems(10), spokenLimit: Infinity,
-    checkAccount: () => accessToken ? null : 'Você ainda não conectou sua conta Google. Vá em Central de Contas, clique na engrenagem e vincule o e-mail.' },
+    checkAccount: () => accessToken ? null : 'Você ainda não conectou sua conta Google. Vá em Minha Conta (ícone de pessoa na barra lateral) e vincule o e-mail.' },
   { keywords: ['aniversário', 'aniversario', 'aniversariante'], catId: 'pessoal', featId: 'aniversarios',
     fetch: () => fetchAniversariosItems(10), spokenLimit: Infinity,
-    checkAccount: () => accessToken ? null : 'Você ainda não conectou sua conta Google. Vá em Central de Contas, clique na engrenagem e vincule o e-mail.' },
+    checkAccount: () => accessToken ? null : 'Você ainda não conectou sua conta Google. Vá em Minha Conta (ícone de pessoa na barra lateral) e vincule o e-mail.' },
   { keywords: ['feriado'], catId: 'pessoal', featId: 'feriados',
     fetch: () => fetchFeriadosItems(3) },
   { keywords: ['fase da lua', 'lua hoje', 'horóscopo', 'horoscopo'], catId: 'horoscopo', featId: 'fase-lua',
