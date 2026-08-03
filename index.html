@@ -1208,7 +1208,7 @@
     <button class="sidebar-btn" id="sidebar-ebook-btn">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6c-1.5-1-4-1.5-8-1v13c4-.5 6.5 0 8 1 1.5-1 4-1.5 8-1V5c-4-.5-6.5 0-8 1z"/><path d="M12 6v13"/></svg>
     </button>
-    <button class="sidebar-btn" id="sos-badge-btn" style="touch-action:none; color:var(--c-red);">
+    <button class="sidebar-btn" id="sos-badge-btn" style="touch-action:none;">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.9" fill="currentColor" stroke="none"/></svg>
     </button>
     <div class="sidebar-spacer"></div>
@@ -1987,7 +1987,8 @@ const CATEGORY_DEFS = [
       { id: 'sos', label: 'SOS (contato de emergência)', icon: '🆘', fields: [
         { id: 'telefone', kind: 'text', placeholder: 'Telefone (com DDD), ex: 11999999999' },
         { id: 'email', kind: 'text', placeholder: 'E-mail de contato' },
-      ], hint: 'Configura aqui; o disparo é segurando o ícone 🆘 por 5 segundos em Meu Dia' },
+        { id: 'holdSeconds', kind: 'dropdown', label: 'Segurar quantos segundos pra disparar', options: ['1', '2', '3', '4', '5'] },
+      ], hint: 'O ícone 🆘 fica na barra lateral: cinza enquanto não tiver telefone/e-mail configurado aqui, vermelho quando estiver pronto pra disparar. Toque nele abre essa tela de novo; segurar pelo tempo escolhido acima dispara de verdade.' },
       { id: 'agenda', label: 'Agenda de hoje', icon: '📅', fields: [], hint: 'Conecta em ⚙️ Central de Contas' },
       { id: 'aniversarios', label: 'Aniversários', icon: '🎂', fields: [], hint: 'Conecta em ⚙️ Central de Contas' },
       { id: 'feriados', label: 'Feriados próximos', icon: '🎉', fields: [] },
@@ -2971,6 +2972,13 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     // Conta/Sobre (e qualquer outro overlay) ficam por cima de tudo — trocar
     // de aba por trás não adianta nada se a tela não fechar junto.
     document.querySelectorAll('.overlay.open').forEach((o) => o.classList.remove('open'));
+    // Rádio/Ebook não são .nav-btn de verdade (o destaque deles é controlado
+    // à parte em switchPlayerTab) — trocar pra outra aba principal precisa
+    // limpar os dois, senão ficam "presos" coloridos.
+    if (btn.dataset.tab !== 'player') {
+      document.getElementById('sidebar-radio-btn').classList.remove('active');
+      document.getElementById('sidebar-ebook-btn').classList.remove('active');
+    }
   });
 });
 
@@ -2990,6 +2998,7 @@ if (nativeApp) {
     const openOverlay = document.querySelector('.overlay.open');
     if (openOverlay) {
       openOverlay.classList.remove('open');
+      updateOverlaySidebarActive();
       // Conta e Sobre perderam a setinha própria — o físico assume, e leva
       // direto pro Meu Dia (não fica preso na aba que tava aberta atrás).
       if (openOverlay.id === 'accounts-overlay' || openOverlay.id === 'sobre-overlay') {
@@ -3245,9 +3254,17 @@ async function getGoogleEmail() {
 // da outra sem fechar a anterior deixava as duas com .open ao mesmo tempo,
 // e a mais antiga no DOM ficava escondida atrás sem sumir. Fecha todas
 // antes de abrir a próxima.
+function updateOverlaySidebarActive() {
+  const contaBtn = document.getElementById('sidebar-conta-btn');
+  const sobreBtn = document.getElementById('sidebar-sobre-btn');
+  if (contaBtn) contaBtn.classList.toggle('active', document.getElementById('accounts-overlay').classList.contains('open'));
+  if (sobreBtn) sobreBtn.classList.toggle('active', document.getElementById('sobre-overlay').classList.contains('open'));
+}
+
 function openOverlayExclusive(el) {
   document.querySelectorAll('.overlay.open').forEach((o) => { if (o !== el) o.classList.remove('open'); });
   el.classList.add('open');
+  updateOverlaySidebarActive();
 }
 
 const accountsOverlay = document.getElementById('accounts-overlay');
@@ -3267,8 +3284,8 @@ const sobreOverlay = document.getElementById('sobre-overlay');
 function openSobre() { openOverlayExclusive(sobreOverlay); updateAccountsUI(); }
 document.querySelectorAll('[data-action="tema"]').forEach((btn) => btn.addEventListener('click', openSobre));
 document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEventListener('click', openSobre));
-document.getElementById('sobre-close-btn').addEventListener('click', () => sobreOverlay.classList.remove('open'));
-document.getElementById('accounts-close-btn').addEventListener('click', () => accountsOverlay.classList.remove('open'));
+document.getElementById('sobre-close-btn').addEventListener('click', () => { sobreOverlay.classList.remove('open'); updateOverlaySidebarActive(); });
+document.getElementById('accounts-close-btn').addEventListener('click', () => { accountsOverlay.classList.remove('open'); updateOverlaySidebarActive(); });
 
 /* =========================================================================
    GAVETA LATERAL (nova navegação, substitui a navbar de baixo) — abre com
@@ -3277,7 +3294,11 @@ document.getElementById('accounts-close-btn').addEventListener('click', () => ac
    ========================================================================= */
 const sidebarEl = document.getElementById('sidebar');
 const sidebarBackdropEl = document.getElementById('sidebar-backdrop');
-function openSidebar() { sidebarEl.classList.add('open'); sidebarBackdropEl.classList.add('show'); }
+function openSidebar() {
+  sidebarEl.classList.add('open');
+  sidebarBackdropEl.classList.add('show');
+  if (typeof updateSosIconState === 'function') updateSosIconState();
+}
 function closeSidebar() { sidebarEl.classList.remove('open'); sidebarBackdropEl.classList.remove('show'); }
 document.getElementById('sidebar-toggle-btn').addEventListener('click', () => {
   sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar();
@@ -5652,6 +5673,8 @@ function switchPlayerTab(tab) {
   document.getElementById('player-screen-title-icon').innerHTML = PLAYER_TAB_ICONS[tab] || '';
   document.getElementById('player-screen-title-text').textContent = PLAYER_TAB_TITLES[tab] || '';
   updatePlayerBodyVisibility();
+  document.getElementById('sidebar-radio-btn').classList.toggle('active', tab === 'radio');
+  document.getElementById('sidebar-ebook-btn').classList.toggle('active', tab === 'audiobook');
 }
 PLAYER_TABS.forEach((t) => {
   document.getElementById(`player-tab-btn-${t}`).addEventListener('click', () => switchPlayerTab(t));
@@ -9328,42 +9351,45 @@ function buildSosExtraCard() {
   return wrap;
 }
 
-// Selo no canto do botão de retroceder é o gatilho do SOS — segura 5s, vibra
-// confirmando, dispara. Soltar antes dos 5s cancela. Independente do botão
-// ⏮ embaixo, que continua voltando item normalmente a qualquer momento.
+// Ícone na sidebar: toque simples abre a configuração (Pessoal > SOS no
+// Guia); segurar por 3s dispara de verdade. Soltar antes cancela. A
+// vibração de confirmação saiu — o navigator.vibrate não tinha suporte
+// confiável no WebView, e mesmo o plugin nativo de Haptics não tava
+// funcionando direito nessa nova posição, então preferimos tirar a
+// vibrar do meio a deixar um feedback quebrado.
 let sosHoldTimeoutId = null;
-let sosHoldPulseInterval = null;
+let sosHoldFired = false;
 const sosHoldBtn = document.getElementById('sos-badge-btn');
 
-// navigator.vibrate (Web Vibration API) não tem suporte confiável no WebView
-// do Android — em muitos aparelhos simplesmente não faz nada, sem erro
-// nenhum, por isso parecia que o SOS "não fazia nada" (o disparo em si
-// funcionava, só a vibração de confirmação que nunca rodava). O plugin
-// nativo de Haptics fala direto com o vibrador do aparelho, sem essa
-// limitação. Pulsa 1x por segundo durante os 5s do hold, em vez de 1
-// vibração só — confirma visualmente (sem precisar olhar) que tá contando.
-const nativeHaptics = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
-
 function startSosHold() {
-  if (nativeHaptics) {
-    pulseSosHaptic();
-    sosHoldPulseInterval = setInterval(pulseSosHaptic, 1000);
-  }
+  sosHoldFired = false;
+  const fs = getFeatureState('pessoal', 'sos');
+  const seconds = parseInt(fs.fields.holdSeconds, 10) || 3;
   sosHoldTimeoutId = setTimeout(() => {
+    sosHoldFired = true;
     triggerSOS();
-  }, 5000);
-}
-function pulseSosHaptic() {
-  try { nativeHaptics.vibrate({ duration: 200 }); } catch (e) { console.error('haptics:', e); }
+  }, seconds * 1000);
 }
 function cancelSosHold() {
   if (sosHoldTimeoutId) { clearTimeout(sosHoldTimeoutId); sosHoldTimeoutId = null; }
-  if (sosHoldPulseInterval) { clearInterval(sosHoldPulseInterval); sosHoldPulseInterval = null; }
 }
+
+function updateSosIconState() {
+  const fs = getFeatureState('pessoal', 'sos');
+  const pronto = !!((fs.fields.telefone || '').trim() || (fs.fields.email || '').trim());
+  sosHoldBtn.style.color = pronto ? 'var(--c-red)' : 'var(--c-text-faint2)';
+}
+updateSosIconState();
+
+sosHoldBtn.addEventListener('click', () => {
+  if (sosHoldFired) return; // já disparou pelo hold, não abre a config também
+  document.querySelector('.nav-btn[data-tab="gratis"]').click();
+  openCategoryDetail('pessoal');
+});
 
 // Bloquear o menu de contexto e seleção de texto evita que o toque-e-segure
 // padrão do Android/WebView cancele nosso gesto no meio do caminho, antes
-// de completar os 5s (já tem reforço via CSS no .icon-btn, isso é extra).
+// de completar os 3s (já tem reforço via CSS no .icon-btn, isso é extra).
 sosHoldBtn.addEventListener('contextmenu', (ev) => ev.preventDefault());
 sosHoldBtn.addEventListener('selectstart', (ev) => ev.preventDefault());
 sosHoldBtn.addEventListener('pointerdown', startSosHold);
