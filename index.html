@@ -396,8 +396,8 @@
 
   /* ===== Meu Dia ===== */
   .briefing-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 16px; }
-  #briefing-label { font-size: 1.05rem; min-height: 1.4em; text-align: center; margin-bottom: 6px; color: var(--c-text); }
-  #briefing-sub { font-size: 0.8rem; color: var(--c-text-dim); min-height: 1.2em; margin-bottom: 24px; text-align: center; }
+  #briefing-label { display: none; font-size: 1.05rem; min-height: 1.4em; text-align: center; margin-bottom: 6px; color: var(--c-text); }
+  #briefing-sub { display: none; font-size: 0.8rem; color: var(--c-text-dim); min-height: 1.2em; margin-bottom: 24px; text-align: center; }
   .play-controls { display: none; align-items: center; gap: 16px; margin-bottom: 22px; }
   .play-wrap { position: relative; width: 130px; height: 130px; }
   .play-ring {
@@ -2188,6 +2188,14 @@ function applyProfile(profileId) {
   if (typeof renderCategoryCards === 'function') renderCategoryCards();
 }
 
+function deactivateProfile() {
+  Object.keys(state.features).forEach((key) => { state.features[key].enabled = false; });
+  state.activeProfileId = null;
+  saveState();
+  renderPerfis();
+  if (typeof renderCategoryCards === 'function') renderCategoryCards();
+}
+
 // Popup de seleção rápida pra montar um perfil novo: mostra tudo por
 // categoria (igual o Guia), ativa na hora (fica salvo de verdade no
 // Guia, não só dentro do perfil) e vira as chaves do perfil ao salvar.
@@ -2334,9 +2342,12 @@ function renderPerfis() {
     const activateBtn = document.createElement('button');
     activateBtn.type = 'button';
     activateBtn.className = 'perfil-card-activate';
-    activateBtn.textContent = isActive ? 'Ativo' : 'Ativar';
+    activateBtn.textContent = isActive ? 'Desativar' : 'Ativar';
     activateBtn.style.cssText = `background:${isActive ? 'var(--c-teal)' : 'var(--c-surface-hover)'}; color:${isActive ? '#fff' : 'var(--c-text)'};`;
-    activateBtn.addEventListener('click', () => applyProfile(profile.id));
+    activateBtn.addEventListener('click', () => {
+      if (isActive) deactivateProfile();
+      else applyProfile(profile.id);
+    });
     card.appendChild(activateBtn);
 
     listEl.appendChild(card);
