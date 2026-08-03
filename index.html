@@ -9473,6 +9473,7 @@ renderPerfis();
 const WEATHER_ICONS = {
   sol: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/></svg>',
   nuvem: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A4.5 4.5 0 0 1 18 18H6z"/></svg>',
+  parcial: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><line x1="7" y1="1.5" x2="7" y2="3"/><line x1="1.5" y1="7" x2="3" y2="7"/><line x1="2.8" y1="2.8" x2="3.9" y2="3.9"/><path d="M9 19a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A4.5 4.5 0 0 1 20 19H9z"/></svg>',
   chuva: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A4.5 4.5 0 0 1 18 15H6z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg>',
   tempestade: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.5A4.5 4.5 0 0 1 18 14H6z"/><polyline points="12 15 10 19 13 19 11 23"/></svg>',
 };
@@ -9480,6 +9481,7 @@ function pickWeatherIconKey(text) {
   const t = (text || '').toLowerCase();
   if (t.includes('tempestade') || t.includes('trovoada')) return 'tempestade';
   if (t.includes('chuv') || t.includes('garoa')) return 'chuva';
+  if (t.includes('parcial')) return 'parcial';
   if (t.includes('nublado') || t.includes('nuv') || t.includes('encoberto')) return 'nuvem';
   if (t.includes('sol') || t.includes('limpo') || t.includes('claro')) return 'sol';
   return 'nuvem';
@@ -9500,7 +9502,7 @@ async function updateMeuDiaWeatherWidget() {
     document.getElementById('meudia-weather-text').textContent = texto;
     widget.style.display = 'flex';
     const iconKey = pickWeatherIconKey(texto);
-    document.getElementById('meudia-weather-icon').textContent = { sol: '☀️', nuvem: '☁️', chuva: '🌧️', tempestade: '⛈️' }[iconKey];
+    document.getElementById('meudia-weather-icon').textContent = { sol: '☀️', nuvem: '☁️', parcial: '⛅', chuva: '🌧️', tempestade: '⛈️' }[iconKey];
     const sidebarBtn = document.getElementById('sidebar-weather-btn');
     document.getElementById('sidebar-weather-icon').innerHTML = WEATHER_ICONS[iconKey];
     sidebarBtn.style.display = 'flex';
