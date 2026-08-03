@@ -1373,6 +1373,19 @@
   </div>
 </div>
 
+<!-- ============ NOVO PERFIL (overlay de seleção rápida por categoria) ============ -->
+<div class="overlay" id="perfil-picker-overlay">
+  <div class="overlay-inner">
+    <div class="overlay-header">
+      <button class="back-btn" id="perfil-picker-close-btn">←</button>
+      <h2>➕ Novo Perfil</h2>
+    </div>
+    <input type="text" id="perfil-picker-name" placeholder="Nome do perfil" style="width:100%; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 10px 12px; margin-bottom:16px; font-size:1rem;">
+    <div id="perfil-picker-categories"></div>
+    <button type="button" id="perfil-picker-save-btn" class="btn-connect" style="width:100%; background: var(--c-teal); color:#fff; margin-top:8px;">Salvar Perfil</button>
+  </div>
+</div>
+
 <!-- ============ SOS (overlay) — básico gratuito, modo contínuo Premium ============ -->
 <!-- ============ VERSÃO E NOVIDADES (overlay) ============ -->
 <div class="overlay" id="changelog-overlay">
@@ -2175,19 +2188,64 @@ function applyProfile(profileId) {
   if (typeof renderCategoryCards === 'function') renderCategoryCards();
 }
 
-function createProfileFromCurrent() {
+// Popup de seleção rápida pra montar um perfil novo: mostra tudo por
+// categoria (igual o Guia), ativa na hora (fica salvo de verdade no
+// Guia, não só dentro do perfil) e vira as chaves do perfil ao salvar.
+function openPerfilPicker() {
   if (!accessToken) { alert('Conecta com o Google em ⚙️ Central de Contas pra usar Perfis.'); return; }
-  const nome = prompt('Nome do novo perfil:');
-  if (!nome || !nome.trim()) return;
+  document.getElementById('perfil-picker-name').value = '';
+  renderPerfilPickerCategories();
+  openOverlayExclusive(document.getElementById('perfil-picker-overlay'));
+}
+
+function renderPerfilPickerCategories() {
+  const wrap = document.getElementById('perfil-picker-categories');
+  wrap.innerHTML = '';
+  CATEGORY_DEFS.forEach((cat) => {
+    const section = document.createElement('div');
+    section.style.marginBottom = '18px';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-weight:700; margin-bottom:8px;';
+    title.textContent = `${cat.icon} ${cat.title}`;
+    section.appendChild(title);
+    const chipWrap = document.createElement('div');
+    chipWrap.className = 'btn-group';
+    cat.features.forEach((feat) => {
+      if (cat.id === 'pessoal' && feat.id === 'lembretes') return; // tem sub-itens próprios, não é toggle simples
+      const fs = getFeatureState(cat.id, feat.id);
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'btn-opt' + (fs.enabled ? ' selected' : '');
+      chip.textContent = `${feat.icon} ${feat.label}`;
+      chip.addEventListener('click', () => {
+        fs.enabled = !fs.enabled;
+        saveState();
+        chip.classList.toggle('selected', fs.enabled);
+      });
+      chipWrap.appendChild(chip);
+    });
+    section.appendChild(chipWrap);
+    wrap.appendChild(section);
+  });
+}
+
+document.getElementById('perfil-picker-close-btn').addEventListener('click', () => {
+  document.getElementById('perfil-picker-overlay').classList.remove('open');
+});
+
+document.getElementById('perfil-picker-save-btn').addEventListener('click', () => {
+  const nome = document.getElementById('perfil-picker-name').value.trim();
+  if (!nome) { alert('Dá um nome pro perfil.'); return; }
   const keys = Object.keys(state.features).filter((k) => state.features[k].enabled);
-  if (!keys.length) { alert('Liga alguma coisa no Guia antes de salvar como perfil.'); return; }
+  if (!keys.length) { alert('Ativa pelo menos uma categoria antes de salvar.'); return; }
   const id = 'custom_' + Date.now();
-  state.customProfiles.push({ id, icon: '⭐', label: nome.trim(), keys });
+  state.customProfiles.push({ id, icon: '⭐', label: nome, keys });
   if (state.profileOrder) state.profileOrder.push(id);
   state.activeProfileId = id;
   saveState();
+  document.getElementById('perfil-picker-overlay').classList.remove('open');
   renderPerfis();
-}
+});
 
 function deleteCustomProfile(id) {
   state.customProfiles = state.customProfiles.filter((p) => p.id !== id);
@@ -2288,7 +2346,7 @@ function renderPerfis() {
   addCard.type = 'button';
   addCard.className = 'perfil-card-new';
   addCard.textContent = '➕ Novo Perfil';
-  addCard.addEventListener('click', createProfileFromCurrent);
+  addCard.addEventListener('click', openPerfilPicker);
   listEl.appendChild(addCard);
 }
 
