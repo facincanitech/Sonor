@@ -2216,23 +2216,31 @@ function renderPerfilPickerCategories() {
     title.style.cssText = 'font-weight:700; margin-bottom:8px;';
     title.textContent = `${cat.icon} ${cat.title}`;
     section.appendChild(title);
-    const chipWrap = document.createElement('div');
-    chipWrap.className = 'btn-group';
     cat.features.forEach((feat) => {
       if (cat.id === 'pessoal' && feat.id === 'lembretes') return; // tem sub-itens próprios, não é toggle simples
       const fs = getFeatureState(cat.id, feat.id);
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'btn-opt' + (fs.enabled ? ' selected' : '');
-      chip.textContent = `${feat.icon} ${feat.label}`;
-      chip.addEventListener('click', () => {
-        fs.enabled = !fs.enabled;
+      const row = document.createElement('div');
+      row.className = 'settings-row';
+      const label = document.createElement('div');
+      label.className = 'label';
+      label.textContent = `${feat.icon} ${feat.label}`;
+      const switchLabel = document.createElement('label');
+      switchLabel.className = 'switch';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = fs.enabled;
+      checkbox.addEventListener('change', () => {
+        fs.enabled = checkbox.checked;
         saveState();
-        chip.classList.toggle('selected', fs.enabled);
       });
-      chipWrap.appendChild(chip);
+      const slider = document.createElement('span');
+      slider.className = 'slider';
+      switchLabel.appendChild(checkbox);
+      switchLabel.appendChild(slider);
+      row.appendChild(label);
+      row.appendChild(switchLabel);
+      section.appendChild(row);
     });
-    section.appendChild(chipWrap);
     wrap.appendChild(section);
   });
 }
