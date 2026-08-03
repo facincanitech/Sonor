@@ -13,16 +13,16 @@
     --md-voice: #a78bfa;
   }
   :root, [data-theme='dark'] {
-    --c-bg: #0f1115; --c-surface: #1a1d24; --c-surface-hover: #1f232b; --c-surface-alt: #20242c;
-    --c-border: #232730; --c-border2: #2a2d35; --c-navbar: #14161b;
-    --c-text: #e8e8e8; --c-text-dim: #9aa0a6; --c-text-faint: #6f7480; --c-text-faint2: #8a8f98;
+    --c-bg: #1e2023; --c-surface: #26282c; --c-surface-hover: #2c2e33; --c-surface-alt: #2c2e33;
+    --c-border: #33353a; --c-border2: #3a3c42; --c-navbar: #1a1c1f;
+    --c-text: #e6e6e6; --c-text-dim: #9aa0a6; --c-text-faint: #6f7480; --c-text-faint2: #8a8f98;
     --c-accent-blue: #8ab4f8; --c-green: #34a853; --c-red: #ea4335;
     --c-green-bg: #1f3a2a; --c-green-text: #8ee6a8;
     --c-google-blue: #4285f4; --c-google-blue-hover: #3367d6; --c-yellow: #fbbc04;
     --c-on-accent: #0f1115; --c-teal: #45b8a8;
   }
   [data-theme='light'] {
-    --c-bg: #f5f5f7; --c-surface: #ffffff; --c-surface-hover: #ececed; --c-surface-alt: #eef0f3;
+    --c-bg: #ffffff; --c-surface: #ffffff; --c-surface-hover: #ececed; --c-surface-alt: #eef0f3;
     --c-border: #d8d9dc; --c-border2: #cfd1d5; --c-navbar: #ffffff;
     --c-text: #1a1a1a; --c-text-dim: #5f6368; --c-text-faint: #80868b; --c-text-faint2: #6b7077;
     --c-accent-blue: #1a73e8; --c-green: #1e8e3e; --c-red: #d33828;
@@ -164,7 +164,15 @@
   .sidebar-btn { width: 52px; height: 52px; border-radius: 12px; background: none; color: var(--c-text-faint2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex: 0 0 auto; }
   .sidebar-btn.active { color: var(--c-teal); background: var(--c-surface-hover); }
   .sidebar-btn svg { display: block; }
-  .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: var(--c-teal); color: #fff; font-size: 1.6rem; }
+  .sidebar-home { width: 56px; height: 56px; border-radius: 50%; background: var(--c-teal); color: #fff; font-size: 1.6rem; animation: sidebar-home-pulse 2.4s ease-out infinite; }
+  @keyframes sidebar-home-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(69,184,168,0.45); }
+    50% { box-shadow: 0 0 0 8px rgba(69,184,168,0); }
+  }
+  /* Play/Prev/Next e o mic saíram da tela Meu Dia — o play do menu lateral
+     assumiu as duas funções (ir pro Meu Dia + tocar o briefing). */
+  .play-controls, .progress-bar { display: none; }
+  #mic-badge-btn { display: none; }
   /* Meu Dia é sempre o círculo teal, ativo ou não — sem isso o .active
      genérico ganhava dele quando essa aba tava selecionada. */
   .sidebar-home.active { background: var(--c-teal); color: #fff; }
@@ -711,6 +719,11 @@
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
 
+      <div id="meudia-weather-widget" style="display:none; align-items:center; gap:8px; background:var(--c-surface); border-radius:10px; padding:8px 12px; margin:14px auto 0; max-width:260px; font-size:0.85rem; color:var(--c-text-dim); justify-content:center;">
+        <span id="meudia-weather-icon">☁️</span>
+        <span id="meudia-weather-text"></span>
+      </div>
+
       <div id="history-list" class="history-list"></div>
     </div>
   </section>
@@ -1016,7 +1029,7 @@
       </div>
       <div id="player-controls-row" style="display:flex; justify-content:center; align-items:center; gap:26px; margin-top:8px;">
         <button id="player-ctrl-prev" style="background:none; font-size:1.6rem; color:var(--c-text); display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M11 19V5l-8 7 8 7zm9 0V5l-8 7 8 7z"/></svg></button>
-        <button id="player-ctrl-playpause" style="background: var(--c-teal); color: #fff; width:58px; height:58px; border-radius:50%; font-size:1.3rem; display:flex; align-items:center; justify-content:center;"></button>
+        <button id="player-ctrl-playpause" style="background: var(--c-green); color: #fff; width:58px; height:58px; border-radius:50%; font-size:1.3rem; display:flex; align-items:center; justify-content:center;"></button>
         <button id="player-ctrl-next" style="background:none; font-size:1.6rem; color:var(--c-text); display:flex; align-items:center; justify-content:center;"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="M13 5v14l8-7-8-7zM4 5v14l8-7-8-7z"/></svg></button>
       </div>
     </div>
@@ -1169,10 +1182,10 @@
     </button>
     <div class="sidebar-spacer"></div>
     <button class="sidebar-btn" id="sidebar-conta-btn">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none"/></svg>
     </button>
     <button class="sidebar-btn" id="sidebar-sobre-btn">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none"/></svg>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
     <button class="nav-btn sidebar-btn sidebar-star" data-tab="premium">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9 12 2"/></svg>
@@ -2920,21 +2933,31 @@ async function getGoogleEmail() {
   }
 }
 
+// Overlays (Conta/Sobre/Privacidade/Changelog/Baixar-Compartilhar/Salvos)
+// são todos telas "por cima" com a mesma prioridade — abrir uma de dentro
+// da outra sem fechar a anterior deixava as duas com .open ao mesmo tempo,
+// e a mais antiga no DOM ficava escondida atrás sem sumir. Fecha todas
+// antes de abrir a próxima.
+function openOverlayExclusive(el) {
+  document.querySelectorAll('.overlay.open').forEach((o) => { if (o !== el) o.classList.remove('open'); });
+  el.classList.add('open');
+}
+
 const accountsOverlay = document.getElementById('accounts-overlay');
 document.querySelectorAll('[data-action="gear"]').forEach(btn => {
-  btn.addEventListener('click', () => { accountsOverlay.classList.add('open'); updateAccountsUI(); });
+  btn.addEventListener('click', () => { openOverlayExclusive(accountsOverlay); updateAccountsUI(); });
 });
 
 // Atalhos do menu "⋯" pra abrir direto numa aba específica da Central de
 // Contas, em vez de cair sempre na primeira (Email).
 function openAccountsTab(tab) {
-  accountsOverlay.classList.add('open');
+  openOverlayExclusive(accountsOverlay);
   updateAccountsUI();
   document.querySelectorAll('.account-tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.account === tab));
   document.querySelectorAll('.account-panel').forEach((p) => p.classList.toggle('active', p.id === `account-${tab}`));
 }
 const sobreOverlay = document.getElementById('sobre-overlay');
-function openSobre() { sobreOverlay.classList.add('open'); updateAccountsUI(); }
+function openSobre() { openOverlayExclusive(sobreOverlay); updateAccountsUI(); }
 document.querySelectorAll('[data-action="tema"]').forEach((btn) => btn.addEventListener('click', openSobre));
 document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEventListener('click', openSobre));
 document.getElementById('sobre-close-btn').addEventListener('click', () => sobreOverlay.classList.remove('open'));
@@ -2978,7 +3001,7 @@ document.querySelector('.sidebar-star').addEventListener('click', () => {
   document.getElementById('tab-premium').classList.add('active');
 });
 document.getElementById('sidebar-conta-btn').addEventListener('click', () => {
-  accountsOverlay.classList.add('open');
+  openOverlayExclusive(accountsOverlay);
   updateAccountsUI();
 });
 document.getElementById('sidebar-sobre-btn').addEventListener('click', openSobre);
@@ -3091,7 +3114,7 @@ document.getElementById('transport-next-btn').addEventListener('click', () => {
 setInterval(updateTransportBar, 1000);
 
 document.getElementById('privacy-open-btn').addEventListener('click', () => {
-  document.getElementById('privacy-overlay').classList.add('open');
+  openOverlayExclusive(document.getElementById('privacy-overlay'));
 });
 document.getElementById('privacy-close-btn').addEventListener('click', () => {
   document.getElementById('privacy-overlay').classList.remove('open');
@@ -3892,7 +3915,7 @@ checkForUpdate();
 
 document.getElementById('changelog-open-btn').addEventListener('click', () => {
   renderChangelog();
-  document.getElementById('changelog-overlay').classList.add('open');
+  openOverlayExclusive(document.getElementById('changelog-overlay'));
 });
 document.getElementById('changelog-close-btn').addEventListener('click', () => {
   document.getElementById('changelog-overlay').classList.remove('open');
@@ -5485,6 +5508,7 @@ async function handleAudiobookFileSelected(file) {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     await processAudiobookPdf(pdf, file.name, `${file.name}:${file.size}`, statusEl);
+    saveLocalPdfHistory(file.name);
   } catch (e) {
     console.error('Erro ao ler PDF:', e);
     statusEl.textContent = 'Não foi possível ler esse PDF — tenta outro arquivo.';
@@ -5629,32 +5653,44 @@ function getAbDriveHistory() {
 }
 function saveAbDriveHistory(id, name) {
   const hist = getAbDriveHistory().filter(h => h.id !== id);
-  hist.unshift({ id, name, ts: Date.now() });
-  localStorage.setItem('infohub_ab_drive_hist', JSON.stringify(hist.slice(0, 5)));
+  hist.unshift({ id, name, type: 'drive', ts: Date.now() });
+  localStorage.setItem('infohub_ab_drive_hist', JSON.stringify(hist.slice(0, 8)));
+  renderAbDriveHistory();
+}
+// PDF selecionado do celular não dá pra reabrir sozinho (o navegador não
+// guarda o arquivo depois de escolhido) — mesmo assim entra na Estante como
+// lembrete; ao clicar, reabre o seletor de arquivo pro usuário escolher de
+// novo (idealmente o mesmo PDF, pra continuar de onde parou).
+function saveLocalPdfHistory(name) {
+  const hist = getAbDriveHistory().filter(h => !(h.type === 'local' && h.name === name));
+  hist.unshift({ id: null, name, type: 'local', ts: Date.now() });
+  localStorage.setItem('infohub_ab_drive_hist', JSON.stringify(hist.slice(0, 8)));
   renderAbDriveHistory();
 }
 function renderAbDriveHistory() {
   const hist = getAbDriveHistory();
   const el = document.getElementById('audiobook-drive-history');
   if (!hist.length) {
-    el.innerHTML = '<div class="hint">Nenhum PDF na estante ainda — abre um link do Drive pra começar.</div>';
+    el.innerHTML = '<div class="hint">Nenhum PDF na estante ainda — abre um link do Drive ou seleciona um PDF pra começar.</div>';
     return;
   }
   el.innerHTML = '';
   const grid = document.createElement('div');
   grid.style.cssText = 'display:flex; flex-wrap:wrap; gap:8px;';
   hist.forEach((h) => {
+    const isLocal = h.type === 'local';
     const tile = document.createElement('div');
     tile.style.cssText = 'flex:0 0 calc(33% - 6px); background: var(--c-surface); border-radius:8px; padding:0; cursor:pointer; text-align:center; font-size:0.75rem; overflow:hidden;';
     tile.title = h.name;
     const shortName = h.name.replace(/\.pdf$/i, '').slice(0, 26) + (h.name.replace(/\.pdf$/i, '').length > 26 ? '…' : '');
-    tile.innerHTML = `
-      <img src="https://drive.google.com/thumbnail?id=${h.id}&sz=w200-h200" loading="lazy"
-           onerror="this.style.display='none'"
-           style="width:100%; height:90px; object-fit:cover; display:block; border-radius:8px 8px 0 0;">
-      <div style="padding:6px 4px; line-height:1.3;">${shortName}</div>
-    `;
-    tile.addEventListener('click', () => carregarAudiobookDoGoogleDrive(h.id, h.name));
+    const thumb = isLocal
+      ? `<div style="width:100%; height:90px; display:flex; align-items:center; justify-content:center; background:var(--c-surface-hover); border-radius:8px 8px 0 0; color:var(--c-text-faint);"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></div>`
+      : `<img src="https://drive.google.com/thumbnail?id=${h.id}&sz=w200-h200" loading="lazy" onerror="this.style.display='none'" style="width:100%; height:90px; object-fit:cover; display:block; border-radius:8px 8px 0 0;">`;
+    tile.innerHTML = `${thumb}<div style="padding:6px 4px; line-height:1.3;">${shortName}</div>`;
+    tile.addEventListener('click', () => {
+      if (isLocal) document.getElementById('audiobook-file-input').click();
+      else carregarAudiobookDoGoogleDrive(h.id, h.name);
+    });
     grid.appendChild(tile);
   });
   el.appendChild(grid);
@@ -6911,7 +6947,12 @@ async function playInEmbeddedPlayer(video, tipoLabel, lista, index, tab) {
   playerShowResults = false; // toca algo novo: some a lista, o player grande toma o espaço
   setPlayerNowPlaying(video.title, `${tipoLabel} · ${video.channelTitle}`);
   updatePlayerBodyVisibility(); // precisa mostrar #player-now-playing ANTES do ensurePlayerYt (precisa de tamanho real pra criar o iframe)
-  document.getElementById('player-cover-img').src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+  const mediaCoverImg = document.getElementById('player-cover-img');
+  // Reseta o ajuste (contain+padding) deixado pelo favicon de rádio, senão a
+  // capa do vídeo vem pequena e emoldurada por engano.
+  mediaCoverImg.style.objectFit = 'cover';
+  mediaCoverImg.style.padding = '0';
+  mediaCoverImg.src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
   document.getElementById('player-yt-container').style.display = 'block'; // precisa estar visível pra criar o iframe certo
   document.getElementById('player-ctrl-prev').style.display = '';
   document.getElementById('player-ctrl-next').style.display = '';
@@ -7212,9 +7253,27 @@ function playRadioStation(est) {
   // não emoji, mesma direção da lupa da topbar). onerror cobre link quebrado
   // (comum nesse banco, é preenchido pela comunidade).
   const radioSilhouette = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="14" fill="#242830"/><g fill="none" stroke="#6f7480" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="30" y="42" width="40" height="28" rx="4"/><circle cx="42" cy="56" r="5"/><path d="M58 56h6"/><path d="M40 42 L58 26"/><circle cx="58" cy="26" r="3" fill="#6f7480" stroke="none"/></g></svg>');
+  // Favicon de rádio costuma ser um ícone bem pequeno (16-32px) — esticar
+  // isso pra 280px de capa fica borrado. Mostra ele menor e centralizado
+  // (object-fit:contain + padding) em vez de cobrir o quadro inteiro; a
+  // silhueta (vetor, sempre nítida) continua ocupando tudo.
   const coverImg = document.getElementById('player-cover-img');
-  coverImg.onerror = () => { coverImg.onerror = null; coverImg.src = radioSilhouette; };
-  coverImg.src = est.favicon || radioSilhouette;
+  coverImg.onerror = () => {
+    coverImg.onerror = null;
+    coverImg.src = radioSilhouette;
+    coverImg.style.objectFit = 'cover';
+    coverImg.style.padding = '0';
+  };
+  if (est.favicon) {
+    coverImg.style.objectFit = 'contain';
+    coverImg.style.padding = '22%';
+    coverImg.style.background = '#242830';
+    coverImg.src = est.favicon;
+  } else {
+    coverImg.style.objectFit = 'cover';
+    coverImg.style.padding = '0';
+    coverImg.src = radioSilhouette;
+  }
   coverImg.style.display = 'block';
   document.getElementById('player-yt-container').style.display = 'none';
   document.getElementById('player-cover-wrap').style.aspectRatio = '1/1';
@@ -7796,6 +7855,19 @@ async function startBriefingPlayback(automatic = false, featureKeys) {
 }
 
 playCircle.addEventListener('click', () => {
+  if (isPlaying) {
+    speechSynthesis.cancel();
+    stopYoutubeSnippetPlayback();
+    setPlayingVisual(false);
+    return;
+  }
+  startBriefingPlayback();
+});
+
+// Play do menu lateral (Meu Dia) virou o play do briefing também — a
+// navegação genérica de .nav-btn já leva pra tela, isso aqui só cuida do
+// play/pause (mesma lógica do antigo play-circle, que saiu da tela).
+document.querySelector('.sidebar-home').addEventListener('click', () => {
   if (isPlaying) {
     speechSynthesis.cancel();
     stopYoutubeSnippetPlayback();
@@ -9232,6 +9304,25 @@ function updateAlarmsTileStatus() {
 renderAlarmsList();
 updateAlarmsTileStatus();
 
+// Widget rápido de clima no Meu Dia (pego de outro app do dev, o Cronos) —
+// só aparece se a cidade já estiver configurada em Clima na aba Guia,
+// senão não tem o que mostrar.
+async function updateMeuDiaWeatherWidget() {
+  const fs = getFeatureState('clima', 'previsao');
+  const cidade1 = fs.fields.cidade1;
+  if (!cidade1) return;
+  try {
+    const { items } = await fetchWeatherItems(cidade1, '');
+    const widget = document.getElementById('meudia-weather-widget');
+    if (!items || !items.length) return;
+    document.getElementById('meudia-weather-text').textContent = items[0].quick || items[0].title;
+    widget.style.display = 'flex';
+  } catch (e) {
+    console.error('widget clima Meu Dia:', e);
+  }
+}
+updateMeuDiaWeatherWidget();
+
 // Mesmo visual do acordeão do tutorial: lista só o título, clica pra abrir o
 // conteúdo completo + ações (sem "salvar" de novo, só compartilhar/copiar/remover).
 function renderSavedItems() {
@@ -9329,7 +9420,7 @@ document.getElementById('saved-close-btn').addEventListener('click', () => {
 /* ── Overlay de baixar / compartilhar ────────────────────────────────────── */
 const downloadShareOverlay = document.getElementById('download-share-overlay');
 document.getElementById('download-app-row').addEventListener('click', () => {
-  downloadShareOverlay.classList.add('open');
+  openOverlayExclusive(downloadShareOverlay);
   const vEl = document.getElementById('dl-overlay-version');
   if (vEl) vEl.textContent = `v${APP_VERSION}`;
 });
