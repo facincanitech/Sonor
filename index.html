@@ -374,6 +374,9 @@
   .btn-opt.selected { background: var(--c-green-bg); border-color: var(--c-green); color: var(--c-green-text); }
 
   /* ===== Premium tab ===== */
+  .plan-tabs { display: flex; background: var(--c-bg); border-radius: 10px; padding: 3px; gap: 3px; margin-bottom: 18px; }
+  .plan-tab { flex: 1; border: none; border-radius: 8px; padding: 8px 6px; font-size: 0.9rem; font-weight: 600; background: none; color: var(--c-text-dim); cursor: pointer; }
+  .plan-tab.active { background: var(--c-surface-hover); color: var(--c-text); }
   .price-card {
     background: linear-gradient(145deg, var(--c-surface), var(--c-surface-alt));
     border: 1px solid var(--c-border2); border-radius: 16px; padding: 22px; text-align: center; margin-bottom: 18px;
@@ -800,34 +803,49 @@
       </div>
       <div class="sub">Mais automação, mais conveniência.</div>
 
-      <div class="price-card">
-        <div class="price">R$ 24,90 <span>/ mês</span></div>
+      <div class="plan-tabs">
+        <button type="button" id="premium-tab-free" class="plan-tab active">Free</button>
+        <button type="button" id="premium-tab-premium" class="plan-tab">👑 Premium</button>
       </div>
 
-      <div class="premium-feature">
-        <div class="title">📚 Biblioteca de Audiobooks</div>
-        <div class="desc">Importe qualquer PDF do celular ou do Google Drive e ouça em voz alta com TTS sincronizado palavra a palavra. Tema sépia, fonte ajustável, progresso salvo por livro.</div>
+      <div id="premium-plan-free">
+        <div class="premium-feature"><div class="title">✅ Meu Dia — briefing completo por voz</div></div>
+        <div class="premium-feature"><div class="title">✅ Guia — Notícias, Clima, Entretenimento, Místico e mais</div></div>
+        <div class="premium-feature"><div class="title">✅ Rádio e Audiobook (versão básica)</div></div>
+        <div class="premium-feature"><div class="title">✅ Perfis e Briefing Automático</div></div>
+        <div class="premium-feature"><div class="title">✅ SOS de emergência</div></div>
       </div>
 
-      <div class="premium-feature">
-        <div class="title">📤 Salvar fotos na nuvem</div>
-        <div class="desc">Escolha fotos e vídeos do celular e o app envia direto pro seu Google Drive. Sem servidor no meio, sem backup automático bagunçado — você decide o que vai.</div>
-      </div>
+      <div id="premium-plan-premium" style="display:none;">
+        <div class="price-card">
+          <div class="price">R$ 24,90 <span>/ mês</span></div>
+        </div>
 
-      <div class="premium-feature">
-        <div class="title">🧭 GPS auditivo minimalista</div>
-        <div class="desc" style="opacity: 0.6;">🚧 Em breve — Navegação por voz completa, 100% auditiva, sem precisar olhar pra tela.</div>
-      </div>
+        <div class="premium-feature">
+          <div class="title">✅ 📚 Biblioteca de Audiobooks</div>
+          <div class="desc">Importe qualquer PDF do celular ou do Google Drive e ouça em voz alta com TTS sincronizado palavra a palavra. Tema sépia, fonte ajustável, progresso salvo por livro.</div>
+        </div>
 
-      <div class="premium-feature">
-        <div class="title">📦 Rastreio de encomenda</div>
-        <div class="desc" style="opacity: 0.6;">🚧 Em breve — conecta Mercado Livre ou e-mail pra ler suas encomendas em trânsito em voz alta.</div>
-      </div>
+        <div class="premium-feature">
+          <div class="title">✅ 📤 Salvar fotos na nuvem</div>
+          <div class="desc">Escolha fotos e vídeos do celular e o app envia direto pro seu Google Drive. Sem servidor no meio, sem backup automático bagunçado — você decide o que vai.</div>
+        </div>
 
-      <button id="subscribe-btn">Assinar</button>
-      <button id="check-subscription-btn" style="background: var(--c-surface); color: var(--c-text); margin-top: 10px; width: 100%; padding: 12px;">Já assinei, verificar</button>
-      <div class="result" id="subscribe-result" style="text-align:center; margin-top: 8px;"></div>
-      <div class="premium-note">Pagamento via Mercado Pago. Conecte sua conta Google (👤 Minha Conta) antes, é assim que identificamos sua assinatura.</div>
+        <div class="premium-feature">
+          <div class="title">🧭 GPS auditivo minimalista</div>
+          <div class="desc" style="opacity: 0.6;">🚧 Em breve — Navegação por voz completa, 100% auditiva, sem precisar olhar pra tela.</div>
+        </div>
+
+        <div class="premium-feature">
+          <div class="title">📦 Rastreio de encomenda</div>
+          <div class="desc" style="opacity: 0.6;">🚧 Em breve — conecta Mercado Livre ou e-mail pra ler suas encomendas em trânsito em voz alta.</div>
+        </div>
+
+        <button id="subscribe-btn">Assinar</button>
+        <button id="check-subscription-btn" style="background: var(--c-surface); color: var(--c-text); margin-top: 10px; width: 100%; padding: 12px;">Já assinei, verificar</button>
+        <div class="result" id="subscribe-result" style="text-align:center; margin-top: 8px;"></div>
+        <div class="premium-note">Pagamento via Mercado Pago. Conecte sua conta Google (👤 Minha Conta) antes, é assim que identificamos sua assinatura.</div>
+      </div>
     </div>
 
     <div id="premium-unlocked" style="display:none;">
@@ -1212,7 +1230,7 @@
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 L22 20 L2 20 Z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.9" fill="currentColor" stroke="none"/></svg>
     </button>
     <div class="sidebar-spacer"></div>
-    <button class="nav-btn sidebar-btn" id="sidebar-weather-btn" data-tab="briefing" style="display:none; flex-direction:column; gap:1px; height:auto; padding:6px 0;" title="Clima">
+    <button class="sidebar-btn" id="sidebar-weather-btn" style="display:none; flex-direction:column; gap:1px; height:auto; padding:6px 0;" title="Clima">
       <span id="sidebar-weather-icon"></span>
       <span id="sidebar-weather-temp" style="font-size:0.62rem; color:var(--c-text-dim); font-weight:600;"></span>
     </button>
@@ -3339,6 +3357,10 @@ sidebarEl.addEventListener('click', (ev) => { if (ev.target.closest('button')) c
 
 // Ícones da sidebar — Rádio/Ebook abrem o MultiSonor já no sub-tab certo,
 // Conta abre direto no Email/Google, Sobre no tab unificado.
+document.getElementById('sidebar-weather-btn').addEventListener('click', () => {
+  document.querySelector('.nav-btn[data-tab="briefing"]').click();
+});
+
 document.getElementById('sidebar-radio-btn').addEventListener('click', () => {
   document.getElementById('player-nav-btn').click();
   switchPlayerTab('radio');
@@ -8282,6 +8304,19 @@ function renderPremiumLock() {
   premiumUnlockedEl.style.display = unlocked ? 'block' : 'none';
 }
 renderPremiumLock();
+
+document.getElementById('premium-tab-free').addEventListener('click', () => {
+  document.getElementById('premium-tab-free').classList.add('active');
+  document.getElementById('premium-tab-premium').classList.remove('active');
+  document.getElementById('premium-plan-free').style.display = 'block';
+  document.getElementById('premium-plan-premium').style.display = 'none';
+});
+document.getElementById('premium-tab-premium').addEventListener('click', () => {
+  document.getElementById('premium-tab-premium').classList.add('active');
+  document.getElementById('premium-tab-free').classList.remove('active');
+  document.getElementById('premium-plan-premium').style.display = 'block';
+  document.getElementById('premium-plan-free').style.display = 'none';
+});
 
 document.getElementById('subscribe-btn').addEventListener('click', async () => {
   const resultEl = document.getElementById('subscribe-result');
