@@ -1042,7 +1042,7 @@
     </div>
     <div id="player-yt-attribution-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:0.72rem; color: var(--c-text-dim);">
       <span>▶️ Busca e reprodução fornecidas pelo YouTube</span>
-      <a href="https://facincanitech.github.io/SonorHub/privacidade.html" target="_blank" id="player-privacy-link" style="color: var(--c-accent-blue); text-decoration:underline;">Política de Privacidade</a>
+      <a href="https://facincanitech.github.io/Sonor/privacidade.html" target="_blank" id="player-privacy-link" style="color: var(--c-accent-blue); text-decoration:underline;">Política de Privacidade</a>
     </div>
     <div id="player-radio-searchbar" style="display:flex; gap:8px; margin-bottom: 14px;">
       <input type="text" id="player-radio-search" placeholder="Buscar rádio, cidade, gênero" enterkeyhint="search" style="flex:1; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 9px 10px;">
@@ -1590,7 +1590,7 @@
         direto aqui e instala manualmente (o Android vai avisar "fonte desconhecida",
         é normal pra apps fora da loja, pode confirmar a instalação).
       </div>
-      <a id="help-download-apk-btn" class="btn-connect" href="https://facincanitech.github.io/SonorHub/downloads/SonorHub.apk" download style="display:block; text-align:center; text-decoration:none; background: var(--c-accent-blue); color: var(--c-on-accent);">⬇️ Baixar SonorHub.apk</a>
+      <a id="help-download-apk-btn" class="btn-connect" href="https://facincanitech.github.io/Sonor/downloads/SonorHub.apk" download style="display:block; text-align:center; text-decoration:none; background: var(--c-accent-blue); color: var(--c-on-accent);">⬇️ Baixar SonorHub.apk</a>
     </div>
 
     <div id="help-accordion">
@@ -1975,7 +1975,7 @@ if (typeof window.SpeechSynthesisUtterance === 'undefined') {
 // limitação — não é o ideal pra venda em escala, mas sem custo imediato.
 const CLIENT_ID_WEB = '614074980827-7k3u0ugpmk8100chp5m1998b36peajo9.apps.googleusercontent.com';
 const CLIENT_ID_NATIVE = '501409490841-felsdcgkktofluhkt1hg5pg089fuakoi.apps.googleusercontent.com';
-const APP_DOWNLOAD_LINK = 'https://facincanitech.github.io/SonorHub/';
+const APP_DOWNLOAD_LINK = 'https://facincanitech.github.io/Sonor/';
 const GOOGLE_SCOPES_BASE = [
   'https://www.googleapis.com/auth/calendar.readonly',
   'https://www.googleapis.com/auth/contacts.readonly',
@@ -2748,7 +2748,7 @@ function wireApkDownloadLink(id) {
 }
 // update-banner-download virou <button>, então usa listener direto em vez de wireApkDownloadLink
 document.getElementById('update-banner-download').addEventListener('click', () => {
-  tocarNoNavegador('https://facincanitech.github.io/SonorHub/downloads/SonorHub.apk');
+  tocarNoNavegador('https://facincanitech.github.io/Sonor/downloads/SonorHub.apk');
 });
 wireApkDownloadLink('help-download-apk-btn');
 wireApkDownloadLink('player-privacy-link');
@@ -3068,7 +3068,7 @@ if (nativeApp) {
     nativeApp.exitApp();
   });
 
-  // Link de compartilhar do MultiSonor (https://facincanitech.github.io/SonorHub/?play=<videoId>)
+  // Link de compartilhar do MultiSonor (https://facincanitech.github.io/Sonor/?play=<videoId>)
   // — se o Android reconheceu o domínio (assetlinks.json em
   // facincanitech.github.io/.well-known/), abre o app instalado direto em
   // vez do navegador, e cai aqui com a URL completa pra gente extrair o
@@ -4280,7 +4280,7 @@ async function checkForUpdate() {
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
   if (!isNative) return;
   try {
-    const resp = await fetch(`https://facincanitech.github.io/SonorHub/version.json?t=${Date.now()}`);
+    const resp = await fetch(`https://facincanitech.github.io/Sonor/version.json?t=${Date.now()}`);
     if (!resp.ok) return;
     const remote = await resp.json();
     if (!remote.versionName || compareVersions(remote.versionName, APP_VERSION) <= 0) return;
@@ -7895,7 +7895,7 @@ document.getElementById('player-ctrl-share').addEventListener('click', async () 
     // navegador e já toca (ver checkForUpdate/playVideoFromDeepLink); com o
     // app instalado e o App Link verificado (assetlinks.json), abre o
     // SonorHub direto em vez do navegador.
-    link = `https://facincanitech.github.io/SonorHub/?play=${playerCurrentVideoObj.videoId}`;
+    link = `https://facincanitech.github.io/Sonor/?play=${playerCurrentVideoObj.videoId}`;
     const attribution = `📲 Compartilhado usando o app Sonor — ${APP_DOWNLOAD_LINK}`;
     text = [attribution, `${playerCurrentVideoObj.title} — ${playerCurrentVideoObj.channelTitle}`].join('\n\n');
   }
@@ -9958,7 +9958,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 document.getElementById('dl-apk-btn').addEventListener('click', () => {
-  tocarNoNavegador('https://facincanitech.github.io/SonorHub/downloads/SonorHub.apk');
+  tocarNoNavegador('https://facincanitech.github.io/Sonor/downloads/SonorHub.apk');
 });
 
 document.getElementById('dl-pwa-btn').addEventListener('click', async () => {
@@ -9979,7 +9979,7 @@ document.getElementById('dl-pwa-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('dl-share-btn').addEventListener('click', () => {
-  const url = 'https://facincanitech.github.io/SonorHub/';
+  const url = 'https://facincanitech.github.io/Sonor/';
   if (navigator.share) {
     navigator.share({ title: 'Sonor', text: 'Seu dia completo em áudio — Briefings, Música, Rádio e mais.', url });
   } else {

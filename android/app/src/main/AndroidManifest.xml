@@ -39,7 +39,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
                       android:host="facincanitech.github.io"
-                      android:pathPrefix="/SonorHub" />
+                      android:pathPrefix="/Sonor" />
             </intent-filter>
 
         </activity>
