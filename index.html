@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Sonor, Seu dia em voz alta</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔊</text></svg>">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <style>
   :root {
@@ -9770,7 +9771,7 @@ function scheduleAlarm(time) {
           const reg = await navigator.serviceWorker.ready;
           reg.showNotification('Sonor, Meu Dia', {
             body: `Seu briefing das ${time} está pronto. Toca aqui pra ouvir.`,
-            icon: 'icon.svg',
+            icon: 'icon-192.png',
             tag: 'infohub-briefing-' + time,
           });
         } catch (e) {
