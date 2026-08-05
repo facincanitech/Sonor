@@ -396,6 +396,8 @@
   .premium-nav-btn:hover { background: var(--c-surface-hover); }
   .premium-nav-btn .pnb-label { display:flex; align-items:center; gap:10px; }
   .premium-nav-btn .pnb-badge { font-size:0.7rem; background: var(--c-border2); color:var(--c-text-dim); border-radius:4px; padding:2px 6px; }
+  .premium-nav-btn.static { cursor: default; opacity: 0.85; }
+  .premium-nav-btn.static .chk { color: var(--c-green-text, #34a853); font-weight: 700; }
   #premium-feature-screen .overlay-inner { max-width:420px; margin:0 auto; padding:18px 16px 90px; }
   .premium-feature .title { font-weight: 600; font-size: 0.98rem; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
   .premium-feature .desc { color: var(--c-text-dim); font-size: 0.82rem; margin-bottom: 10px; }
@@ -797,7 +799,7 @@
   <section class="tab" id="tab-premium">
     <div id="premium-locked">
       <div class="screen-header">
-        <h1 style="display:none;">⭐ Premium</h1>
+        <h1 style="display:none;">⭐ Planos</h1>
         <div class="header-actions" style="position: relative; margin-left:auto;">
           <button class="icon-btn" data-action="voice">🎤</button>
           <button class="icon-btn more-menu-btn">⋯</button>
@@ -822,44 +824,23 @@
         <button type="button" class="btn-connect" disabled id="free-plan-status-btn" style="width:100%; margin-bottom:16px; opacity:0.7; cursor:default; background: var(--c-surface); color: var(--c-text-dim);">Seu plano atual</button>
 
         <div class="premium-nav-group">
-          <button type="button" class="premium-nav-btn" id="free-nav-meudia">
-            <span class="pnb-label">▶ Meu Dia — briefing completo por voz</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-radio">
-            <span class="pnb-label">📻 Rádio</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-audiobook">
-            <span class="pnb-label">📖 Audiobook (versão básica)</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-perfis">
-            <span class="pnb-label">🧑‍🤝‍🧑 Perfis e Briefing Automático</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-sos">
-            <span class="pnb-label">🆘 SOS de emergência</span><span class="chev">›</span>
-          </button>
+          <div class="premium-nav-btn static"><span class="pnb-label">▶ Meu Dia — briefing completo por voz</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">📻 Rádio</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">📖 Audiobook (versão básica)</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">🧑‍🤝‍🧑 Perfis e Briefing Automático</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">🆘 SOS de emergência</span><span class="chk">✓</span></div>
         </div>
 
         <div class="premium-section-label" style="margin: 18px 0 8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color: var(--c-text-dim);">📋 Briefings</div>
         <div class="premium-nav-group">
-          <button type="button" class="premium-nav-btn" id="free-nav-lembretes">
-            <span class="pnb-label">📝 Lembretes personalizados</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-aniversarios">
-            <span class="pnb-label">🎂 Aniversários</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-entretenimento">
-            <span class="pnb-label">🎮 Entretenimento</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-noticias">
-            <span class="pnb-label">📰 Notícias</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-feriados">
-            <span class="pnb-label">🎉 Feriados próximos</span><span class="chev">›</span>
-          </button>
-          <button type="button" class="premium-nav-btn" id="free-nav-clima">
-            <span class="pnb-label">🌤️ Clima</span><span class="chev">›</span>
-          </button>
+          <div class="premium-nav-btn static"><span class="pnb-label">📝 Lembretes personalizados</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">🎂 Aniversários</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">🎮 Entretenimento</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">📰 Notícias</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">🎉 Feriados próximos</span><span class="chk">✓</span></div>
+          <div class="premium-nav-btn static"><span class="pnb-label">🌤️ Clima</span><span class="chk">✓</span></div>
         </div>
+        <div class="premium-note">Pra configurar essas categorias, usa o botão ⚙️ Configurações no menu "⋯".</div>
       </div>
 
       <div id="premium-plan-premium" style="display:none;">
@@ -894,22 +875,9 @@
           <div class="premium-note">Pagamento via Mercado Pago. Conecte sua conta Google (👤 Minha Conta) antes, é assim que identificamos sua assinatura.</div>
         </div>
 
-        <div id="premium-active-view" style="display:none;">
+        <div id="planos-active-note" style="display:none;">
           <div class="premium-active-badge">👑 Premium ativo</div>
-          <button class="premium-nav-btn" data-premium-screen="audiobook-premium">
-            <span class="pnb-label">📚 Biblioteca de Audiobooks</span><span class="chev">›</span>
-          </button>
-          <button class="premium-nav-btn" data-premium-screen="drive-backup">
-            <span class="pnb-label">📤 Salvar fotos na nuvem</span><span class="chev">›</span>
-          </button>
-          <button class="premium-nav-btn" data-premium-screen="gps">
-            <span class="pnb-label">🧭 GPS auditivo minimalista</span>
-            <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
-          </button>
-          <button class="premium-nav-btn" data-premium-screen="rastreio">
-            <span class="pnb-label">📦 Rastreio de encomenda</span>
-            <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
-          </button>
+          <div class="premium-note">Pra usar os recursos, vai em ⚙️ Configurações no menu "⋯".</div>
         </div>
       </div>
     </div>
@@ -1219,7 +1187,7 @@
       <button class="nav-btn active" data-tab="briefing"><span class="ic">▶</span>Meu Dia</button>
       <button class="nav-btn" data-tab="gratis"><span class="ic">🎚️</span>Guia</button>
       <button class="nav-btn" id="player-nav-btn" data-tab="player"><span class="ic">🎵</span>MultiSonor</button>
-      <button class="nav-btn" data-tab="premium"><span class="ic">⭐</span>Premium</button>
+      <button class="nav-btn" data-tab="premium"><span class="ic">⭐</span>Planos</button>
     </div>
   </nav>
 
@@ -1351,7 +1319,7 @@
         <button class="btn-connect" id="outlook-connect-btn">Entrar com Microsoft</button>
       </div>
       <button type="button" class="premium-nav-btn" id="conta-premium-shortcut" style="margin-bottom:12px;">
-        <span class="pnb-label">👑 Premium</span><span class="chev">›</span>
+        <span class="pnb-label">⭐ Planos</span><span class="chev">›</span>
       </button>
 
       <div class="account-card" style="--brand-color: var(--c-red); border-color: var(--c-red);">
@@ -1451,6 +1419,92 @@
     </div>
     <div class="account-card">
       <button class="btn-connect" id="changelog-open-btn" style="background: var(--c-border2); color: var(--c-text);">📋 Versão e novidades</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIGURAÇÕES (overlay) — igual as abas Free/Premium do
+     Planos, só que aqui os itens funcionam de verdade (abrem a categoria).
+     Planos é vitrine (compara/assina), Config é onde se mexe. ============ -->
+<div class="overlay" id="config-overlay">
+  <div class="overlay-inner">
+    <div class="overlay-header">
+      <button class="back-btn" id="config-close-btn">←</button>
+      <h2>⚙️ Configurações</h2>
+    </div>
+
+    <div class="plan-tabs">
+      <button type="button" id="config-tab-free" class="plan-tab active">Free</button>
+      <button type="button" id="config-tab-premium" class="plan-tab">👑 Premium</button>
+    </div>
+
+    <div id="config-plan-free">
+      <div class="premium-nav-group">
+        <button type="button" class="premium-nav-btn" id="free-nav-meudia">
+          <span class="pnb-label">▶ Meu Dia — briefing completo por voz</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-radio">
+          <span class="pnb-label">📻 Rádio</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-audiobook">
+          <span class="pnb-label">📖 Audiobook (versão básica)</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-perfis">
+          <span class="pnb-label">🧑‍🤝‍🧑 Perfis e Briefing Automático</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-sos">
+          <span class="pnb-label">🆘 SOS de emergência</span><span class="chev">›</span>
+        </button>
+      </div>
+
+      <div class="premium-section-label" style="margin: 18px 0 8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color: var(--c-text-dim);">📋 Briefings</div>
+      <div class="premium-nav-group">
+        <button type="button" class="premium-nav-btn" id="free-nav-lembretes">
+          <span class="pnb-label">📝 Lembretes personalizados</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-aniversarios">
+          <span class="pnb-label">🎂 Aniversários</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-entretenimento">
+          <span class="pnb-label">🎮 Entretenimento</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-noticias">
+          <span class="pnb-label">📰 Notícias</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-feriados">
+          <span class="pnb-label">🎉 Feriados próximos</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-clima">
+          <span class="pnb-label">🌤️ Clima</span><span class="chev">›</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="config-plan-premium" style="display:none;">
+      <div id="config-premium-locked-note" style="display:none;">
+        <div class="premium-feature">
+          <div class="title">🔒 Recursos Premium bloqueados</div>
+          <div class="desc">Assine no ⭐ Planos pra desbloquear Biblioteca de Audiobooks e Salvar fotos na nuvem.</div>
+        </div>
+        <button type="button" id="config-go-planos-btn" style="width:100%; background: var(--c-surface); color: var(--c-text); padding:12px; border-radius:12px;">Ver Planos</button>
+      </div>
+      <div id="premium-active-view" style="display:none;">
+        <div class="premium-active-badge">👑 Premium ativo</div>
+        <button class="premium-nav-btn" data-premium-screen="audiobook-premium">
+          <span class="pnb-label">📚 Biblioteca de Audiobooks</span><span class="chev">›</span>
+        </button>
+        <button class="premium-nav-btn" data-premium-screen="drive-backup">
+          <span class="pnb-label">📤 Salvar fotos na nuvem</span><span class="chev">›</span>
+        </button>
+        <button class="premium-nav-btn" data-premium-screen="gps">
+          <span class="pnb-label">🧭 GPS auditivo minimalista</span>
+          <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
+        </button>
+        <button class="premium-nav-btn" data-premium-screen="rastreio">
+          <span class="pnb-label">📦 Rastreio de encomenda</span>
+          <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -3370,8 +3424,26 @@ function openOverlayExclusive(el) {
 }
 
 const accountsOverlay = document.getElementById('accounts-overlay');
+const configOverlay = document.getElementById('config-overlay');
 document.querySelectorAll('[data-action="gear"]').forEach(btn => {
-  btn.addEventListener('click', () => { openOverlayExclusive(accountsOverlay); updateAccountsUI(); });
+  btn.addEventListener('click', () => { openOverlayExclusive(configOverlay); });
+});
+document.getElementById('config-close-btn').addEventListener('click', () => { configOverlay.classList.remove('open'); updateOverlaySidebarActive(); });
+document.getElementById('config-go-planos-btn').addEventListener('click', () => {
+  configOverlay.classList.remove('open');
+  document.querySelector('.nav-btn[data-tab="premium"]').click();
+});
+document.getElementById('config-tab-free').addEventListener('click', () => {
+  document.getElementById('config-tab-free').classList.add('active');
+  document.getElementById('config-tab-premium').classList.remove('active');
+  document.getElementById('config-plan-free').style.display = 'block';
+  document.getElementById('config-plan-premium').style.display = 'none';
+});
+document.getElementById('config-tab-premium').addEventListener('click', () => {
+  document.getElementById('config-tab-premium').classList.add('active');
+  document.getElementById('config-tab-free').classList.remove('active');
+  document.getElementById('config-plan-premium').style.display = 'block';
+  document.getElementById('config-plan-free').style.display = 'none';
 });
 
 // Atalhos do menu "⋯" pra abrir direto numa aba específica da Central de
@@ -3578,8 +3650,12 @@ document.getElementById('privacy-close-btn').addEventListener('click', () => {
 
 // Versão mostrada aqui precisa bater com versionName do android/app/build.gradle
 // — atualiza os dois juntos sempre que reempacotar o APK pra distribuir.
-const APP_VERSION = '4.74';
+const APP_VERSION = '4.75';
 const CHANGELOG = [
+  {
+    version: '4.75', date: '05/08/2026',
+    notes: 'Planos virou vitrine (só compara Free x Premium, itens não clicam mais); novo botão ⚙️ Configurações no menu "⋯" abre a tela onde as categorias do Guia e os recursos Premium ativos realmente funcionam.',
+  },
   {
     version: '4.73', date: '30/06/2026',
     items: [
@@ -8461,7 +8537,11 @@ function renderPremiumLock() {
   const SETE_DIAS = 7 * 24 * 60 * 60 * 1000;
   const verifiedRecentemente = Date.now() - state.premiumLastVerified < SETE_DIAS;
   const unlocked = state.premiumUnlocked && (!!accessToken || verifiedRecentemente);
-  document.getElementById('premium-subscribe-view').style.display = unlocked ? 'none' : 'block';
+  document.getElementById('subscribe-btn').style.display = unlocked ? 'none' : 'block';
+  document.getElementById('check-subscription-btn').style.display = unlocked ? 'none' : 'block';
+  document.getElementById('premium-subscribe-view').querySelector('.premium-note').style.display = unlocked ? 'none' : 'block';
+  document.getElementById('planos-active-note').style.display = unlocked ? 'block' : 'none';
+  document.getElementById('config-premium-locked-note').style.display = unlocked ? 'none' : 'block';
   document.getElementById('premium-active-view').style.display = unlocked ? 'block' : 'none';
 }
 renderPremiumLock();
