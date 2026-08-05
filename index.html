@@ -7756,7 +7756,7 @@ function playRadioStation(est) {
   document.getElementById('player-ctrl-video-toggle').style.display = 'none';
   document.getElementById('player-ctrl-discover').style.display = 'flex';
   document.getElementById('player-ctrl-favorite').style.display = 'flex';
-  document.getElementById('player-ctrl-share').style.display = 'flex';
+  document.getElementById('player-ctrl-share').style.display = 'none'; // link de compartilhar de rádio ainda não tá confiável, escondido por ora
   updateRadioFavoriteIcon();
   document.getElementById('player-progress-row').style.display = 'none';
   setPlayPauseIcon('player-ctrl-playpause', true);
