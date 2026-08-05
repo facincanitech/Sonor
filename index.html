@@ -390,6 +390,9 @@
   .price-card .price span { font-size: 0.9rem; color: var(--c-text-dim); font-weight: 400; }
   .premium-feature { background: var(--c-surface); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
   .premium-nav-btn { display:flex; align-items:center; justify-content:space-between; width:100%; text-align:left; background: var(--c-surface); border-radius:14px; padding:16px; margin-bottom:10px; font-size:1rem; font-weight:600; color:var(--c-text); }
+  .premium-nav-group { background: var(--c-surface); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+  .premium-nav-group .premium-nav-btn { background: none; border-radius: 0; margin-bottom: 0; border-bottom: 1px solid var(--c-border); }
+  .premium-nav-group .premium-nav-btn:last-child { border-bottom: none; }
   .premium-nav-btn:hover { background: var(--c-surface-hover); }
   .premium-nav-btn .pnb-label { display:flex; align-items:center; gap:10px; }
   .premium-nav-btn .pnb-badge { font-size:0.7rem; background: var(--c-border2); color:var(--c-text-dim); border-radius:4px; padding:2px 6px; }
@@ -794,19 +797,18 @@
   <section class="tab" id="tab-premium">
     <div id="premium-locked">
       <div class="screen-header">
-        <h1>⭐ Premium</h1>
-        <div class="header-actions" style="position: relative;">
+        <h1 style="display:none;">⭐ Premium</h1>
+        <div class="header-actions" style="position: relative; margin-left:auto;">
           <button class="icon-btn" data-action="voice">🎤</button>
           <button class="icon-btn more-menu-btn">⋯</button>
           <div class="item-action-menu more-menu-panel">
-  
+
             <button type="button" class="item-action-menu-opt" data-action="gear">⚙️ Configurações</button>
             <button type="button" class="item-action-menu-opt" data-action="tema">🎨 Tema</button>
             <button type="button" class="item-action-menu-opt" data-action="contato">✉️ Contato</button>
           </div>
         </div>
       </div>
-      <div class="sub">Mais automação, mais conveniência.</div>
 
       <div class="plan-tabs">
         <button type="button" id="premium-tab-free" class="plan-tab active">Free</button>
@@ -819,21 +821,23 @@
         </div>
         <button type="button" class="btn-connect" disabled id="free-plan-status-btn" style="width:100%; margin-bottom:16px; opacity:0.7; cursor:default; background: var(--c-surface); color: var(--c-text-dim);">Seu plano atual</button>
 
-        <button type="button" class="premium-nav-btn" id="free-nav-meudia">
-          <span class="pnb-label">▶ Meu Dia — briefing completo por voz</span><span class="chev">›</span>
-        </button>
-        <button type="button" class="premium-nav-btn" id="free-nav-radio">
-          <span class="pnb-label">📻 Rádio</span><span class="chev">›</span>
-        </button>
-        <button type="button" class="premium-nav-btn" id="free-nav-audiobook">
-          <span class="pnb-label">📖 Audiobook (versão básica)</span><span class="chev">›</span>
-        </button>
-        <button type="button" class="premium-nav-btn" id="free-nav-perfis">
-          <span class="pnb-label">🧑‍🤝‍🧑 Perfis e Briefing Automático</span><span class="chev">›</span>
-        </button>
-        <button type="button" class="premium-nav-btn" id="free-nav-sos">
-          <span class="pnb-label">🆘 SOS de emergência</span><span class="chev">›</span>
-        </button>
+        <div class="premium-nav-group">
+          <button type="button" class="premium-nav-btn" id="free-nav-meudia">
+            <span class="pnb-label">▶ Meu Dia — briefing completo por voz</span><span class="chev">›</span>
+          </button>
+          <button type="button" class="premium-nav-btn" id="free-nav-radio">
+            <span class="pnb-label">📻 Rádio</span><span class="chev">›</span>
+          </button>
+          <button type="button" class="premium-nav-btn" id="free-nav-audiobook">
+            <span class="pnb-label">📖 Audiobook (versão básica)</span><span class="chev">›</span>
+          </button>
+          <button type="button" class="premium-nav-btn" id="free-nav-perfis">
+            <span class="pnb-label">🧑‍🤝‍🧑 Perfis e Briefing Automático</span><span class="chev">›</span>
+          </button>
+          <button type="button" class="premium-nav-btn" id="free-nav-sos">
+            <span class="pnb-label">🆘 SOS de emergência</span><span class="chev">›</span>
+          </button>
+        </div>
 
         <div class="premium-section-label" style="margin: 18px 0 8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color: var(--c-text-dim);">📋 Guia</div>
         <button type="button" class="premium-nav-btn" id="free-nav-lembretes">
