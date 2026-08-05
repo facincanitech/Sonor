@@ -2178,6 +2178,7 @@ let openCategoryId = null;
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (typeof scheduleConfigSync === 'function') scheduleConfigSync();
 }
 
 function applyTheme() {
@@ -4315,10 +4316,72 @@ document.querySelectorAll('.account-tab-btn').forEach(btn => {
   });
 });
 
+/* =========================================================================
+   SINCRONIZAÇÃO DE CONFIGURAÇÃO ENTRE APARELHOS (Supabase, sob login Google)
+   Continua tudo no localStorage como antes (funciona sem login normalmente)
+   — logado, cada saveState() também manda uma cópia pro servidor (com
+   debounce, não a cada tecla), e no login puxa a última versão salva.
+   Última gravação vence — sem resolução de conflito fina.
+   ========================================================================= */
+let configSyncTimeout = null;
+let configSyncedThisSession = false;
+
+async function callSyncConfigFunction(action, extra) {
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/sync-config`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, accessToken, ...extra }),
+  });
+  return resp.json();
+}
+
+function scheduleConfigSync() {
+  if (typeof accessToken === 'undefined' || !accessToken) return;
+  clearTimeout(configSyncTimeout);
+  configSyncTimeout = setTimeout(async () => {
+    try {
+      const { error } = await callSyncConfigFunction('save', { data: state });
+      if (error) console.error('sync config save:', error);
+    } catch (e) {
+      console.error('sync config save:', e);
+    }
+  }, 2000); // espera 2s parado de mexer antes de mandar, não é a cada campo digitado
+}
+
+async function loadConfigFromServer() {
+  if (!accessToken) return;
+  try {
+    const { data, error } = await callSyncConfigFunction('get');
+    if (error) { console.error('sync config load:', error); return; }
+    if (data) {
+      // Mescla com os defaults do loadState() (cobre o caso de a versão
+      // salva no servidor ser de uma versão mais antiga do app, sem algum
+      // campo novo).
+      state = { ...loadState(), ...data };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      applyTheme();
+      if (typeof renderPerfis === 'function') renderPerfis();
+      if (typeof renderAlarmsList === 'function') renderAlarmsList();
+      if (typeof updateAlarmsTileStatus === 'function') updateAlarmsTileStatus();
+      if (typeof renderCategoryCards === 'function') renderCategoryCards();
+    } else {
+      // Nunca sincronizou antes nesse e-mail — sobe o que já tem local,
+      // pra não perder a configuração que a pessoa já tinha feito.
+      scheduleConfigSync();
+    }
+  } catch (e) {
+    console.error('sync config load:', e);
+  }
+}
+
 function updateAccountsUI() {
   renderPremiumLock();
   revalidatePremiumIfNeeded();
   if (typeof renderPerfis === 'function') renderPerfis();
+  if (accessToken && !configSyncedThisSession) {
+    configSyncedThisSession = true;
+    loadConfigFromServer();
+  }
   const googleOn = !!accessToken;
   document.getElementById('google-status-dot').classList.toggle('on', googleOn);
   document.getElementById('google-status-text').textContent = googleOn ? 'Conectado' : 'Desconectado';
