@@ -7734,7 +7734,11 @@ function playRadioStation(est) {
     coverImg.style.objectFit = 'cover';
     coverImg.style.padding = '0';
   };
-  if (est.favicon) {
+  // Muitas rádios cadastram o favicon em http:// puro — carregar isso numa
+  // página https:// dispara o aviso de "conteúdo misto" do navegador
+  // (Chrome mostra "não seguro" mesmo o site em si sendo https). Só usa o
+  // favicon se ele já for https; senão cai direto na silhueta.
+  if (est.favicon && est.favicon.startsWith('https://')) {
     coverImg.style.objectFit = 'contain';
     coverImg.style.padding = '22%';
     coverImg.style.background = '#242830';
