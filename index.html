@@ -378,6 +378,10 @@
   .plan-tabs { display: flex; background: var(--c-bg); border-radius: 10px; padding: 3px; gap: 3px; margin-bottom: 18px; }
   .plan-tab { flex: 1; border: none; border-radius: 8px; padding: 8px 6px; font-size: 0.9rem; font-weight: 600; background: none; color: var(--c-text-dim); cursor: pointer; }
   .plan-tab.active { background: var(--c-surface-hover); color: var(--c-text); }
+  .premium-active-badge {
+    background: linear-gradient(135deg, var(--c-yellow), #f0a020); color: #1a1200; font-weight: 700;
+    text-align: center; border-radius: 20px; padding: 10px; margin-bottom: 16px; font-size: 0.9rem;
+  }
   .price-card {
     background: linear-gradient(145deg, var(--c-surface), var(--c-surface-alt));
     border: 1px solid var(--c-border2); border-radius: 16px; padding: 22px; text-align: center; margin-bottom: 18px;
@@ -810,11 +814,24 @@
       </div>
 
       <div id="premium-plan-free">
-        <div class="premium-feature"><div class="title">✅ Meu Dia — briefing completo por voz</div></div>
-        <div class="premium-feature"><div class="title">✅ Guia — Notícias, Clima, Entretenimento, Místico e mais</div></div>
-        <div class="premium-feature"><div class="title">✅ Rádio e Audiobook (versão básica)</div></div>
-        <div class="premium-feature"><div class="title">✅ Perfis e Briefing Automático</div></div>
-        <div class="premium-feature"><div class="title">✅ SOS de emergência</div></div>
+        <button type="button" class="premium-nav-btn" id="free-nav-meudia">
+          <span class="pnb-label">▶ Meu Dia — briefing completo por voz</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-guia">
+          <span class="pnb-label">🗂️ Guia — Notícias, Clima, Entretenimento, Místico</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-radio">
+          <span class="pnb-label">📻 Rádio</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-audiobook">
+          <span class="pnb-label">📖 Audiobook (versão básica)</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-perfis">
+          <span class="pnb-label">🧑‍🤝‍🧑 Perfis e Briefing Automático</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-sos">
+          <span class="pnb-label">🆘 SOS de emergência</span><span class="chev">›</span>
+        </button>
       </div>
 
       <div id="premium-plan-premium" style="display:none;">
@@ -863,7 +880,7 @@
           </div>
         </div>
       </div>
-      <div class="sub">Assinatura ativa.</div>
+      <div class="premium-active-badge">👑 Premium ativo</div>
 
       <button class="premium-nav-btn" data-premium-screen="audiobook-premium">
         <span class="pnb-label">📚 Biblioteca de Audiobooks</span><span class="chev">›</span>
@@ -8410,6 +8427,25 @@ function renderPremiumLock() {
   premiumUnlockedEl.style.display = unlocked ? 'block' : 'none';
 }
 renderPremiumLock();
+
+document.getElementById('free-nav-meudia').addEventListener('click', () => {
+  document.querySelector('.nav-btn[data-tab="briefing"]').click();
+});
+document.getElementById('free-nav-guia').addEventListener('click', () => {
+  document.querySelector('.nav-btn[data-tab="gratis"]').click();
+});
+document.getElementById('free-nav-radio').addEventListener('click', () => {
+  document.getElementById('sidebar-radio-btn').click();
+});
+document.getElementById('free-nav-audiobook').addEventListener('click', () => {
+  document.getElementById('sidebar-ebook-btn').click();
+});
+document.getElementById('free-nav-perfis').addEventListener('click', () => {
+  document.querySelector('.nav-btn[data-tab="briefing"]').click();
+});
+document.getElementById('free-nav-sos').addEventListener('click', () => {
+  document.getElementById('sos-badge-btn').click();
+});
 
 document.getElementById('premium-tab-free').addEventListener('click', () => {
   document.getElementById('premium-tab-free').classList.add('active');
