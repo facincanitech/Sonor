@@ -1056,6 +1056,7 @@
         <button id="player-back-to-search-btn" style="display:none; background:none; color: var(--c-text); font-size:1.3rem; padding:4px;">←</button>
         <div style="display:flex; align-items:center; gap:28px; margin-left:auto;">
           <button id="player-ctrl-video-toggle" style="background:none; color: var(--c-text); padding:4px; display:none;"></button>
+          <button id="player-ctrl-discover" title="Descoberta — sortear outra rádio" style="background:none; color: var(--c-text); padding:4px; display:none;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
           <button id="player-ctrl-favorite" style="background:none; color: var(--c-text); font-size:1.4rem; padding:4px; display:none;">☆</button>
           <button id="player-ctrl-share" style="background:none; color: var(--c-text); padding:4px; display:none;"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg></button>
         </div>
@@ -3081,6 +3082,8 @@ if (nativeApp) {
       const url = new URL(data.url);
       const videoId = url.searchParams.get('play');
       if (videoId) playVideoFromDeepLink(videoId);
+      const radioParam = url.searchParams.get('radio');
+      if (radioParam) playRadioFromDeepLink(radioParam, url.searchParams.get('name'), url.searchParams.get('country'));
     } catch (e) { console.error('appUrlOpen:', e); }
   });
 }
@@ -3088,8 +3091,11 @@ if (nativeApp) {
 // Versão web (PWA/site) do mesmo link — sem App Link nativo, só checa o
 // parâmetro na URL ao carregar a página.
 (() => {
-  const videoId = new URLSearchParams(location.search).get('play');
+  const params = new URLSearchParams(location.search);
+  const videoId = params.get('play');
   if (videoId) playVideoFromDeepLink(videoId);
+  const radioParam = params.get('radio');
+  if (radioParam) playRadioFromDeepLink(radioParam, params.get('name'), params.get('country'));
 })();
 
 async function playVideoFromDeepLink(videoId) {
@@ -3101,6 +3107,20 @@ async function playVideoFromDeepLink(videoId) {
     if (!video) { console.error('playVideoFromDeepLink: vídeo não encontrado', resp.error); return; }
     playInEmbeddedPlayer(video, 'Música/Vídeo', [video], 0, 'media');
   } catch (e) { console.error('playVideoFromDeepLink:', e); }
+}
+
+// Link de compartilhar do Rádio (?radio=<url em base64>&name=&country=) —
+// a URL do stream vem em base64 só pra não quebrar como query string (tem
+// barra, dois-pontos etc). Mesma ideia do link de vídeo: abre o app
+// instalado direto (App Link) ou cai na versão web, e já toca sozinho.
+async function playRadioFromDeepLink(streamUrlB64, name, country) {
+  const navBtn = document.getElementById('player-nav-btn');
+  if (navBtn) navBtn.click();
+  try {
+    const url = atob(streamUrlB64);
+    switchPlayerTab('radio');
+    playRadioStation({ name: name || 'Rádio', url, url_resolved: url, country: country || '' });
+  } catch (e) { console.error('playRadioFromDeepLink:', e); }
 }
 
 /* =========================================================================
@@ -7406,6 +7426,7 @@ async function playInEmbeddedPlayer(video, tipoLabel, lista, index, tab) {
   document.getElementById('player-ctrl-prev').style.display = '';
   document.getElementById('player-ctrl-next').style.display = '';
   document.getElementById('player-ctrl-video-toggle').style.display = 'flex';
+  document.getElementById('player-ctrl-discover').style.display = 'none';
   document.getElementById('player-ctrl-favorite').style.display = 'flex';
   document.getElementById('player-ctrl-share').style.display = 'flex';
   updatePlayerFavoriteIcon();
@@ -7729,6 +7750,7 @@ function playRadioStation(est) {
   document.getElementById('player-ctrl-prev').style.display = 'none';
   document.getElementById('player-ctrl-next').style.display = 'none';
   document.getElementById('player-ctrl-video-toggle').style.display = 'none';
+  document.getElementById('player-ctrl-discover').style.display = 'flex';
   document.getElementById('player-ctrl-favorite').style.display = 'flex';
   document.getElementById('player-ctrl-share').style.display = 'flex';
   updateRadioFavoriteIcon();
@@ -7776,6 +7798,16 @@ document.getElementById('radio-discover-btn').addEventListener('click', async ()
   btn.classList.add('loading');
   const est = await sortearRadioAleatoria();
   btn.classList.remove('loading');
+  if (est) playRadioStation(est);
+});
+
+// Mesma Descoberta, agora também dentro do player grande — sorteia outra
+// rádio sem precisar voltar pra tela de busca.
+document.getElementById('player-ctrl-discover').addEventListener('click', async (ev) => {
+  const btn = ev.currentTarget;
+  btn.style.opacity = '0.5';
+  const est = await sortearRadioAleatoria();
+  btn.style.opacity = '1';
   if (est) playRadioStation(est);
 });
 
@@ -7948,10 +7980,15 @@ document.getElementById('player-ctrl-share').addEventListener('click', async () 
   let link, text;
   if (playerActiveTab === 'radio') {
     if (!playerCurrentRadioObj) return;
-    const url = playerCurrentRadioObj.url_resolved || playerCurrentRadioObj.url;
+    const streamUrl = playerCurrentRadioObj.url_resolved || playerCurrentRadioObj.url;
+    const nome = playerCurrentRadioObj.name || playerCurrentRadioObj.nome || 'Rádio';
+    const country = playerCurrentRadioObj.country || '';
+    // Link próprio (não a URL crua do stream) — mesma ideia do link de
+    // vídeo: abre o app instalado direto (App Link) já tocando essa rádio,
+    // em vez de mandar pra um site externo qualquer.
+    link = `https://facincanitech.github.io/Sonor/?radio=${encodeURIComponent(btoa(streamUrl))}&name=${encodeURIComponent(nome)}&country=${encodeURIComponent(country)}`;
     const attribution = `📲 Compartilhado usando o app Sonor — ${APP_DOWNLOAD_LINK}`;
-    text = [attribution, `📻 ${playerCurrentRadioObj.name || playerCurrentRadioObj.nome}`].join('\n\n');
-    link = url;
+    text = [attribution, `📻 ${nome}`].join('\n\n');
   } else {
     if (!playerCurrentVideoObj) return;
     // Link próprio (não o youtube.com direto) — sem app instalado cai no
