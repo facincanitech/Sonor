@@ -857,6 +857,7 @@
       </div>
 
       <div id="premium-plan-premium" style="display:none;">
+        <div id="premium-subscribe-view">
         <div class="price-card">
           <div class="price">R$ 24,90 <span>/ mês</span></div>
         </div>
@@ -881,44 +882,30 @@
           <div class="desc" style="opacity: 0.6;">🚧 Em breve — conecta Mercado Livre ou e-mail pra ler suas encomendas em trânsito em voz alta.</div>
         </div>
 
-        <button id="subscribe-btn">Assinar</button>
-        <button id="check-subscription-btn" style="background: var(--c-surface); color: var(--c-text); margin-top: 10px; width: 100%; padding: 12px;">Já assinei, verificar</button>
-        <div class="result" id="subscribe-result" style="text-align:center; margin-top: 8px;"></div>
-        <div class="premium-note">Pagamento via Mercado Pago. Conecte sua conta Google (👤 Minha Conta) antes, é assim que identificamos sua assinatura.</div>
-      </div>
-    </div>
+          <button id="subscribe-btn">Assinar</button>
+          <button id="check-subscription-btn" style="background: var(--c-surface); color: var(--c-text); margin-top: 10px; width: 100%; padding: 12px;">Já assinei, verificar</button>
+          <div class="result" id="subscribe-result" style="text-align:center; margin-top: 8px;"></div>
+          <div class="premium-note">Pagamento via Mercado Pago. Conecte sua conta Google (👤 Minha Conta) antes, é assim que identificamos sua assinatura.</div>
+        </div>
 
-    <div id="premium-unlocked" style="display:none;">
-      <div class="screen-header">
-        <h1>⭐ Premium</h1>
-        <div class="header-actions" style="position: relative;">
-          <button class="icon-btn" data-action="voice">🎤</button>
-          <button class="icon-btn more-menu-btn">⋯</button>
-          <div class="item-action-menu more-menu-panel">
-  
-            <button type="button" class="item-action-menu-opt" data-action="gear">⚙️ Configurações</button>
-            <button type="button" class="item-action-menu-opt" data-action="tema">🎨 Tema</button>
-            <button type="button" class="item-action-menu-opt" data-action="contato">✉️ Contato</button>
-          </div>
+        <div id="premium-active-view" style="display:none;">
+          <div class="premium-active-badge">👑 Premium ativo</div>
+          <button class="premium-nav-btn" data-premium-screen="audiobook-premium">
+            <span class="pnb-label">📚 Biblioteca de Audiobooks</span><span class="chev">›</span>
+          </button>
+          <button class="premium-nav-btn" data-premium-screen="drive-backup">
+            <span class="pnb-label">📤 Salvar fotos na nuvem</span><span class="chev">›</span>
+          </button>
+          <button class="premium-nav-btn" data-premium-screen="gps">
+            <span class="pnb-label">🧭 GPS auditivo minimalista</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
+          </button>
+          <button class="premium-nav-btn" data-premium-screen="rastreio">
+            <span class="pnb-label">📦 Rastreio de encomenda</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
+          </button>
         </div>
       </div>
-      <div class="premium-active-badge">👑 Premium ativo</div>
-
-      <button class="premium-nav-btn" data-premium-screen="audiobook-premium">
-        <span class="pnb-label">📚 Biblioteca de Audiobooks</span><span class="chev">›</span>
-      </button>
-      <button class="premium-nav-btn" data-premium-screen="drive-backup">
-        <span class="pnb-label">📤 Salvar fotos na nuvem</span><span class="chev">›</span>
-      </button>
-      <button class="premium-nav-btn" data-premium-screen="gps">
-        <span class="pnb-label">🧭 GPS auditivo minimalista</span>
-        <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
-      </button>
-      <button class="premium-nav-btn" data-premium-screen="rastreio">
-        <span class="pnb-label">📦 Rastreio de encomenda</span>
-        <span style="display:flex;align-items:center;gap:6px;"><span class="pnb-badge">Em breve</span><span class="chev">›</span></span>
-      </button>
-
     </div>
   </section>
 
@@ -8437,16 +8424,19 @@ document.getElementById('mic-badge-btn').addEventListener('click', () => {
    PREMIUM, desbloqueio
    ========================================================================= */
 const premiumLockedEl = document.getElementById('premium-locked');
-const premiumUnlockedEl = document.getElementById('premium-unlocked');
 
+// Uma tela só (abas Free/Premium) pra todo mundo — quem já assina só vê a
+// aba Premium trocar de "Assinar" pro status "ativo" + os atalhos das
+// features, em vez de ser uma tela inteira separada (era o que causava a
+// "tela antiga" aparecer sempre que premiumUnlocked ficava true).
 function renderPremiumLock() {
   // Mantém acesso premium por 7 dias sem precisar do Google conectado — evita
   // ter que reconectar a conta toda sessão no APK (native auth não persiste).
   const SETE_DIAS = 7 * 24 * 60 * 60 * 1000;
   const verifiedRecentemente = Date.now() - state.premiumLastVerified < SETE_DIAS;
   const unlocked = state.premiumUnlocked && (!!accessToken || verifiedRecentemente);
-  premiumLockedEl.style.display = unlocked ? 'none' : 'block';
-  premiumUnlockedEl.style.display = unlocked ? 'block' : 'none';
+  document.getElementById('premium-subscribe-view').style.display = unlocked ? 'none' : 'block';
+  document.getElementById('premium-active-view').style.display = unlocked ? 'block' : 'none';
 }
 renderPremiumLock();
 
