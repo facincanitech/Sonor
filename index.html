@@ -1350,13 +1350,18 @@
         <div class="scope-list">Hotmail / Outlook, acesso de leitura aos e-mails.</div>
         <button class="btn-connect" id="outlook-connect-btn">Entrar com Microsoft</button>
       </div>
-      <div class="account-card" style="--brand-color: var(--c-red);">
+      <button type="button" class="premium-nav-btn" id="conta-premium-shortcut" style="margin-bottom:12px;">
+        <span class="pnb-label">👑 Premium</span><span class="chev">›</span>
+      </button>
+
+      <div class="account-card" style="--brand-color: var(--c-red); border-color: var(--c-red);">
         <div class="acc-top">
-          <div class="acc-icon-badge">🗑️</div>
-          <div class="status">Apagar conta</div>
+          <div class="acc-icon-badge">⚠️</div>
+          <div class="status" style="color: var(--c-red); font-weight:700;">Apagar conta</div>
         </div>
-        <div class="scope-list">Apaga tudo salvo neste aparelho — perfis, favoritos, histórico, configurações do Guia. Não afeta sua conta Google/Microsoft nem arquivos já salvos no Drive.</div>
-        <button class="btn-connect" id="delete-account-btn" style="background: var(--c-red); color:#fff;">Apagar conta</button>
+        <div class="scope-list">Apaga tudo salvo neste aparelho — perfis, favoritos, histórico, configurações do Guia. Não tem como desfazer. Não afeta sua conta Google/Microsoft nem arquivos já salvos no Drive. Pra confirmar, digite <b>APAGAR</b> abaixo.</div>
+        <input type="text" id="delete-account-confirm-input" placeholder="Digite APAGAR" style="width:100%; background: var(--c-bg); border: 1px solid var(--c-border2); color: var(--c-text); border-radius: 8px; padding: 9px 10px; margin-bottom:10px;">
+        <button class="btn-connect" id="delete-account-btn" disabled style="background: var(--c-surface-hover); color: var(--c-text-faint); opacity:0.6; cursor:default;">🗑️ Apagar conta</button>
       </div>
     </div>
 
@@ -3384,11 +3389,26 @@ document.querySelectorAll('[data-action="contato"]').forEach((btn) => btn.addEve
 document.getElementById('sobre-close-btn').addEventListener('click', () => { sobreOverlay.classList.remove('open'); updateOverlaySidebarActive(); });
 document.getElementById('accounts-close-btn').addEventListener('click', () => { accountsOverlay.classList.remove('open'); updateOverlaySidebarActive(); });
 
-document.getElementById('delete-account-btn').addEventListener('click', () => {
-  const ok = confirm('Isso apaga TUDO salvo neste aparelho (perfis, favoritos, histórico, configurações) de vez, sem volta. Sua conta Google/Microsoft e arquivos no Drive não são afetados. Confirma?');
-  if (!ok) return;
+const deleteAccountInput = document.getElementById('delete-account-confirm-input');
+const deleteAccountBtn = document.getElementById('delete-account-btn');
+deleteAccountInput.addEventListener('input', () => {
+  const ready = deleteAccountInput.value.trim().toUpperCase() === 'APAGAR';
+  deleteAccountBtn.disabled = !ready;
+  deleteAccountBtn.style.background = ready ? 'var(--c-red)' : 'var(--c-surface-hover)';
+  deleteAccountBtn.style.color = ready ? '#fff' : 'var(--c-text-faint)';
+  deleteAccountBtn.style.opacity = ready ? '1' : '0.6';
+  deleteAccountBtn.style.cursor = ready ? 'pointer' : 'default';
+});
+deleteAccountBtn.addEventListener('click', () => {
+  if (deleteAccountInput.value.trim().toUpperCase() !== 'APAGAR') return;
   localStorage.clear();
   location.reload();
+});
+
+document.getElementById('conta-premium-shortcut').addEventListener('click', () => {
+  accountsOverlay.classList.remove('open');
+  updateOverlaySidebarActive();
+  document.querySelector('.nav-btn[data-tab="premium"]').click();
 });
 
 /* =========================================================================
