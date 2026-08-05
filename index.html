@@ -814,11 +814,13 @@
       </div>
 
       <div id="premium-plan-free">
+        <div class="price-card">
+          <div class="price">R$ 0 <span>/ mês</span></div>
+        </div>
+        <button type="button" class="btn-connect" disabled id="free-plan-status-btn" style="width:100%; margin-bottom:16px; opacity:0.7; cursor:default; background: var(--c-surface); color: var(--c-text-dim);">Seu plano atual</button>
+
         <button type="button" class="premium-nav-btn" id="free-nav-meudia">
           <span class="pnb-label">▶ Meu Dia — briefing completo por voz</span><span class="chev">›</span>
-        </button>
-        <button type="button" class="premium-nav-btn" id="free-nav-guia">
-          <span class="pnb-label">🗂️ Guia — Notícias, Clima, Entretenimento, Místico</span><span class="chev">›</span>
         </button>
         <button type="button" class="premium-nav-btn" id="free-nav-radio">
           <span class="pnb-label">📻 Rádio</span><span class="chev">›</span>
@@ -831,6 +833,26 @@
         </button>
         <button type="button" class="premium-nav-btn" id="free-nav-sos">
           <span class="pnb-label">🆘 SOS de emergência</span><span class="chev">›</span>
+        </button>
+
+        <div class="premium-section-label" style="margin: 18px 0 8px; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color: var(--c-text-dim);">📋 Guia</div>
+        <button type="button" class="premium-nav-btn" id="free-nav-lembretes">
+          <span class="pnb-label">📝 Lembretes personalizados</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-aniversarios">
+          <span class="pnb-label">🎂 Aniversários</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-entretenimento">
+          <span class="pnb-label">🎮 Entretenimento</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-noticias">
+          <span class="pnb-label">📰 Notícias</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-feriados">
+          <span class="pnb-label">🎉 Feriados próximos</span><span class="chev">›</span>
+        </button>
+        <button type="button" class="premium-nav-btn" id="free-nav-clima">
+          <span class="pnb-label">🌤️ Clima</span><span class="chev">›</span>
         </button>
       </div>
 
@@ -8431,9 +8453,6 @@ renderPremiumLock();
 document.getElementById('free-nav-meudia').addEventListener('click', () => {
   document.querySelector('.nav-btn[data-tab="briefing"]').click();
 });
-document.getElementById('free-nav-guia').addEventListener('click', () => {
-  document.querySelector('.nav-btn[data-tab="gratis"]').click();
-});
 document.getElementById('free-nav-radio').addEventListener('click', () => {
   document.getElementById('sidebar-radio-btn').click();
 });
@@ -8446,6 +8465,19 @@ document.getElementById('free-nav-perfis').addEventListener('click', () => {
 document.getElementById('free-nav-sos').addEventListener('click', () => {
   document.getElementById('sos-badge-btn').click();
 });
+
+// Categorias do Guia — abre a aba e cai direto no detalhe daquela categoria
+// (igual clicar nela na lista do Guia), não só na lista geral.
+function goToGuiaCategory(catId) {
+  document.querySelector('.nav-btn[data-tab="gratis"]').click();
+  openCategoryDetail(catId);
+}
+document.getElementById('free-nav-lembretes').addEventListener('click', () => goToGuiaCategory('pessoal'));
+document.getElementById('free-nav-aniversarios').addEventListener('click', () => goToGuiaCategory('pessoal'));
+document.getElementById('free-nav-entretenimento').addEventListener('click', () => goToGuiaCategory('entretenimento'));
+document.getElementById('free-nav-noticias').addEventListener('click', () => goToGuiaCategory('noticias'));
+document.getElementById('free-nav-feriados').addEventListener('click', () => goToGuiaCategory('pessoal'));
+document.getElementById('free-nav-clima').addEventListener('click', () => goToGuiaCategory('clima'));
 
 document.getElementById('premium-tab-free').addEventListener('click', () => {
   document.getElementById('premium-tab-free').classList.add('active');
