@@ -30,3 +30,6 @@ vozes/
 
 # Backup manual do index.html, não é pra subir
 backup/
+
+# Notas do Claude Code sobre o projeto, uso interno, não é pra subir
+CLAUDE.md

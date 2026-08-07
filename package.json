@@ -5,7 +5,8 @@
   "main": "sw.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "sync": "node -e \"const fs=require('fs');['index.html','manifest.json','sw.js','icon.svg','icon-192.png','icon-512.png'].forEach(f=>fs.copyFileSync(f,'www/'+f));fs.cpSync('voz','www/voz',{recursive:true});fs.cpSync('icones','www/icones',{recursive:true});fs.cpSync('pdfjs','www/pdfjs',{recursive:true})\" && npx cap copy android",
+    "build": "node scripts/build.js",
+    "sync": "npm run build && node -e \"const fs=require('fs');['index.html','manifest.json','sw.js','icon.svg','icon-192.png','icon-512.png'].forEach(f=>fs.copyFileSync(f,'www/'+f));fs.cpSync('voz','www/voz',{recursive:true});fs.cpSync('icones','www/icones',{recursive:true});fs.cpSync('pdfjs','www/pdfjs',{recursive:true})\" && npx cap copy android",
     "android:run": "npm run sync && npx cap run android",
     "android:open": "npm run sync && npx cap open android"
   },
@@ -36,5 +37,8 @@
     "@capgo/capacitor-social-login": "^8.3.30",
     "@recognizebv/capacitor-plugin-msauth": "^4.1.0",
     "pdfjs-dist": "^6.1.200"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0"
   }
 }
