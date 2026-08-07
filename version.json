@@ -1,4 +1,4 @@
 {
-  "versionName": "4.75",
-  "notes": "Planos virou vitrine (só compara Free x Premium); novo botão ⚙️ Configurações abre a tela onde as categorias e os recursos Premium ativos realmente funcionam."
+  "versionName": "4.76",
+  "notes": "Fix: ⚙️ Configurações agora tem ícone próprio na gaveta lateral (antes ficava sem jeito de abrir). Fix: topbar não cobre mais o botão de fechar das telas cheias na versão web."
 }

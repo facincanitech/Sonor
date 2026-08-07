@@ -17,7 +17,8 @@ async function build() {
     minifyCSS: true,
     removeAttributeQuotes: false,
   });
-  fs.writeFileSync(OUT, min);
+  const guard = '<!-- ARQUIVO GERADO por scripts/build.js a partir de backup/index-source.html. NAO EDITE AQUI, edite o source e rode "npm run build". -->\n';
+  fs.writeFileSync(OUT, guard + min);
   const before = Buffer.byteLength(src, 'utf8');
   const after = Buffer.byteLength(min, 'utf8');
   console.log(`index.html minificado: ${(before / 1024).toFixed(0)}KB -> ${(after / 1024).toFixed(0)}KB`);
