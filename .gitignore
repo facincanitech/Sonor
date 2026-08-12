@@ -33,3 +33,6 @@ backup/
 
 # Notas do Claude Code sobre o projeto, uso interno, não é pra subir
 CLAUDE.md
+
+# Bot de Discord (discord-bot/) — segredos nunca vão pro git
+discord-bot/.env
