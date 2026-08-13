@@ -62,6 +62,29 @@ async function tocarEComRegistro(voiceChannel, userId, est) {
   radio.registrarHistorico(userId, est).catch(() => {});
 }
 
+// Resultado de busca (/radio tocar): lista até 5, cada uma com botão de
+// tocar e de salvar direto, sem precisar escolher e confirmar em 2 passos.
+function resultadosEmbed(lista, termo) {
+  const desc = lista
+    .slice(0, 5)
+    .map((e, i) => `${i + 1}. **${e.name}**${e.country ? ` — ${e.country}` : ''}`)
+    .join('\n');
+  return new EmbedBuilder().setColor(COR).setTitle(`🔎 Resultados pra "${termo}"`).setDescription(desc);
+}
+
+function resultadosComponents(lista) {
+  const token = cacheLista(lista);
+  return lista.slice(0, 5).map((est, i) =>
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`radio_res_play:${token}:${i}`)
+        .setLabel(`▶️ ${est.name}`.slice(0, 80))
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(`radio_res_save:${token}:${i}`).setEmoji('⭐').setStyle(ButtonStyle.Secondary)
+    )
+  );
+}
+
 function selectMenuDeLista(customIdPrefix, lista, placeholder) {
   const token = cacheLista(lista);
   const menu = new StringSelectMenuBuilder()
@@ -150,18 +173,37 @@ async function handleInteraction(interaction) {
       return true;
     }
 
+    if (id.startsWith('radio_res_play:') || id.startsWith('radio_res_save:')) {
+      const [, token, idxStr] = id.split(':');
+      const lista = listCache.get(token);
+      const est = lista && lista[Number(idxStr)];
+      const salvar = id.startsWith('radio_res_save:');
+
+      await interaction.deferReply({ ephemeral: salvar });
+      if (!est) { await interaction.editReply('Essa lista expirou, busca de novo com `/radio tocar` ou o painel.'); return true; }
+
+      if (salvar) {
+        await radio.salvarFavorita(interaction.user.id, est);
+        await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', est)] });
+        return true;
+      }
+
+      const voiceChannel = interaction.member?.voice?.channel;
+      if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); return true; }
+      await tocarEComRegistro(voiceChannel, interaction.user.id, est);
+      await interaction.editReply({ embeds: [embedEstacao('📻 Tocando agora', est)] });
+      return true;
+    }
+
     return false;
   }
 
   if (interaction.isModalSubmit() && interaction.customId === 'radio_tocar_modal') {
     await interaction.deferReply();
-    const voiceChannel = interaction.member?.voice?.channel;
-    if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); return true; }
     const nome = interaction.fields.getTextInputValue('nome');
     const estacoes = await radio.buscarRadios(nome);
     if (!estacoes.length) { await interaction.editReply(`Não achei nenhuma rádio com "${nome}".`); return true; }
-    await tocarEComRegistro(voiceChannel, interaction.user.id, estacoes[0]);
-    await interaction.editReply({ embeds: [embedEstacao('📻 Tocando agora', estacoes[0])] });
+    await interaction.editReply({ embeds: [resultadosEmbed(estacoes, nome)], components: resultadosComponents(estacoes) });
     return true;
   }
 
@@ -181,4 +223,4 @@ async function handleInteraction(interaction) {
   return false;
 }
 
-module.exports = { painelRows, painelEmbed, handleInteraction };
+module.exports = { painelRows, painelEmbed, handleInteraction, resultadosEmbed, resultadosComponents };

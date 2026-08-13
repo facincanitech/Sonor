@@ -112,20 +112,12 @@ client.on('interactionCreate', async (interaction) => {
     if (sub === 'tocar') {
       await interaction.deferReply();
       const nome = interaction.options.getString('nome', true);
-      const voiceChannel = interaction.member?.voice?.channel;
-      if (!voiceChannel) {
-        await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.');
-        return;
-      }
       const estacoes = await radio.buscarRadios(nome);
       if (!estacoes.length) {
         await interaction.editReply(`Não achei nenhuma rádio com "${nome}". Tenta outro nome.`);
         return;
       }
-      const est = estacoes[0];
-      await player.play(voiceChannel, est);
-      radio.registrarHistorico(interaction.user.id, est).catch(() => {});
-      await interaction.editReply({ embeds: [embedEstacao('📻 Tocando agora', est)] });
+      await interaction.editReply({ embeds: [panel.resultadosEmbed(estacoes, nome)], components: panel.resultadosComponents(estacoes) });
       return;
     }
 
