@@ -105,7 +105,10 @@ client.on('interactionCreate', async (interaction) => {
 
   try {
     if (sub === 'painel') {
-      await interaction.reply({ embeds: [panel.painelEmbed()], components: panel.painelRows() });
+      await interaction.deferReply({ ephemeral: true });
+      const canal = await panel.canalDoPainel(interaction.guild);
+      await canal.send({ embeds: [panel.painelEmbed()], components: panel.painelRows() });
+      await interaction.editReply(`📻 Painel pronto em ${canal}.`);
       return;
     }
 

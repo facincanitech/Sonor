@@ -10,12 +10,38 @@ const {
   TextInputBuilder,
   TextInputStyle,
   EmbedBuilder,
+  ChannelType,
 } = require('discord.js');
 const crypto = require('crypto');
 const radio = require('./radio');
 const player = require('./player');
 
 const COR = 0x45b8a8;
+const NOME_CANAL_PAINEL = 'radio-painel';
+
+// Cria (1ª vez) ou reaproveita um canal de texto só pro painel — assim ele
+// não fica se perdendo no meio da conversa geral do servidor. Limpa
+// mensagens antigas do próprio bot ali antes de postar o painel de novo,
+// pra não acumular repetido a cada /radio painel.
+async function canalDoPainel(guild) {
+  let canal = guild.channels.cache.find((c) => c.type === ChannelType.GuildText && c.name === NOME_CANAL_PAINEL);
+  if (!canal) {
+    canal = await guild.channels.create({
+      name: NOME_CANAL_PAINEL,
+      type: ChannelType.GuildText,
+      topic: '📻 Painel de rádio do Sonor — clique nos botões pra tocar, salvar, ver favoritos/histórico.',
+    });
+  }
+  try {
+    const mensagens = await canal.messages.fetch({ limit: 20 });
+    const doProprioBot = mensagens.filter((m) => m.author.id === guild.client.user.id);
+    if (doProprioBot.size) await canal.bulkDelete(doProprioBot, true).catch(() => {});
+  } catch {
+    // canal novo/vazio ou mensagens velhas demais pro bulkDelete (>14 dias)
+    // — sem problema, só não limpa, o painel novo vai embaixo mesmo assim.
+  }
+  return canal;
+}
 
 // Cache curto pra ligar as opções de um select menu (favoritos/histórico) à
 // lista real de estações — o value de uma option tem limite de 100
@@ -223,4 +249,4 @@ async function handleInteraction(interaction) {
   return false;
 }
 
-module.exports = { painelRows, painelEmbed, handleInteraction, resultadosEmbed, resultadosComponents };
+module.exports = { painelRows, painelEmbed, handleInteraction, resultadosEmbed, resultadosComponents, canalDoPainel };
