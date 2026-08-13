@@ -8,7 +8,11 @@ const {
   entersState,
 } = require('@discordjs/voice');
 const prism = require('prism-media');
-const ffmpegPath = require('ffmpeg-static');
+
+// Usa o ffmpeg do sistema (apt install ffmpeg), não o pacote ffmpeg-static:
+// o binário empacotado do ffmpeg-static crashava (segfault) decodificando
+// qualquer stream real nessa VPS — provável bug de dispatch SIMD específico
+// daquele build. O ffmpeg do apt funciona normal. Ver README, seção de deploy.
 
 // Um "player" (conexão de voz + audio player) por servidor — trocar de rádio
 // no mesmo servidor reaproveita a mesma conexão em vez de entrar de novo.
@@ -18,13 +22,12 @@ function resourceFromUrl(url) {
   // Stream de rádio (icecast/shoutcast, mp3 ou aac) -> PCM -> Opus, direto
   // pelo ffmpeg, sem precisar baixar nada em disco.
   const transcoder = new prism.FFmpeg({
-    command: ffmpegPath,
     args: [
       '-reconnect', '1',
       '-reconnect_streamed', '1',
       '-reconnect_delay_max', '4',
       '-analyzeduration', '0',
-      '-loglevel', '0',
+      '-loglevel', 'error',
       '-i', url,
       '-f', 's16le',
       '-ar', '48000',
@@ -33,8 +36,8 @@ function resourceFromUrl(url) {
   });
   const opusEncoder = new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 960 });
   const stream = transcoder.pipe(opusEncoder);
-  stream.on('error', () => {});
-  transcoder.on('error', () => {});
+  stream.on('error', (err) => console.error('[player] erro no stream de áudio:', err.message));
+  transcoder.on('error', (err) => console.error('[player] erro no ffmpeg:', err.message));
   return createAudioResource(stream, { inputType: StreamType.Opus });
 }
 
@@ -50,6 +53,7 @@ async function play(voiceChannel, estacao) {
     });
     await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
     const player = createAudioPlayer();
+    player.on('error', (err) => console.error('[player] erro no AudioPlayer:', err.message));
     connection.subscribe(player);
     session = { connection, player, current: null };
     sessions.set(guildId, session);

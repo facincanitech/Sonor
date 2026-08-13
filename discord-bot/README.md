@@ -78,10 +78,15 @@ bastante pra conviver junto, não precisa de VPS nova.
 git clone https://github.com/facincanitech/Sonor.git
 cd Sonor/discord-bot
 
-# 2. se a VPS for ARM (Oracle Ampere A1) ou não tiver toolchain de C++,
-#    instala isso ANTES do npm install (senão o @discordjs/opus falha
-#    tentando compilar do zero):
-sudo apt-get update && sudo apt-get install -y build-essential python3
+# 2. instala isso ANTES do npm install:
+#    - build-essential/python3: se a VPS for ARM (Oracle Ampere A1) ou não
+#      tiver toolchain de C++, o @discordjs/opus falha tentando compilar
+#      do zero sem isso.
+#    - ffmpeg: o bot usa o ffmpeg do sistema (PATH), não vem empacotado.
+#      Foi de propósito — o pacote ffmpeg-static (binário pronto) tinha um
+#      bug de compatibilidade (crashava/segfault) numa Oracle E2.1.Micro,
+#      o do apt funciona liso.
+sudo apt-get update && sudo apt-get install -y build-essential python3 ffmpeg
 
 # 3. instala as dependências
 npm install --omit=dev
