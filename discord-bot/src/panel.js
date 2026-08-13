@@ -18,19 +18,34 @@ const player = require('./player');
 
 const COR = 0x45b8a8;
 const NOME_CANAL_PAINEL = 'radio-painel';
+const NOME_CATEGORIA = 'Sonor';
 
-// Cria (1ª vez) ou reaproveita um canal de texto só pro painel — assim ele
-// não fica se perdendo no meio da conversa geral do servidor. Limpa
-// mensagens antigas do próprio bot ali antes de postar o painel de novo,
-// pra não acumular repetido a cada /radio painel.
+// Cria (1ª vez) ou reaproveita a categoria "Sonor" pra organizar os canais
+// do bot dentro dela em vez de espalhados na raiz do servidor.
+async function categoriaSonor(guild) {
+  let categoria = guild.channels.cache.find((c) => c.type === ChannelType.GuildCategory && c.name === NOME_CATEGORIA);
+  if (!categoria) {
+    categoria = await guild.channels.create({ name: NOME_CATEGORIA, type: ChannelType.GuildCategory });
+  }
+  return categoria;
+}
+
+// Cria (1ª vez) ou reaproveita um canal de texto só pro painel, dentro da
+// categoria Sonor — assim ele não fica se perdendo no meio da conversa
+// geral do servidor. Limpa mensagens antigas do próprio bot ali antes de
+// postar o painel de novo, pra não acumular repetido a cada /radio painel.
 async function canalDoPainel(guild) {
+  const categoria = await categoriaSonor(guild);
   let canal = guild.channels.cache.find((c) => c.type === ChannelType.GuildText && c.name === NOME_CANAL_PAINEL);
   if (!canal) {
     canal = await guild.channels.create({
       name: NOME_CANAL_PAINEL,
       type: ChannelType.GuildText,
+      parent: categoria.id,
       topic: '📻 Painel de rádio do Sonor — clique nos botões pra tocar, salvar, ver favoritos/histórico.',
     });
+  } else if (canal.parentId !== categoria.id) {
+    await canal.setParent(categoria.id, { lockPermissions: false }).catch(() => {});
   }
   try {
     const mensagens = await canal.messages.fetch({ limit: 20 });
