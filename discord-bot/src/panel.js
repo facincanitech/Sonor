@@ -38,7 +38,10 @@ const NOME_CATEGORIA_ANTIGO = 'Sonor';
 const NOME_CANAL_PAINEL_ANTIGO = 'radio-painel';
 
 // Cria (1ª vez) ou reaproveita a categoria "SONOR" pra organizar os canais
-// do bot dentro dela em vez de espalhados na raiz do servidor.
+// do bot dentro dela em vez de espalhados na raiz do servidor. Permissão
+// pra @everyone: só ver + ver histórico, sem escrever — o canal é só
+// painel de botão, não precisa ninguém digitando ali. Comando de slash e
+// clique em botão continuam funcionando (não dependem de SendMessages).
 async function categoriaSonor(guild) {
   let categoria = guild.channels.cache.find((c) => c.type === ChannelType.GuildCategory && c.name === NOME_CATEGORIA);
   if (!categoria) {
@@ -49,6 +52,9 @@ async function categoriaSonor(guild) {
       categoria = await guild.channels.create({ name: NOME_CATEGORIA, type: ChannelType.GuildCategory });
     }
   }
+  await categoria.permissionOverwrites
+    .edit(guild.roles.everyone, { ViewChannel: true, ReadMessageHistory: true, SendMessages: false })
+    .catch(() => {});
   return categoria;
 }
 
