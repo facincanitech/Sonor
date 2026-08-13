@@ -41,8 +41,10 @@ reaproveita o mesmo projeto Supabase pra guardar os favoritos.
 3. Em **General Information**, copia o **Application ID** — vira
    `DISCORD_CLIENT_ID`.
 4. Em **OAuth2 > URL Generator**: marca `bot` e `applications.commands` em
-   Scopes; em Bot Permissions marca `Connect` e `Speak`. Copia o link
-   gerado embaixo e abre no navegador pra convidar o bot pro seu servidor.
+   Scopes; em Bot Permissions marca `Connect`, `Speak` e `Manage Channels`
+   (esse último é pro `/radio painel` criar o canal `#radio-painel`
+   sozinho). Copia o link gerado embaixo e abre no navegador pra convidar
+   o bot pro seu servidor.
 
 ### 2. Criar a tabela no Supabase
 
