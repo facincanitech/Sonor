@@ -19,6 +19,17 @@ const commands = [
     .addSubcommand((sub) => sub.setName('parar').setDescription('Para a rádio e sai da call'))
     .addSubcommand((sub) => sub.setName('painel').setDescription('Abre o painel com botões (tocar, aleatória, salvar, favoritos, histórico, parar)'))
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('youtube')
+    .setDescription('Toca áudio do YouTube na call (busca por nome ou link)')
+    .addSubcommand((sub) =>
+      sub
+        .setName('tocar')
+        .setDescription('Busca no YouTube e toca o áudio na sua call')
+        .addStringOption((opt) => opt.setName('busca').setDescription('Nome da música/vídeo ou link do YouTube').setRequired(true))
+    )
+    .addSubcommand((sub) => sub.setName('parar').setDescription('Para o áudio e sai da call'))
+    .toJSON(),
 ];
 
 module.exports = { commands };

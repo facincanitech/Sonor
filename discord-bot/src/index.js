@@ -2,6 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes } = require('discord.js');
 const radio = require('./radio');
 const player = require('./player');
+const youtube = require('./youtube');
 const { commands } = require('./commands');
 const panel = require('./panel');
 
@@ -62,8 +63,45 @@ client.on('interactionCreate', async (interaction) => {
     return;
   }
 
-  if (!interaction.isChatInputCommand() || interaction.commandName !== 'radio') return;
+  if (!interaction.isChatInputCommand() || !['radio', 'youtube'].includes(interaction.commandName)) return;
   const sub = interaction.options.getSubcommand();
+
+  if (interaction.commandName === 'youtube') {
+    try {
+      if (sub === 'tocar') {
+        await interaction.deferReply();
+        const busca = interaction.options.getString('busca', true);
+        const voiceChannel = interaction.member?.voice?.channel;
+        if (!voiceChannel) {
+          await interaction.editReply('Entra numa call primeiro, aí eu toco lá.');
+          return;
+        }
+        const item = await youtube.buscar(busca);
+        const proc = youtube.spawnAudioStream(item.url);
+        await player.playFromProcess(voiceChannel, item, proc);
+        await interaction.editReply({
+          embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
+        });
+        return;
+      }
+
+      if (sub === 'parar') {
+        await interaction.deferReply();
+        const parou = player.stop(interaction.guildId);
+        await interaction.editReply(parou ? '⏹ Parei e saí da call.' : 'Não tinha nada tocando aqui.');
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+      const msg = `Deu ruim: ${err.message}`;
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(msg).catch(() => {});
+      } else {
+        await interaction.reply({ content: msg, ephemeral: true }).catch(() => {});
+      }
+    }
+    return;
+  }
 
   try {
     if (sub === 'painel') {

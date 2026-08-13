@@ -2,8 +2,7 @@
 
 Bot de Discord que toca rádio de verdade (stream ao vivo, via
 [radio-browser.info](https://www.radio-browser.info/), a mesma fonte do
-SonorHub) direto numa call — igual um bot de música, só que em vez de link
-do YouTube você busca a rádio pelo nome.
+SonorHub) e áudio do YouTube, direto numa call — igual um bot de música.
 
 Roda separado do SonorHub (é um serviço próprio, sempre online), mas
 reaproveita o mesmo projeto Supabase pra guardar os favoritos.
@@ -22,6 +21,12 @@ reaproveita o mesmo projeto Supabase pra guardar os favoritos.
   de descoberta com as rádios mais ouvidas de ~40 países se você não tiver
   nenhuma salva ainda)
 - `/radio parar` — para e sai da call
+- `/youtube tocar busca:<nome ou link>` — busca (ou abre direto se for
+  link) e toca o áudio na sua call. **Precisa de `YOUTUBE_COOKIES_FILE`
+  configurado** (ver seção de deploy) — sem isso o YouTube costuma
+  bloquear a extração vinda de IP de VPS/datacenter.
+- `/youtube parar` — para e sai da call (mesmo comando de efeito que
+  `/radio parar`, só uma sessão de voz por servidor)
 
 ## Passo a passo pra colocar no ar
 
@@ -88,12 +93,24 @@ cd Sonor/discord-bot
 #      o do apt funciona liso.
 sudo apt-get update && sudo apt-get install -y build-essential python3 ffmpeg
 
+# 2b. yt-dlp (pro /youtube tocar) — o binário standalone oficial, não o do
+#     apt (costuma ficar desatualizado e o YouTube muda o esquema de
+#     extração toda hora, precisa de versão recente):
+sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+sudo chmod a+rx /usr/local/bin/yt-dlp
+# manter atualizado de vez em quando (o YouTube quebra o extractor com
+# frequência): sudo yt-dlp -U
+
 # 3. instala as dependências
 npm install --omit=dev
 
 # 4. cria o .env de verdade (mesmo conteúdo que você já usou pra testar local)
 cp .env.example .env
-nano .env   # cola DISCORD_TOKEN, DISCORD_CLIENT_ID, SUPABASE_SERVICE_ROLE_KEY
+nano .env   # cola DISCORD_TOKEN, DISCORD_CLIENT_ID, SUPABASE_SERVICE_ROLE_KEY,
+            # e YOUTUBE_COOKIES_FILE=/home/ubuntu/sonor-radio-bot/cookies.txt
+            # se for usar /youtube (manda o cookies.txt exportado do seu
+            # YouTube logado — extensão tipo "Get cookies.txt LOCALLY" — pro
+            # mesmo caminho que você apontou aí)
 
 # 5. testa rodando na mão primeiro — Ctrl+C depois de ver "Bot online como..."
 npm start
