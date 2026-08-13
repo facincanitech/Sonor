@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, MessageFlags } = require('discord.js');
 const radio = require('./radio');
 const player = require('./player');
 const youtube = require('./youtube');
@@ -57,7 +57,7 @@ client.on('interactionCreate', async (interaction) => {
       if (interaction.deferred || interaction.replied) {
         await interaction.editReply(msg).catch(() => {});
       } else {
-        await interaction.reply({ content: msg, ephemeral: true }).catch(() => {});
+        await interaction.reply({ content: msg, flags: MessageFlags.Ephemeral }).catch(() => {});
       }
     }
     return;
@@ -66,14 +66,18 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand() || !['radio', 'youtube'].includes(interaction.commandName)) return;
   const sub = interaction.options.getSubcommand();
 
+  // Todas as respostas de comando são efêmeras (só quem digitou vê) e
+  // somem sozinhas depois de um tempo — evita lotar o canal de tralha. O
+  // painel fixo (/radio painel) é a exceção, ele fica.
   if (interaction.commandName === 'youtube') {
     try {
       if (sub === 'tocar') {
-        await interaction.deferReply();
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const busca = interaction.options.getString('busca', true);
         const voiceChannel = interaction.member?.voice?.channel;
         if (!voiceChannel) {
           await interaction.editReply('Entra numa call primeiro, aí eu toco lá.');
+          panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
           return;
         }
         const item = await youtube.buscar(busca);
@@ -82,13 +86,15 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.editReply({
           embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
         });
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
 
       if (sub === 'parar') {
-        await interaction.deferReply();
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const parou = player.stop(interaction.guildId);
         await interaction.editReply(parou ? '⏹ Parei e saí da call.' : 'Não tinha nada tocando aqui.');
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
     } catch (err) {
@@ -97,7 +103,7 @@ client.on('interactionCreate', async (interaction) => {
       if (interaction.deferred || interaction.replied) {
         await interaction.editReply(msg).catch(() => {});
       } else {
-        await interaction.reply({ content: msg, ephemeral: true }).catch(() => {});
+        await interaction.reply({ content: msg, flags: MessageFlags.Ephemeral }).catch(() => {});
       }
     }
     return;
@@ -105,56 +111,64 @@ client.on('interactionCreate', async (interaction) => {
 
   try {
     if (sub === 'painel') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const canal = await panel.canalDoPainel(interaction.guild);
       await canal.send({ embeds: [panel.painelEmbed()], components: panel.painelRows() });
       await interaction.editReply(`📻 Painel pronto em ${canal}.`);
+      panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
     }
 
     if (sub === 'tocar') {
-      await interaction.deferReply();
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const nome = interaction.options.getString('nome', true);
       const estacoes = await radio.buscarRadios(nome);
       if (!estacoes.length) {
         await interaction.editReply(`Não achei nenhuma rádio com "${nome}". Tenta outro nome.`);
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
       await interaction.editReply({ embeds: [panel.resultadosEmbed(estacoes, nome)], components: panel.resultadosComponents(estacoes) });
+      panel.agendarSumico(interaction, panel.SOME_LISTA_MS);
       return;
     }
 
     if (sub === 'salvar') {
-      await interaction.deferReply();
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const atual = player.current(interaction.guildId);
       if (!atual) {
         await interaction.editReply('Não tem nenhuma rádio tocando aqui pra salvar.');
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
       await radio.salvarFavorita(interaction.user.id, atual);
       await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', atual)] });
+      panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
     }
 
     if (sub === 'favoritos') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const favs = await radio.listarFavoritas(interaction.user.id);
       if (!favs.length) {
         await interaction.editReply('Você ainda não salvou nenhuma rádio. Usa `/radio tocar` e depois `/radio salvar`.');
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
       const lista = favs.map((f, i) => `${i + 1}. **${f.station_name}**${f.country ? ` — ${f.country}` : ''}`).join('\n');
       await interaction.editReply({
         embeds: [new EmbedBuilder().setColor(COR).setTitle('⭐ Suas rádios salvas').setDescription(lista)],
       });
+      panel.agendarSumico(interaction, panel.SOME_LISTA_MS);
       return;
     }
 
     if (sub === 'aleatoria') {
-      await interaction.deferReply();
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const voiceChannel = interaction.member?.voice?.channel;
       if (!voiceChannel) {
         await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.');
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
       let est = await radio.estacaoAleatoriaFavorita(interaction.user.id).catch(() => null);
@@ -165,32 +179,37 @@ client.on('interactionCreate', async (interaction) => {
       }
       if (!est) {
         await interaction.editReply('Não consegui sortear nenhuma rádio agora, tenta de novo em instantes.');
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
       await player.play(voiceChannel, est);
       radio.registrarHistorico(interaction.user.id, est).catch(() => {});
       await interaction.editReply({ embeds: [embedEstacao(`🎲 Aleatória (${origem})`, est)] });
+      panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
     }
 
     if (sub === 'historico') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const hist = await radio.listarHistorico(interaction.user.id);
       if (!hist.length) {
         await interaction.editReply('Você ainda não tocou nenhuma rádio.');
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
       const lista = hist.map((f, i) => `${i + 1}. **${f.station_name}**${f.country ? ` — ${f.country}` : ''}`).join('\n');
       await interaction.editReply({
         embeds: [new EmbedBuilder().setColor(COR).setTitle('📜 Tocadas recentemente').setDescription(lista)],
       });
+      panel.agendarSumico(interaction, panel.SOME_LISTA_MS);
       return;
     }
 
     if (sub === 'parar') {
-      await interaction.deferReply();
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const parou = player.stop(interaction.guildId);
       await interaction.editReply(parou ? '⏹ Parei e saí da call.' : 'Não tinha nenhuma rádio tocando aqui.');
+      panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
     }
   } catch (err) {
@@ -199,7 +218,7 @@ client.on('interactionCreate', async (interaction) => {
     if (interaction.deferred || interaction.replied) {
       await interaction.editReply(msg).catch(() => {});
     } else {
-      await interaction.reply({ content: msg, ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: msg, flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 });

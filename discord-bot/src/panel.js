@@ -11,21 +11,43 @@ const {
   TextInputStyle,
   EmbedBuilder,
   ChannelType,
+  MessageFlags,
 } = require('discord.js');
 const crypto = require('crypto');
 const radio = require('./radio');
 const player = require('./player');
 
 const COR = 0x45b8a8;
-const NOME_CANAL_PAINEL = 'radio-painel';
-const NOME_CATEGORIA = 'Sonor';
+const NOME_CANAL_PAINEL = '📻-painel';
+const NOME_CATEGORIA = '🎧 SONOR';
 
-// Cria (1ª vez) ou reaproveita a categoria "Sonor" pra organizar os canais
+// Toda resposta de botão/modal/select é efêmera (só quem clicou vê) e some
+// sozinha depois de um tempo — evita lotar o #radio-painel de tralha. O
+// painel em si (mensagem fixa postada por /radio painel) nunca é tocado
+// por esse timeout, só as respostas avulsas dos cliques.
+const SOME_RAPIDO_MS = 8000; // confirmações simples (tocando, salvo, erro)
+const SOME_LISTA_MS = 20000; // listas com botão/menu pra escolher
+
+function agendarSumico(interaction, ms) {
+  setTimeout(() => interaction.deleteReply().catch(() => {}), ms);
+}
+
+// Nomes usados antes de ganhar emoji — se existirem, renomeia em vez de
+// criar duplicado.
+const NOME_CATEGORIA_ANTIGO = 'Sonor';
+const NOME_CANAL_PAINEL_ANTIGO = 'radio-painel';
+
+// Cria (1ª vez) ou reaproveita a categoria "SONOR" pra organizar os canais
 // do bot dentro dela em vez de espalhados na raiz do servidor.
 async function categoriaSonor(guild) {
   let categoria = guild.channels.cache.find((c) => c.type === ChannelType.GuildCategory && c.name === NOME_CATEGORIA);
   if (!categoria) {
-    categoria = await guild.channels.create({ name: NOME_CATEGORIA, type: ChannelType.GuildCategory });
+    const antiga = guild.channels.cache.find((c) => c.type === ChannelType.GuildCategory && c.name === NOME_CATEGORIA_ANTIGO);
+    if (antiga) {
+      categoria = await antiga.setName(NOME_CATEGORIA).catch(() => antiga);
+    } else {
+      categoria = await guild.channels.create({ name: NOME_CATEGORIA, type: ChannelType.GuildCategory });
+    }
   }
   return categoria;
 }
@@ -37,6 +59,10 @@ async function categoriaSonor(guild) {
 async function canalDoPainel(guild) {
   const categoria = await categoriaSonor(guild);
   let canal = guild.channels.cache.find((c) => c.type === ChannelType.GuildText && c.name === NOME_CANAL_PAINEL);
+  if (!canal) {
+    const antigo = guild.channels.cache.find((c) => c.type === ChannelType.GuildText && c.name === NOME_CANAL_PAINEL_ANTIGO);
+    canal = antigo ? await antigo.setName(NOME_CANAL_PAINEL).catch(() => antigo) : null;
+  }
   if (!canal) {
     canal = await guild.channels.create({
       name: NOME_CANAL_PAINEL,
@@ -162,55 +188,60 @@ async function handleInteraction(interaction) {
     }
 
     if (id === 'radio_aleatoria') {
-      await interaction.deferReply();
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const voiceChannel = interaction.member?.voice?.channel;
-      if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); return true; }
+      if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       let est = await radio.estacaoAleatoriaFavorita(interaction.user.id).catch(() => null);
       const origem = est ? 'dos seus favoritos' : 'descoberta';
       if (!est) est = await radio.estacaoAleatoriaGlobal();
-      if (!est) { await interaction.editReply('Não consegui sortear nenhuma rádio agora.'); return true; }
+      if (!est) { await interaction.editReply('Não consegui sortear nenhuma rádio agora.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       await tocarEComRegistro(voiceChannel, interaction.user.id, est);
       await interaction.editReply({ embeds: [embedEstacao(`🎲 Aleatória (${origem})`, est)] });
+      agendarSumico(interaction, SOME_RAPIDO_MS);
       return true;
     }
 
     if (id === 'radio_salvar') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const atual = player.current(interaction.guildId);
-      if (!atual) { await interaction.editReply('Não tem nenhuma rádio tocando aqui pra salvar.'); return true; }
+      if (!atual) { await interaction.editReply('Não tem nenhuma rádio tocando aqui pra salvar.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       await radio.salvarFavorita(interaction.user.id, atual);
       await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', atual)] });
+      agendarSumico(interaction, SOME_RAPIDO_MS);
       return true;
     }
 
     if (id === 'radio_favoritos') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const favs = await radio.listarFavoritas(interaction.user.id);
-      if (!favs.length) { await interaction.editReply('Você ainda não salvou nenhuma rádio.'); return true; }
+      if (!favs.length) { await interaction.editReply('Você ainda não salvou nenhuma rádio.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       const lista = favs.map((f) => ({ name: f.station_name, url_resolved: f.station_url, country: f.country }));
       await interaction.editReply({
         content: 'Escolhe uma pra tocar:',
         components: [selectMenuDeLista('radio_sel_favorito', lista, 'Suas rádios salvas')],
       });
+      agendarSumico(interaction, SOME_LISTA_MS);
       return true;
     }
 
     if (id === 'radio_historico') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const hist = await radio.listarHistorico(interaction.user.id);
-      if (!hist.length) { await interaction.editReply('Você ainda não tocou nenhuma rádio.'); return true; }
+      if (!hist.length) { await interaction.editReply('Você ainda não tocou nenhuma rádio.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       const lista = hist.map((f) => ({ name: f.station_name, url_resolved: f.station_url, country: f.country }));
       await interaction.editReply({
         content: 'Escolhe uma pra tocar de novo:',
         components: [selectMenuDeLista('radio_sel_historico', lista, 'Rádios tocadas recentemente')],
       });
+      agendarSumico(interaction, SOME_LISTA_MS);
       return true;
     }
 
     if (id === 'radio_parar') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const parou = player.stop(interaction.guildId);
       await interaction.editReply(parou ? '⏹ Parei e saí da call.' : 'Não tinha nenhuma rádio tocando aqui.');
+      agendarSumico(interaction, SOME_RAPIDO_MS);
       return true;
     }
 
@@ -220,19 +251,21 @@ async function handleInteraction(interaction) {
       const est = lista && lista[Number(idxStr)];
       const salvar = id.startsWith('radio_res_save:');
 
-      await interaction.deferReply({ ephemeral: salvar });
-      if (!est) { await interaction.editReply('Essa lista expirou, busca de novo com `/radio tocar` ou o painel.'); return true; }
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      if (!est) { await interaction.editReply('Essa lista expirou, busca de novo com `/radio tocar` ou o painel.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
 
       if (salvar) {
         await radio.salvarFavorita(interaction.user.id, est);
         await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', est)] });
+        agendarSumico(interaction, SOME_RAPIDO_MS);
         return true;
       }
 
       const voiceChannel = interaction.member?.voice?.channel;
-      if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); return true; }
+      if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       await tocarEComRegistro(voiceChannel, interaction.user.id, est);
       await interaction.editReply({ embeds: [embedEstacao('📻 Tocando agora', est)] });
+      agendarSumico(interaction, SOME_RAPIDO_MS);
       return true;
     }
 
@@ -240,28 +273,40 @@ async function handleInteraction(interaction) {
   }
 
   if (interaction.isModalSubmit() && interaction.customId === 'radio_tocar_modal') {
-    await interaction.deferReply();
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const nome = interaction.fields.getTextInputValue('nome');
     const estacoes = await radio.buscarRadios(nome);
-    if (!estacoes.length) { await interaction.editReply(`Não achei nenhuma rádio com "${nome}".`); return true; }
+    if (!estacoes.length) { await interaction.editReply(`Não achei nenhuma rádio com "${nome}".`); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     await interaction.editReply({ embeds: [resultadosEmbed(estacoes, nome)], components: resultadosComponents(estacoes) });
+    agendarSumico(interaction, SOME_LISTA_MS);
     return true;
   }
 
   if (interaction.isStringSelectMenu() && (interaction.customId.startsWith('radio_sel_favorito:') || interaction.customId.startsWith('radio_sel_historico:'))) {
     await interaction.deferUpdate();
     const voiceChannel = interaction.member?.voice?.channel;
-    if (!voiceChannel) { await interaction.editReply({ content: 'Entra numa call primeiro, aí eu toco a rádio lá.', components: [] }); return true; }
+    if (!voiceChannel) { await interaction.editReply({ content: 'Entra numa call primeiro, aí eu toco a rádio lá.', components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     const token = interaction.customId.split(':')[1];
     const lista = listCache.get(token);
     const est = lista && lista[Number(interaction.values[0])];
-    if (!est) { await interaction.editReply({ content: 'Essa lista expirou, tenta abrir o painel de novo.', components: [] }); return true; }
+    if (!est) { await interaction.editReply({ content: 'Essa lista expirou, tenta abrir o painel de novo.', components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     await tocarEComRegistro(voiceChannel, interaction.user.id, est);
     await interaction.editReply({ content: null, embeds: [embedEstacao('📻 Tocando agora', est)], components: [] });
+    agendarSumico(interaction, SOME_RAPIDO_MS);
     return true;
   }
 
   return false;
 }
 
-module.exports = { painelRows, painelEmbed, handleInteraction, resultadosEmbed, resultadosComponents, canalDoPainel };
+module.exports = {
+  painelRows,
+  painelEmbed,
+  handleInteraction,
+  resultadosEmbed,
+  resultadosComponents,
+  canalDoPainel,
+  agendarSumico,
+  SOME_RAPIDO_MS,
+  SOME_LISTA_MS,
+};
