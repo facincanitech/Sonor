@@ -1,13 +1,28 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes } = require('discord.js');
 const radio = require('./radio');
 const player = require('./player');
+const { commands } = require('./commands');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
 const COR = 0x45b8a8; // mesmo teal do SonorHub
+
+// Auto-registra os comandos como comando DE SERVIDOR (não global) em
+// qualquer guild que o bot esteja — aparece na hora (comando global demora
+// até 1h) e não duplica, já que cada guild só recebe o registro uma vez
+// (a chamada é um PUT, substitui o que já tinha lá, não soma).
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+async function registrarComandosNoServidor(guildId) {
+  try {
+    await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, guildId), { body: commands });
+    console.log(`Comandos registrados no servidor ${guildId}.`);
+  } catch (err) {
+    console.error(`Falha ao registrar comandos no servidor ${guildId}:`, err.message);
+  }
+}
 
 function embedEstacao(titulo, est) {
   return new EmbedBuilder()
@@ -16,8 +31,16 @@ function embedEstacao(titulo, est) {
     .setDescription(`**${est.name}**${est.country ? ` — ${est.country}` : ''}`);
 }
 
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`Bot online como ${client.user.tag}`);
+  for (const guild of client.guilds.cache.values()) {
+    await registrarComandosNoServidor(guild.id);
+  }
+});
+
+client.on('guildCreate', (guild) => {
+  console.log(`Entrou num servidor novo: ${guild.name} (${guild.id})`);
+  registrarComandosNoServidor(guild.id);
 });
 
 client.on('interactionCreate', async (interaction) => {

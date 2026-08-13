@@ -40,44 +40,78 @@ Mesmo projeto do SonorHub (`xpscjwcqgdldwtmbbzua`). No **SQL Editor**, roda
 o `supabase-schema.sql` desta pasta. Em **Project Settings > API**, copia a
 **service_role key** (não a anon key!) — vira `SUPABASE_SERVICE_ROLE_KEY`.
 
-### 3. Configurar e testar local (opcional, antes de subir pra nuvem)
+### 3. Configurar e testar local (opcional, antes de subir pra VPS)
 
 ```bash
 cd discord-bot
 npm install
 cp .env.example .env
-# edita o .env com os valores dos passos 1 e 2
-npm run register   # registra os slash commands (1x, ou de novo se mudar comandos)
-npm start           # roda o bot
+# edita o .env com os valores dos passos 1 e 2 (DISCORD_GUILD_ID pode ficar
+# vazio — é só um atalho opcional pro register-commands.js manual; o bot
+# em si já se autorregistra em qualquer servidor sozinho, ao subir)
+npm start
 ```
 
 Se `npm install` falhar no `@discordjs/opus` (módulo nativo, precisa de
 toolchain de C++), roda `npm install --build-from-source` ou troca a
 dependência por `opusscript` no `package.json` (mais lento, mas 100% JS,
-não precisa compilar nada).
+não precisa compilar nada) — bem comum precisar disso em VPS ARM (Oracle
+Ampere), ver seção abaixo.
 
-### 4. Deploy 24/7 (Railway, Fly.io ou Render — qualquer um serve)
+O bot registra os slash commands sozinho, por servidor, assim que conecta
+(e de novo automaticamente se entrar num servidor novo) — não precisa
+rodar nada manual pra isso.
 
-O bot é um processo Node comum (`npm start`), sem porta HTTP obrigatória —
-declare como **Worker/Background Service**, não como Web Service (senão a
-plataforma pode reclamar de não ter porta respondendo).
+### 4. Deploy numa VPS que você já tem (Oracle, ou qualquer outra)
 
-**Railway** (mais simples):
-1. `railway.app` > New Project > Deploy from GitHub repo (ou `railway up`
-   direto desta pasta via CLI).
-2. Se for do GitHub: em **Settings > Root Directory**, aponta pra
-   `discord-bot/` (esse repo tem outras coisas na raiz que não são do bot).
-3. Em **Variables**, cola as 5 variáveis do `.env.example` preenchidas.
-4. Depois do primeiro deploy, roda `npm run register` uma vez (Railway
-   tem um "Run Command" no dashboard, ou roda local apontando pro mesmo
-   `.env` — só precisa rodar uma vez, os comandos ficam registrados no
-   Discord, não precisa rodar de novo a cada deploy a menos que mude os
-   comandos).
+Roda como um segundo processo na mesma VPS do seu outro bot — é leve o
+bastante pra conviver junto, não precisa de VPS nova.
 
-**Fly.io / Render**: mesma ideia — variáveis de ambiente iguais,
-`npm install && npm start` como comando de start, sem porta exposta
-necessária (Fly.io pode pedir pra desligar o healthcheck HTTP nas
-configs do app, já que o bot não serve HTTP).
+```bash
+# 1. copia só a pasta discord-bot/ pra VPS (ou clona o repo inteiro e usa
+#    só essa pasta — o resto do repo, ~75MB, não atrapalha nada)
+git clone https://github.com/facincanitech/Sonor.git
+cd Sonor/discord-bot
+
+# 2. se a VPS for ARM (Oracle Ampere A1) ou não tiver toolchain de C++,
+#    instala isso ANTES do npm install (senão o @discordjs/opus falha
+#    tentando compilar do zero):
+sudo apt-get update && sudo apt-get install -y build-essential python3
+
+# 3. instala as dependências
+npm install --omit=dev
+
+# 4. cria o .env de verdade (mesmo conteúdo que você já usou pra testar local)
+cp .env.example .env
+nano .env   # cola DISCORD_TOKEN, DISCORD_CLIENT_ID, SUPABASE_SERVICE_ROLE_KEY
+
+# 5. testa rodando na mão primeiro — Ctrl+C depois de ver "Bot online como..."
+npm start
+```
+
+Não precisa abrir nenhuma porta/firewall — o bot só faz conexões de saída
+(pra Discord e pra Radio Browser/Supabase), não recebe nada de fora.
+
+**Deixando ele rodando de verdade com PM2** (se o outro bot já usa PM2,
+reaproveita o mesmo; se não tiver instalado: `sudo npm install -g pm2`):
+
+```bash
+cd Sonor/discord-bot
+pm2 start src/index.js --name sonor-radio-bot
+pm2 save                # salva a lista de processos
+pm2 startup             # só na 1ª vez: mostra um comando pra rodar (com
+                         # sudo) que faz o PM2 voltar sozinho se a VPS reiniciar
+```
+
+Comandos úteis depois:
+```bash
+pm2 logs sonor-radio-bot     # ver o que o bot tá logando
+pm2 restart sonor-radio-bot  # reiniciar (ex: depois de git pull com mudanças)
+pm2 stop sonor-radio-bot     # parar
+```
+
+Pra atualizar o bot depois de uma mudança no código: `git pull`, `npm
+install` (só se mudou dependência), `pm2 restart sonor-radio-bot`.
 
 ## Por que não dá pra "puxar áudio do Discord pro SonorHub"
 

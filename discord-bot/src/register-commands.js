@@ -1,22 +1,9 @@
+// Uso manual/opcional (ex: registrar global de propósito, ou testar). O bot
+// em si (index.js) já se autorregistra por servidor sozinho — não precisa
+// rodar isso no dia a dia.
 require('dotenv').config();
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
-
-const commands = [
-  new SlashCommandBuilder()
-    .setName('radio')
-    .setDescription('Toca rádio de verdade na call')
-    .addSubcommand((sub) =>
-      sub
-        .setName('tocar')
-        .setDescription('Busca uma rádio pelo nome e toca na sua call')
-        .addStringOption((opt) => opt.setName('nome').setDescription('Nome da rádio (ex: Jovem Pan, BBC)').setRequired(true))
-    )
-    .addSubcommand((sub) => sub.setName('salvar').setDescription('Salva a rádio que está tocando agora nos seus favoritos'))
-    .addSubcommand((sub) => sub.setName('favoritos').setDescription('Lista suas rádios salvas'))
-    .addSubcommand((sub) => sub.setName('aleatoria').setDescription('Toca uma rádio aleatória (dos seus favoritos, ou descoberta se não tiver nenhum salvo)'))
-    .addSubcommand((sub) => sub.setName('parar').setDescription('Para a rádio e sai da call'))
-    .toJSON(),
-];
+const { REST, Routes } = require('discord.js');
+const { commands } = require('./commands');
 
 async function main() {
   const token = process.env.DISCORD_TOKEN;
