@@ -19,11 +19,18 @@ const prism = require('prism-media');
 // de novo.
 const sessions = new Map(); // guildId -> { connection, player, current, sourceProcess }
 
-function opusStreamFromTranscoder(transcoder) {
+// Log verboso de propósito — a 1ª versão disso ficava muda/parava sem
+// deixar rastro nenhum (handlers de erro vazios, stream "end" normal
+// nunca logado). Até identificar o padrão real de queda, loga tudo:
+// fim de stream, fechamento do processo ffmpeg, motivo do estado do
+// player mudar.
+function opusStreamFromTranscoder(transcoder, label) {
   const opusEncoder = new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 960 });
   const stream = transcoder.pipe(opusEncoder);
-  stream.on('error', (err) => console.error('[player] erro no stream de áudio:', err.message));
-  transcoder.on('error', (err) => console.error('[player] erro no ffmpeg:', err.message));
+  stream.on('error', (err) => console.error(`[player:${label}] erro no stream de áudio:`, err.message));
+  stream.on('close', () => console.log(`[player:${label}] stream de áudio fechou`));
+  transcoder.on('error', (err) => console.error(`[player:${label}] erro no ffmpeg:`, err.message));
+  transcoder.on('close', () => console.log(`[player:${label}] processo ffmpeg encerrou`));
   return createAudioResource(stream, { inputType: StreamType.Opus });
 }
 
@@ -35,15 +42,16 @@ function resourceFromUrl(url) {
       '-reconnect', '1',
       '-reconnect_streamed', '1',
       '-reconnect_delay_max', '4',
+      '-reconnect_at_eof', '1',
       '-analyzeduration', '0',
-      '-loglevel', 'error',
+      '-loglevel', 'warning',
       '-i', url,
       '-f', 's16le',
       '-ar', '48000',
       '-ac', '2',
     ],
   });
-  return opusStreamFromTranscoder(transcoder);
+  return opusStreamFromTranscoder(transcoder, 'radio');
 }
 
 // YouTube: o "sourceProcess" é um yt-dlp já rodando (ver youtube.js),
@@ -51,11 +59,12 @@ function resourceFromUrl(url) {
 // entrada padrão dele (sem "-i", o prism-media já assume stdin).
 function resourceFromProcess(sourceProcess) {
   const transcoder = new prism.FFmpeg({
-    args: ['-analyzeduration', '0', '-loglevel', 'error', '-f', 's16le', '-ar', '48000', '-ac', '2'],
+    args: ['-analyzeduration', '0', '-loglevel', 'warning', '-f', 's16le', '-ar', '48000', '-ac', '2'],
   });
   sourceProcess.stdout.pipe(transcoder);
-  sourceProcess.on('error', (err) => console.error('[player] erro no processo de origem (yt-dlp):', err.message));
-  return opusStreamFromTranscoder(transcoder);
+  sourceProcess.on('error', (err) => console.error('[player:youtube] erro no processo de origem (yt-dlp):', err.message));
+  sourceProcess.on('close', (code) => console.log(`[player:youtube] yt-dlp encerrou, código ${code}`));
+  return opusStreamFromTranscoder(transcoder, 'youtube');
 }
 
 function novaSessao(voiceChannel) {
@@ -66,8 +75,14 @@ function novaSessao(voiceChannel) {
   });
   const player = createAudioPlayer();
   player.on('error', (err) => console.error('[player] erro no AudioPlayer:', err.message));
+  player.on('stateChange', (oldState, newState) => {
+    console.log(`[player] estado mudou: ${oldState.status} -> ${newState.status}`);
+  });
   connection.subscribe(player);
   const session = { connection, player, current: null, sourceProcess: null };
+  connection.on('stateChange', (oldState, newState) => {
+    console.log(`[player] conexão de voz mudou: ${oldState.status} -> ${newState.status}`);
+  });
   connection.on(VoiceConnectionStatus.Disconnected, () => {
     try { connection.destroy(); } catch {}
     sessions.delete(voiceChannel.guild.id);
