@@ -77,11 +77,59 @@ async function estacaoAleatoriaFavorita(discordUserId) {
   return { name: fav.station_name, url_resolved: fav.station_url, country: fav.country };
 }
 
+const HISTORICO_MAX_POR_USUARIO = 20;
+
+async function registrarHistorico(discordUserId, est) {
+  if (!supabase) return; // histórico é "nice to have" — não quebra o /radio tocar se faltar Supabase
+  try {
+    await supabase.from('discord_radio_history').insert({
+      discord_user_id: discordUserId,
+      station_name: est.name,
+      station_url: streamUrl(est),
+      country: est.country || null,
+    });
+    const { data } = await supabase
+      .from('discord_radio_history')
+      .select('id')
+      .eq('discord_user_id', discordUserId)
+      .order('played_at', { ascending: false })
+      .range(HISTORICO_MAX_POR_USUARIO, 9999);
+    if (data && data.length) {
+      await supabase.from('discord_radio_history').delete().in('id', data.map((r) => r.id));
+    }
+  } catch (err) {
+    console.error('[radio] falha ao registrar histórico:', err.message);
+  }
+}
+
+async function listarHistorico(discordUserId) {
+  if (!supabase) throw new Error('Supabase não configurado (faltam as env vars).');
+  const { data, error } = await supabase
+    .from('discord_radio_history')
+    .select('station_name, station_url, country, played_at')
+    .eq('discord_user_id', discordUserId)
+    .order('played_at', { ascending: false })
+    .limit(HISTORICO_MAX_POR_USUARIO);
+  if (error) throw new Error(error.message);
+  // Remove tocadas repetidas seguidas (ex: deu play na mesma 3x seguidas),
+  // mantém só a mais recente de cada estação.
+  const vistas = new Set();
+  const unicas = [];
+  for (const h of data || []) {
+    if (vistas.has(h.station_url)) continue;
+    vistas.add(h.station_url);
+    unicas.push(h);
+  }
+  return unicas;
+}
+
 module.exports = {
   buscarRadios,
   estacaoAleatoriaGlobal,
   estacaoAleatoriaFavorita,
   salvarFavorita,
   listarFavoritas,
+  registrarHistorico,
+  listarHistorico,
   streamUrl,
 };

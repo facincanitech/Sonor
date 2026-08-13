@@ -10,9 +10,14 @@ reaproveita o mesmo projeto Supabase pra guardar os favoritos.
 
 ## Comandos
 
+- `/radio painel` — posta um painel com botões (tocar, aleatória, salvar,
+  favoritos, histórico, parar), pra quem prefere clicar em vez de digitar
+  comando. Favoritos/Histórico viram um menu suspenso pra escolher e já
+  toca. É o jeito mais fácil de usar no dia a dia.
 - `/radio tocar nome:<busca>` — busca e toca a rádio na sua call
 - `/radio salvar` — salva a rádio que está tocando nos seus favoritos
 - `/radio favoritos` — lista suas rádios salvas
+- `/radio historico` — lista as últimas rádios que você tocou
 - `/radio aleatoria` — toca uma aleatória (dos seus favoritos, ou de um pool
   de descoberta com as rádios mais ouvidas de ~40 países se você não tiver
   nenhuma salva ainda)

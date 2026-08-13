@@ -14,8 +14,10 @@ const commands = [
     )
     .addSubcommand((sub) => sub.setName('salvar').setDescription('Salva a rádio que está tocando agora nos seus favoritos'))
     .addSubcommand((sub) => sub.setName('favoritos').setDescription('Lista suas rádios salvas'))
+    .addSubcommand((sub) => sub.setName('historico').setDescription('Lista as rádios que você tocou recentemente'))
     .addSubcommand((sub) => sub.setName('aleatoria').setDescription('Toca uma rádio aleatória (dos seus favoritos, ou descoberta se não tiver nenhum salvo)'))
     .addSubcommand((sub) => sub.setName('parar').setDescription('Para a rádio e sai da call'))
+    .addSubcommand((sub) => sub.setName('painel').setDescription('Abre o painel com botões (tocar, aleatória, salvar, favoritos, histórico, parar)'))
     .toJSON(),
 ];
 

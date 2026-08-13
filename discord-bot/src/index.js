@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes } = require('disco
 const radio = require('./radio');
 const player = require('./player');
 const { commands } = require('./commands');
+const panel = require('./panel');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -44,10 +45,32 @@ client.on('guildCreate', (guild) => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+  // Botões/modal/select do painel (/radio painel) — não são chat input command.
+  if (interaction.isButton() || interaction.isModalSubmit() || interaction.isStringSelectMenu()) {
+    try {
+      const tratado = await panel.handleInteraction(interaction);
+      if (!tratado) return;
+    } catch (err) {
+      console.error(err);
+      const msg = `Deu ruim: ${err.message}`;
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(msg).catch(() => {});
+      } else {
+        await interaction.reply({ content: msg, ephemeral: true }).catch(() => {});
+      }
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand() || interaction.commandName !== 'radio') return;
   const sub = interaction.options.getSubcommand();
 
   try {
+    if (sub === 'painel') {
+      await interaction.reply({ embeds: [panel.painelEmbed()], components: panel.painelRows() });
+      return;
+    }
+
     if (sub === 'tocar') {
       await interaction.deferReply();
       const nome = interaction.options.getString('nome', true);
@@ -63,6 +86,7 @@ client.on('interactionCreate', async (interaction) => {
       }
       const est = estacoes[0];
       await player.play(voiceChannel, est);
+      radio.registrarHistorico(interaction.user.id, est).catch(() => {});
       await interaction.editReply({ embeds: [embedEstacao('📻 Tocando agora', est)] });
       return;
     }
@@ -111,7 +135,22 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
       await player.play(voiceChannel, est);
+      radio.registrarHistorico(interaction.user.id, est).catch(() => {});
       await interaction.editReply({ embeds: [embedEstacao(`🎲 Aleatória (${origem})`, est)] });
+      return;
+    }
+
+    if (sub === 'historico') {
+      await interaction.deferReply({ ephemeral: true });
+      const hist = await radio.listarHistorico(interaction.user.id);
+      if (!hist.length) {
+        await interaction.editReply('Você ainda não tocou nenhuma rádio.');
+        return;
+      }
+      const lista = hist.map((f, i) => `${i + 1}. **${f.station_name}**${f.country ? ` — ${f.country}` : ''}`).join('\n');
+      await interaction.editReply({
+        embeds: [new EmbedBuilder().setColor(COR).setTitle('📜 Tocadas recentemente').setDescription(lista)],
+      });
       return;
     }
 
