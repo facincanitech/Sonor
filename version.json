@@ -1,4 +1,4 @@
 {
-  "versionName": "4.76",
-  "notes": "Fix: ⚙️ Configurações agora tem ícone próprio na gaveta lateral (antes ficava sem jeito de abrir). Fix: topbar não cobre mais o botão de fechar das telas cheias na versão web."
+  "versionName": "4.77",
+  "notes": "Removida a janelinha de PiP (ficava inútil no dia a dia) — a notificação com controle de mídia continua funcionando ao minimizar. Botões de voltar/avançar da notificação agora funcionam com Rádio favoritada."
 }

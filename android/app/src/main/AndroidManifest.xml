@@ -17,7 +17,6 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
-            android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
             android:exported="true">
 
@@ -44,8 +43,8 @@
 
         </activity>
 
-        <!-- Mantém Música/Vídeo/Rádio tocando quando o PiP é fechado de
-             propósito — vira notificação com controle de mídia. -->
+        <!-- Mantém Rádio/Audiobook tocando ao minimizar o app — vira
+             notificação com controle de mídia (voltar/play-pause/avançar). -->
         <service
             android:name=".PlayerForegroundService"
             android:exported="false"
