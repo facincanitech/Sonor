@@ -36,3 +36,6 @@ CLAUDE.md
 
 # Bot de Discord (discord-bot/) — segredos nunca vão pro git
 discord-bot/.env
+
+# Cache local da CLI do Supabase (project-ref linkado, versão) — não é segredo, mas é cache de máquina
+supabase/.temp/

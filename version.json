@@ -1,4 +1,4 @@
 {
-  "versionName": "4.77",
-  "notes": "Removida a janelinha de PiP (ficava inútil no dia a dia) — a notificação com controle de mídia continua funcionando ao minimizar. Botões de voltar/avançar da notificação agora funcionam com Rádio favoritada."
+  "versionName": "4.78",
+  "notes": "Projeto Supabase migrado pra outra conta (bastidores, sem mudança visível) — login, sync de configuração e status Premium continuam normais."
 }

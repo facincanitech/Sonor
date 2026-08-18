@@ -48,7 +48,7 @@ reaproveita o mesmo projeto Supabase pra guardar os favoritos.
 
 ### 2. Criar a tabela no Supabase
 
-Mesmo projeto do SonorHub (`xpscjwcqgdldwtmbbzua`). No **SQL Editor**, roda
+Mesmo projeto do SonorHub (`xtdydmfxqxsujrqdtrkn`). No **SQL Editor**, roda
 o `supabase-schema.sql` desta pasta. Em **Project Settings > API**, copia a
 **service_role key** (não a anon key!) — vira `SUPABASE_SERVICE_ROLE_KEY`.
 
