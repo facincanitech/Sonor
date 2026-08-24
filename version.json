@@ -1,4 +1,4 @@
 {
-  "versionName": "4.81",
-  "notes": "Minha Conta: Email virou tela própria; Email/Config/Sobre/Acessibilidade agora voltam pra Minha Conta ao fechar, em vez de sair da tela toda."
+  "versionName": "4.82",
+  "notes": "Rádio em http:// (sem HTTPS) agora toca também na versão web, via proxy que reconecta sozinho a cada ~2,5min."
 }
