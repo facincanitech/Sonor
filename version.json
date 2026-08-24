@@ -1,4 +1,4 @@
 {
-  "versionName": "4.82",
-  "notes": "Rádio em http:// (sem HTTPS) agora toca também na versão web, via proxy que reconecta sozinho a cada ~2,5min."
+  "versionName": "4.83",
+  "notes": "Capa/favicon de rádio em http:// agora aparece no player e na notificação, em vez de cair na silhueta genérica."
 }
