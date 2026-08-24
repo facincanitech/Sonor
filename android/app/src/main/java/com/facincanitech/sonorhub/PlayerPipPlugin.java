@@ -1,10 +1,17 @@
 package com.facincanitech.sonorhub;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 // Ponte JS <-> estado de reprodução do Player, usada pra decidir se
 // minimizar o app sobe a notificação de mídia (ver PlayerForegroundService
@@ -26,6 +33,15 @@ public class PlayerPipPlugin extends Plugin {
     // notificação ali é só promessa vazia, então não acende pra esse caso.
     private static boolean notificationCapable = false;
 
+    // "Now playing" pra notificação — 22/08/2026, a notificação ficava sempre
+    // com texto genérico e ícone de pausa fixo, sem refletir a rádio/estado
+    // real. Guardado aqui (não só no serviço) porque o serviço só existe
+    // enquanto o app tá minimizado; o plugin sobrevive o tempo todo.
+    private static String nowTitle = "SonorHub Player";
+    private static String nowSubtitle = "Tocando em segundo plano";
+    private static Bitmap nowImage;
+    private static boolean nowPaused = false;
+
     @Override
     public void load() {
         activeInstance = this;
@@ -38,6 +54,11 @@ public class PlayerPipPlugin extends Plugin {
     public static boolean isNotificationCapable() {
         return notificationCapable;
     }
+
+    public static String getNowTitle() { return nowTitle; }
+    public static String getNowSubtitle() { return nowSubtitle; }
+    public static Bitmap getNowImage() { return nowImage; }
+    public static boolean isNowPaused() { return nowPaused; }
 
     public static void emitControlIfActive(String control) {
         if (activeInstance != null) activeInstance.emitControl(control);
@@ -78,10 +99,46 @@ public class PlayerPipPlugin extends Plugin {
         call.resolve();
     }
 
-    // Mantido só pra não quebrar quem já chama do JS (playerTogglePlayPause
-    // etc.) — não controla mais nenhum botão de janela PiP, não existe mais.
+    // Mantido só pra não quebrar quem já chama do JS — não controla mais
+    // nenhum botão de janela PiP (não existe mais), mas ainda atualiza o
+    // ícone de play/pause da notificação se ela já estiver de pé.
     @PluginMethod
     public void setPaused(PluginCall call) {
+        nowPaused = Boolean.TRUE.equals(call.getBoolean("paused", false));
+        PlayerForegroundService.refreshNotification();
         call.resolve();
+    }
+
+    // Nome/subtítulo/capa de que tá tocando agora (rádio, por enquanto) —
+    // pra notificação parar de mostrar texto genérico fixo. imageUrl baixado
+    // aqui mesmo, síncrono: @PluginMethod já roda fora da thread principal
+    // (thread própria do Capacitor), então uma chamada de rede bloqueante
+    // aqui não trava a UI.
+    @PluginMethod
+    public void setNowPlaying(PluginCall call) {
+        nowTitle = call.getString("title", "SonorHub Player");
+        nowSubtitle = call.getString("subtitle", "Tocando em segundo plano");
+        nowPaused = Boolean.TRUE.equals(call.getBoolean("paused", false));
+        String imageUrl = call.getString("imageUrl", "");
+        nowImage = (imageUrl != null && !imageUrl.isEmpty()) ? baixarImagem(imageUrl) : null;
+        PlayerForegroundService.refreshNotification();
+        call.resolve();
+    }
+
+    private Bitmap baixarImagem(String urlStr) {
+        try {
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setConnectTimeout(4000);
+            conn.setReadTimeout(4000);
+            conn.setInstanceFollowRedirects(true);
+            try (InputStream in = conn.getInputStream()) {
+                return BitmapFactory.decodeStream(in);
+            } finally {
+                conn.disconnect();
+            }
+        } catch (Exception e) {
+            return null; // favicon quebrado/fora do ar — notificação cai pro ícone padrão
+        }
     }
 }

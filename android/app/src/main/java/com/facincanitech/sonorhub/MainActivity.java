@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.WebSettings;
 
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.Plugin;
@@ -35,6 +36,15 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
         registerPlugin(PlayerPipPlugin.class);
         registerPlugin(PhotoSyncPlugin.class);
         super.onCreate(savedInstanceState);
+        // O WebView tem a própria trava de "mixed content" pra recurso carregado
+        // dentro de uma página (independente do usesCleartextTraffic do Manifest,
+        // que só libera a Activity fazer requisição HTTP — não afeta o que o
+        // WebView deixa um <audio>/<video> tocar de dentro da página). Sem isso,
+        // rádio antiga em http:// (streams ShoutCast old-school) não tocava nem
+        // no app nativo, só via ffmpeg (fora do navegador).
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
         // Registrado aqui (e só desfeito em onDestroy) em vez de onStart/onStop:
         // os botões da notificação (visíveis na tela de bloqueio) precisam
         // funcionar mesmo com a Activity parada (onStop) — era exatamente esse

@@ -34,6 +34,7 @@ public class PlayerForegroundService extends Service {
     private static final long WAKE_LOCK_TIMEOUT_MS = 10 * 60 * 60 * 1000L; // 10h de segurança, caso onDestroy não rode por algum motivo
     private MediaSessionCompat mediaSession;
     private PowerManager.WakeLock wakeLock;
+    private static PlayerForegroundService activeInstance;
 
     public static void start(Context context) {
         Intent intent = new Intent(context, PlayerForegroundService.class);
@@ -45,9 +46,31 @@ public class PlayerForegroundService extends Service {
         context.stopService(new Intent(context, PlayerForegroundService.class));
     }
 
+    // Chamado pelo PlayerPipPlugin sempre que o "now playing" (título/capa/
+    // pausado) muda — se a notificação já tá de pé, redesenha ela na hora
+    // (ícone de play/pause, nome da rádio, capa). Sem isso ela ficava presa
+    // pra sempre com o primeiro conteúdo que teve.
+    public static void refreshNotification() {
+        if (activeInstance != null) activeInstance.updateNotification();
+    }
+
+    private void updateNotification() {
+        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) nm.notify(NOTIFICATION_ID, buildNotification());
+        if (mediaSession != null) {
+            mediaSession.setPlaybackState(
+                new PlaybackStateCompat.Builder()
+                    .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
+                    .setState(PlayerPipPlugin.isNowPaused() ? PlaybackStateCompat.STATE_PAUSED : PlaybackStateCompat.STATE_PLAYING, 0, 1f)
+                    .build()
+            );
+        }
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+        activeInstance = this;
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         if (powerManager != null) {
             wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SonorHub:PlayerWakeLock");
@@ -57,7 +80,7 @@ public class PlayerForegroundService extends Service {
         mediaSession.setPlaybackState(
             new PlaybackStateCompat.Builder()
                 .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
-                .setState(PlaybackStateCompat.STATE_PLAYING, 0, 1f)
+                .setState(PlayerPipPlugin.isNowPaused() ? PlaybackStateCompat.STATE_PAUSED : PlaybackStateCompat.STATE_PLAYING, 0, 1f)
                 .build()
         );
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
@@ -101,15 +124,24 @@ public class PlayerForegroundService extends Service {
             ? new Notification.Builder(this, CHANNEL_ID)
             : new Notification.Builder(this);
 
+        boolean paused = PlayerPipPlugin.isNowPaused();
         builder
-            .setContentTitle("SonorHub Player")
-            .setContentText("Tocando em segundo plano")
+            .setContentTitle(PlayerPipPlugin.getNowTitle())
+            .setContentText(PlayerPipPlugin.getNowSubtitle())
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentIntent(contentIntent)
             .setOngoing(true)
             .addAction(android.R.drawable.ic_media_previous, "Voltar", buildControlPendingIntent("previous"))
-            .addAction(android.R.drawable.ic_media_pause, "Pausar", buildControlPendingIntent("playpause"))
+            .addAction(
+                paused ? android.R.drawable.ic_media_play : android.R.drawable.ic_media_pause,
+                paused ? "Tocar" : "Pausar",
+                buildControlPendingIntent("playpause")
+            )
             .addAction(android.R.drawable.ic_media_next, "Avançar", buildControlPendingIntent("next"));
+
+        if (PlayerPipPlugin.getNowImage() != null) {
+            builder.setLargeIcon(PlayerPipPlugin.getNowImage());
+        }
 
         // Sem isso, a notificação aparece normal mas o Android não a trata
         // como "controle de mídia" — não mostra na tela de bloqueio nem no
@@ -136,6 +168,7 @@ public class PlayerForegroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (activeInstance == this) activeInstance = null;
         if (mediaSession != null) mediaSession.release();
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
     }

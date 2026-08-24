@@ -1,4 +1,4 @@
 {
-  "versionName": "4.78",
-  "notes": "Projeto Supabase migrado pra outra conta (bastidores, sem mudança visível) — login, sync de configuração e status Premium continuam normais."
+  "versionName": "4.79",
+  "notes": "Rádio http:// agora toca no app, notificação de mídia mostra a rádio de verdade, Minha Conta reorganizada (Email, Config/Sobre/Acessibilidade por dentro), GPS/Rastreio removidos do Premium."
 }
