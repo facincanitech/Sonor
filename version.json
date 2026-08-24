@@ -1,4 +1,4 @@
 {
-  "versionName": "4.79",
-  "notes": "Rádio http:// agora toca no app, notificação de mídia mostra a rádio de verdade, Minha Conta reorganizada (Email, Config/Sobre/Acessibilidade por dentro), GPS/Rastreio removidos do Premium."
+  "versionName": "4.80",
+  "notes": "Chave pública do Mercado Pago atualizada pra conta nova (parte da migração do Supabase) — assinatura Premium volta a identificar o pagamento certo."
 }

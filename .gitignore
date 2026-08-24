@@ -39,3 +39,7 @@ discord-bot/.env
 
 # Cache local da CLI do Supabase (project-ref linkado, versão) — não é segredo, mas é cache de máquina
 supabase/.temp/
+
+# Credenciais/chaves de API coletadas durante a migração do Supabase — nunca sobe pro git
+.env
+.env.*
