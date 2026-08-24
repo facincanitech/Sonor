@@ -1,4 +1,4 @@
 {
-  "versionName": "4.80",
-  "notes": "Chave pública do Mercado Pago atualizada pra conta nova (parte da migração do Supabase) — assinatura Premium volta a identificar o pagamento certo."
+  "versionName": "4.81",
+  "notes": "Minha Conta: Email virou tela própria; Email/Config/Sobre/Acessibilidade agora voltam pra Minha Conta ao fechar, em vez de sair da tela toda."
 }
