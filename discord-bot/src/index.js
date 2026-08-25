@@ -99,8 +99,7 @@ client.on('interactionCreate', async (interaction) => {
           return;
         }
         const item = await youtube.buscar(busca);
-        const proc = youtube.spawnAudioStream(item.url);
-        await player.playFromProcess(voiceChannel, item, proc);
+        await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
         await interaction.editReply({
           embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
         });

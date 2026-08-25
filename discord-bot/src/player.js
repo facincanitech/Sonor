@@ -80,6 +80,41 @@ function limparTimerIdle(session) {
   }
 }
 
+// Vigia de "travou tocando silêncio": alguns streams (icecast antigo,
+// principalmente) somem sem fechar a conexão TCP nem soltar erro nenhum —
+// não é um "stream fechou" (isso o ffmpeg já reconecta sozinho, ver
+// -reconnect_* nos args), é a conexão continuar "aberta" só que sem mandar
+// mais nenhum byte. Nesse caso o AudioPlayer nem percebe: ele fica no
+// estado "playing" pra sempre, porque do ponto de vista dele nada deu
+// errado, só não tem áudio novo chegando. Detecta isso comparando
+// resource.playbackDuration (só avança quando tem áudio de verdade tocando)
+// entre duas checagens; se não andou nada com o player em "playing" pelo
+// intervalo inteiro, considera travado e força uma reconexão do zero.
+const VIGIA_INTERVALO_MS = 12_000;
+
+function limparVigia(session) {
+  if (session.vigiaInterval) {
+    clearInterval(session.vigiaInterval);
+    session.vigiaInterval = null;
+  }
+}
+
+function iniciarVigia(session, guildId) {
+  limparVigia(session);
+  let ultimaDuracao = -1;
+  session.vigiaInterval = setInterval(() => {
+    const atual = sessions.get(guildId);
+    if (atual !== session) { clearInterval(session.vigiaInterval); return; }
+    if (session.player.state.status !== AudioPlayerStatus.Playing) { ultimaDuracao = -1; return; }
+    const duracaoAgora = session.player.state.resource?.playbackDuration ?? 0;
+    if (ultimaDuracao !== -1 && duracaoAgora === ultimaDuracao && session.regenerar) {
+      console.log('[player] tocando mas sem avançar áudio nenhum — travado (silêncio mudo), forçando reconexão do zero.');
+      session.regenerar();
+    }
+    ultimaDuracao = duracaoAgora;
+  }, VIGIA_INTERVALO_MS);
+}
+
 function novaSessao(voiceChannel) {
   const connection = joinVoiceChannel({
     channelId: voiceChannel.id,
@@ -131,7 +166,7 @@ function novaSessao(voiceChannel) {
   return session;
 }
 
-async function tocarComResource(voiceChannel, item, resource, sourceProcess) {
+async function tocarComResource(voiceChannel, item, resource, sourceProcess, regenerar) {
   const guildId = voiceChannel.guild.id;
   let session = sessions.get(guildId);
   if (!session) {
@@ -145,23 +180,47 @@ async function tocarComResource(voiceChannel, item, resource, sourceProcess) {
   session.player.play(resource);
   session.current = item;
   session.sourceProcess = sourceProcess || null;
+  session.regenerar = regenerar || null;
   await entersState(session.player, AudioPlayerStatus.Playing, 15_000);
+  iniciarVigia(session, guildId);
   return session;
 }
 
+// A 1ª tentativa (chamada pelo comando do usuário) deixa o erro subir
+// normalmente pra quem chamou mostrar "deu ruim" na hora. Já a função
+// "regenerar" guardada na sessão é chamada sozinha pela vigia lá em cima,
+// sem ninguém esperando — erro ali só vai pro log, não tem quem avisar.
 async function play(voiceChannel, estacao) {
   const url = estacao.url_resolved || estacao.url;
-  return tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null);
+  const regenerar = async () => {
+    try {
+      await tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar);
+    } catch (err) {
+      console.error('[player] falha ao reconectar rádio travada:', err.message);
+    }
+  };
+  return tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar);
 }
 
-async function playFromProcess(voiceChannel, item, sourceProcess) {
-  return tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess);
+async function playFromProcess(voiceChannel, item, spawnSourceProcess) {
+  const regenerar = async () => {
+    try {
+      const sourceProcess = spawnSourceProcess();
+      await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar);
+    } catch (err) {
+      console.error('[player] falha ao reconectar YouTube travado:', err.message);
+    }
+  };
+  const sourceProcess = spawnSourceProcess();
+  return tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar);
 }
 
 function stop(guildId) {
   const session = sessions.get(guildId);
   if (!session) return false;
   limparTimerIdle(session);
+  limparVigia(session);
+  session.regenerar = null;
   if (session.sourceProcess) {
     try { session.sourceProcess.kill(); } catch {}
   }
