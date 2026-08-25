@@ -227,12 +227,8 @@ client.on('interactionCreate', async (interaction) => {
         panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
-      let est = await radio.estacaoAleatoriaFavorita(interaction.user.id).catch(() => null);
-      let origem = 'dos seus favoritos';
-      if (!est) {
-        est = await radio.estacaoAleatoriaGlobal();
-        origem = 'descoberta';
-      }
+      const est = await radio.estacaoAleatoriaGlobal();
+      const origem = 'descoberta';
       if (!est) {
         await interaction.editReply('Não consegui sortear nenhuma rádio agora, tenta de novo em instantes.');
         panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);

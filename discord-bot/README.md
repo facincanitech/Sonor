@@ -17,9 +17,8 @@ reaproveita o mesmo projeto Supabase pra guardar os favoritos.
 - `/radio salvar` — salva a rádio que está tocando nos seus favoritos
 - `/radio favoritos` — lista suas rádios salvas
 - `/radio historico` — lista as últimas rádios que você tocou
-- `/radio aleatoria` — toca uma aleatória (dos seus favoritos, ou de um pool
-  de descoberta com as rádios mais ouvidas de ~40 países se você não tiver
-  nenhuma salva ainda)
+- `/radio aleatoria` — toca uma aleatória do pool de descoberta (as rádios
+  mais ouvidas de ~40 países), sem olhar seus favoritos
 - `/radio parar` — para e sai da call
 - `/youtube tocar busca:<nome ou link>` — busca (ou abre direto se for
   link) e toca o áudio na sua call. **Precisa de `YOUTUBE_COOKIES_FILE`

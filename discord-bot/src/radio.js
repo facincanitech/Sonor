@@ -70,13 +70,6 @@ async function listarFavoritas(discordUserId) {
   return data || [];
 }
 
-async function estacaoAleatoriaFavorita(discordUserId) {
-  const favs = await listarFavoritas(discordUserId);
-  if (!favs.length) return null;
-  const fav = favs[Math.floor(Math.random() * favs.length)];
-  return { name: fav.station_name, url_resolved: fav.station_url, country: fav.country };
-}
-
 const HISTORICO_MAX_POR_USUARIO = 20;
 
 async function registrarHistorico(discordUserId, est) {
@@ -126,7 +119,6 @@ async function listarHistorico(discordUserId) {
 module.exports = {
   buscarRadios,
   estacaoAleatoriaGlobal,
-  estacaoAleatoriaFavorita,
   salvarFavorita,
   listarFavoritas,
   registrarHistorico,

@@ -225,9 +225,8 @@ async function handleInteraction(interaction) {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const voiceChannel = interaction.member?.voice?.channel;
       if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-      let est = await radio.estacaoAleatoriaFavorita(interaction.user.id).catch(() => null);
-      const origem = est ? 'dos seus favoritos' : 'descoberta';
-      if (!est) est = await radio.estacaoAleatoriaGlobal();
+      const est = await radio.estacaoAleatoriaGlobal();
+      const origem = 'descoberta';
       if (!est) { await interaction.editReply('Não consegui sortear nenhuma rádio agora.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       const erroOcupado1 = await tocarEComRegistro(interaction.guildId, voiceChannel, interaction.user.id, est);
       if (erroOcupado1) { await interaction.editReply(erroOcupado1); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
