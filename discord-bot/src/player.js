@@ -83,9 +83,26 @@ function novaSessao(voiceChannel) {
   connection.on('stateChange', (oldState, newState) => {
     console.log(`[player] conexão de voz mudou: ${oldState.status} -> ${newState.status}`);
   });
-  connection.on(VoiceConnectionStatus.Disconnected, () => {
-    try { connection.destroy(); } catch {}
-    sessions.delete(voiceChannel.guild.id);
+  // "Disconnected" não é sempre definitivo — soluço de rede/protocolo com o
+  // Discord costuma se recuperar sozinho em poucos segundos (a conexão
+  // volta pra "signalling"/"connecting"). Destruir na hora (como era antes)
+  // matava a sessão à toa nesses casos, deixando o bot mudo até alguém
+  // rodar /radio tocar de novo manualmente — bug real visto em produção
+  // (log mostrava "ready -> disconnected -> destroyed" do nada, sem cair
+  // conexão de internet nem nada do lado do usuário). Só destrói de vez se
+  // não voltar a sinalizar em 5s (padrão recomendado pela doc do
+  // @discordjs/voice).
+  connection.on(VoiceConnectionStatus.Disconnected, async () => {
+    try {
+      await Promise.race([
+        entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+        entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+      ]);
+      // Voltou a sinalizar sozinho — deixa quieto, não é uma queda de verdade.
+    } catch {
+      try { connection.destroy(); } catch {}
+      sessions.delete(voiceChannel.guild.id);
+    }
   });
   return session;
 }
