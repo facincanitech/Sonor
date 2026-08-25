@@ -80,6 +80,12 @@ client.on('interactionCreate', async (interaction) => {
           panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
           return;
         }
+        const ocupadoMsg = panel.mensagemCanalOcupado(interaction.guildId, voiceChannel.id);
+        if (ocupadoMsg) {
+          await interaction.editReply(ocupadoMsg);
+          panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
+          return;
+        }
         const item = await youtube.buscar(busca);
         const proc = youtube.spawnAudioStream(item.url);
         await player.playFromProcess(voiceChannel, item, proc);
@@ -179,6 +185,12 @@ client.on('interactionCreate', async (interaction) => {
       }
       if (!est) {
         await interaction.editReply('Não consegui sortear nenhuma rádio agora, tenta de novo em instantes.');
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
+        return;
+      }
+      const ocupadoMsg = panel.mensagemCanalOcupado(interaction.guildId, voiceChannel.id);
+      if (ocupadoMsg) {
+        await interaction.editReply(ocupadoMsg);
         panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }

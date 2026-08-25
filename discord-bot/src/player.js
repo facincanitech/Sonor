@@ -133,4 +133,13 @@ function current(guildId) {
   return sessions.get(guildId)?.current || null;
 }
 
-module.exports = { play, playFromProcess, stop, current };
+// ID do canal de voz onde o bot já tá conectado nesse servidor, ou null se
+// não tiver sessão ativa. Usado pra recusar tocar em outro canal do mesmo
+// servidor em vez de simplesmente pular pra lá — só uma pessoa por vez usa
+// o bot em cada Discord (limitação da própria API de voz do Discord, não
+// dá pra estar em 2 canais do mesmo servidor ao mesmo tempo).
+function activeChannelId(guildId) {
+  return sessions.get(guildId)?.connection?.joinConfig?.channelId || null;
+}
+
+module.exports = { play, playFromProcess, stop, current, activeChannelId };

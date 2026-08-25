@@ -130,9 +130,21 @@ function embedEstacao(titulo, est) {
     .setDescription(`**${est.name}**${est.country ? ` — ${est.country}` : ''}`);
 }
 
-async function tocarEComRegistro(voiceChannel, userId, est) {
+// Se o bot já tá noutro canal de voz DESSE servidor, recusa em vez de pular
+// pra lá — só uma sessão de voz por servidor (limitação do Discord), então
+// trocar de canal no meio interromperia quem já tava ouvindo.
+function mensagemCanalOcupado(guildId, voiceChannelId) {
+  const ocupado = player.activeChannelId(guildId);
+  if (!ocupado || ocupado === voiceChannelId) return null;
+  return `🔒 Já tô tocando no canal <#${ocupado}> agora. Espera terminar ou peça pra alguém lá rodar \`/radio parar\`.`;
+}
+
+async function tocarEComRegistro(guildId, voiceChannel, userId, est) {
+  const ocupadoMsg = mensagemCanalOcupado(guildId, voiceChannel.id);
+  if (ocupadoMsg) return ocupadoMsg;
   await player.play(voiceChannel, est);
   radio.registrarHistorico(userId, est).catch(() => {});
+  return null;
 }
 
 // Resultado de busca (/radio tocar): lista até 5, cada uma com botão de
@@ -201,7 +213,8 @@ async function handleInteraction(interaction) {
       const origem = est ? 'dos seus favoritos' : 'descoberta';
       if (!est) est = await radio.estacaoAleatoriaGlobal();
       if (!est) { await interaction.editReply('Não consegui sortear nenhuma rádio agora.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-      await tocarEComRegistro(voiceChannel, interaction.user.id, est);
+      const erroOcupado1 = await tocarEComRegistro(interaction.guildId, voiceChannel, interaction.user.id, est);
+      if (erroOcupado1) { await interaction.editReply(erroOcupado1); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       await interaction.editReply({ embeds: [embedEstacao(`🎲 Aleatória (${origem})`, est)] });
       agendarSumico(interaction, SOME_RAPIDO_MS);
       return true;
@@ -269,7 +282,8 @@ async function handleInteraction(interaction) {
 
       const voiceChannel = interaction.member?.voice?.channel;
       if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-      await tocarEComRegistro(voiceChannel, interaction.user.id, est);
+      const erroOcupado2 = await tocarEComRegistro(interaction.guildId, voiceChannel, interaction.user.id, est);
+      if (erroOcupado2) { await interaction.editReply(erroOcupado2); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
       await interaction.editReply({ embeds: [embedEstacao('📻 Tocando agora', est)] });
       agendarSumico(interaction, SOME_RAPIDO_MS);
       return true;
@@ -296,7 +310,8 @@ async function handleInteraction(interaction) {
     const lista = listCache.get(token);
     const est = lista && lista[Number(interaction.values[0])];
     if (!est) { await interaction.editReply({ content: 'Essa lista expirou, tenta abrir o painel de novo.', components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-    await tocarEComRegistro(voiceChannel, interaction.user.id, est);
+    const erroOcupado3 = await tocarEComRegistro(interaction.guildId, voiceChannel, interaction.user.id, est);
+    if (erroOcupado3) { await interaction.editReply({ content: erroOcupado3, components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     await interaction.editReply({ content: null, embeds: [embedEstacao('📻 Tocando agora', est)], components: [] });
     agendarSumico(interaction, SOME_RAPIDO_MS);
     return true;
@@ -313,6 +328,7 @@ module.exports = {
   resultadosComponents,
   canalDoPainel,
   agendarSumico,
+  mensagemCanalOcupado,
   SOME_RAPIDO_MS,
   SOME_LISTA_MS,
 };
