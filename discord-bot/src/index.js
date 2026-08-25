@@ -45,6 +45,18 @@ client.on('guildCreate', (guild) => {
   registrarComandosNoServidor(guild.id);
 });
 
+// Alguém saiu (ou entrou) de um canal de voz — se o canal onde o bot tá
+// tocando ficou vazio (só o bot), sai também em vez de continuar tocando
+// pra ninguém ouvir. Só interessa quando a mudança envolve o canal ativo.
+client.on('voiceStateUpdate', (oldState, newState) => {
+  const guildId = (oldState.guild || newState.guild).id;
+  const canalAtivoId = player.activeChannelId(guildId);
+  if (!canalAtivoId) return;
+  if (oldState.channelId !== canalAtivoId && newState.channelId !== canalAtivoId) return;
+  const canal = oldState.guild.channels.cache.get(canalAtivoId);
+  player.saiSeCanalVazio(guildId, canal);
+});
+
 client.on('interactionCreate', async (interaction) => {
   // Botões/modal/select do painel (/radio painel) — não são chat input command.
   if (interaction.isButton() || interaction.isModalSubmit() || interaction.isStringSelectMenu()) {

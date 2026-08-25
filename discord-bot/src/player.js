@@ -67,6 +67,19 @@ function resourceFromProcess(sourceProcess) {
   return opusStreamFromTranscoder(transcoder, 'youtube');
 }
 
+// Tempo parado sem tocar nada (idle de verdade, não os idles rápidos de
+// meio-segundo entre uma reconexão de stream e outra) até o bot sair sozinho
+// da call — evita ficar pendurado num canal indefinidamente depois de um
+// /radio parar que falhou ou de alguém esquecer de mandar parar.
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+
+function limparTimerIdle(session) {
+  if (session.idleTimer) {
+    clearTimeout(session.idleTimer);
+    session.idleTimer = null;
+  }
+}
+
 function novaSessao(voiceChannel) {
   const connection = joinVoiceChannel({
     channelId: voiceChannel.id,
@@ -77,9 +90,20 @@ function novaSessao(voiceChannel) {
   player.on('error', (err) => console.error('[player] erro no AudioPlayer:', err.message));
   player.on('stateChange', (oldState, newState) => {
     console.log(`[player] estado mudou: ${oldState.status} -> ${newState.status}`);
+    const session = sessions.get(voiceChannel.guild.id);
+    if (!session) return;
+    if (newState.status === AudioPlayerStatus.Idle) {
+      limparTimerIdle(session);
+      session.idleTimer = setTimeout(() => {
+        console.log('[player] parado há muito tempo sem tocar nada, saindo da call sozinho.');
+        stop(voiceChannel.guild.id);
+      }, IDLE_TIMEOUT_MS);
+    } else {
+      limparTimerIdle(session);
+    }
   });
   connection.subscribe(player);
-  const session = { connection, player, current: null, sourceProcess: null };
+  const session = { connection, player, current: null, sourceProcess: null, idleTimer: null };
   connection.on('stateChange', (oldState, newState) => {
     console.log(`[player] conexão de voz mudou: ${oldState.status} -> ${newState.status}`);
   });
@@ -137,6 +161,7 @@ async function playFromProcess(voiceChannel, item, sourceProcess) {
 function stop(guildId) {
   const session = sessions.get(guildId);
   if (!session) return false;
+  limparTimerIdle(session);
   if (session.sourceProcess) {
     try { session.sourceProcess.kill(); } catch {}
   }
@@ -144,6 +169,15 @@ function stop(guildId) {
   session.connection.destroy();
   sessions.delete(guildId);
   return true;
+}
+
+// Chamado pelo index.js a cada voiceStateUpdate — se o canal onde o bot tá
+// tocando ficou só com o bot (todo mundo real saiu), sai também em vez de
+// continuar tocando sozinho pra ninguém ouvir.
+function saiSeCanalVazio(guildId, canal) {
+  if (!canal || canal.id !== activeChannelId(guildId)) return;
+  const temGenteReal = canal.members.some((m) => !m.user.bot);
+  if (!temGenteReal) stop(guildId);
 }
 
 function current(guildId) {
@@ -159,4 +193,4 @@ function activeChannelId(guildId) {
   return sessions.get(guildId)?.connection?.joinConfig?.channelId || null;
 }
 
-module.exports = { play, playFromProcess, stop, current, activeChannelId };
+module.exports = { play, playFromProcess, stop, current, activeChannelId, saiSeCanalVazio };
