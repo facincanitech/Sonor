@@ -138,7 +138,10 @@ function novaSessao(voiceChannel) {
     }
   });
   connection.subscribe(player);
-  const session = { connection, player, current: null, sourceProcess: null, idleTimer: null };
+  const session = {
+    connection, player, current: null, sourceProcess: null, idleTimer: null,
+    vigiaInterval: null, regenerar: null, fonte: null, saindoDeProposito: false,
+  };
   connection.on('stateChange', (oldState, newState) => {
     console.log(`[player] conexão de voz mudou: ${oldState.status} -> ${newState.status}`);
   });
@@ -146,11 +149,8 @@ function novaSessao(voiceChannel) {
   // Discord costuma se recuperar sozinho em poucos segundos (a conexão
   // volta pra "signalling"/"connecting"). Destruir na hora (como era antes)
   // matava a sessão à toa nesses casos, deixando o bot mudo até alguém
-  // rodar /radio tocar de novo manualmente — bug real visto em produção
-  // (log mostrava "ready -> disconnected -> destroyed" do nada, sem cair
-  // conexão de internet nem nada do lado do usuário). Só destrói de vez se
-  // não voltar a sinalizar em 5s (padrão recomendado pela doc do
-  // @discordjs/voice).
+  // rodar /radio tocar de novo manualmente. Só destrói de vez se não voltar
+  // a sinalizar em 5s (padrão recomendado pela doc do @discordjs/voice).
   connection.on(VoiceConnectionStatus.Disconnected, async () => {
     try {
       await Promise.race([
@@ -160,13 +160,30 @@ function novaSessao(voiceChannel) {
       // Voltou a sinalizar sozinho — deixa quieto, não é uma queda de verdade.
     } catch {
       try { connection.destroy(); } catch {}
-      sessions.delete(voiceChannel.guild.id);
+    }
+  });
+  // Rede visto em produção também derruba a conexão pulando direto de
+  // "ready" pra "destroyed", sem passar por "disconnected" — nesse caso o
+  // handler acima nunca dispara, e a sessão ficava morta pra sempre (bot
+  // continuava "na call" pro Discord mas sem tocar nada, porque
+  // internamente a conexão já tinha sumido). Esse listener aqui cobre
+  // QUALQUER destroy inesperado (venha de onde vier) reconstruindo a
+  // sessão do zero sozinho, exceto quando fomos nós que pedimos pra sair
+  // de propósito (/radio parar, seta saindoDeProposito antes de destruir).
+  connection.on(VoiceConnectionStatus.Destroyed, () => {
+    if (sessions.get(voiceChannel.guild.id) !== session) return; // já foi trocada/limpa por outro fluxo
+    sessions.delete(voiceChannel.guild.id);
+    limparTimerIdle(session);
+    limparVigia(session);
+    if (!session.saindoDeProposito && session.regenerar) {
+      console.log('[player] conexão de voz destruída inesperadamente, reconstruindo sessão do zero.');
+      session.regenerar();
     }
   });
   return session;
 }
 
-async function tocarComResource(voiceChannel, item, resource, sourceProcess, regenerar) {
+async function tocarComResource(voiceChannel, item, resource, sourceProcess, regenerar, fonte) {
   const guildId = voiceChannel.guild.id;
   let session = sessions.get(guildId);
   if (!session) {
@@ -181,6 +198,7 @@ async function tocarComResource(voiceChannel, item, resource, sourceProcess, reg
   session.current = item;
   session.sourceProcess = sourceProcess || null;
   session.regenerar = regenerar || null;
+  session.fonte = fonte || null;
   await entersState(session.player, AudioPlayerStatus.Playing, 15_000);
   iniciarVigia(session, guildId);
   return session;
@@ -194,30 +212,31 @@ async function play(voiceChannel, estacao) {
   const url = estacao.url_resolved || estacao.url;
   const regenerar = async () => {
     try {
-      await tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar);
+      await tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar, 'radio');
     } catch (err) {
       console.error('[player] falha ao reconectar rádio travada:', err.message);
     }
   };
-  return tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar);
+  return tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar, 'radio');
 }
 
 async function playFromProcess(voiceChannel, item, spawnSourceProcess) {
   const regenerar = async () => {
     try {
       const sourceProcess = spawnSourceProcess();
-      await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar);
+      await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube');
     } catch (err) {
       console.error('[player] falha ao reconectar YouTube travado:', err.message);
     }
   };
   const sourceProcess = spawnSourceProcess();
-  return tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar);
+  return tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube');
 }
 
 function stop(guildId) {
   const session = sessions.get(guildId);
   if (!session) return false;
+  session.saindoDeProposito = true;
   limparTimerIdle(session);
   limparVigia(session);
   session.regenerar = null;
@@ -243,6 +262,12 @@ function current(guildId) {
   return sessions.get(guildId)?.current || null;
 }
 
+// 'radio' ou 'youtube' — pra saber em qual tabela salvar/listar favoritos
+// do que tá tocando agora nesse servidor.
+function currentFonte(guildId) {
+  return sessions.get(guildId)?.fonte || null;
+}
+
 // ID do canal de voz onde o bot já tá conectado nesse servidor, ou null se
 // não tiver sessão ativa. Usado pra recusar tocar em outro canal do mesmo
 // servidor em vez de simplesmente pular pra lá — só uma pessoa por vez usa
@@ -252,4 +277,4 @@ function activeChannelId(guildId) {
   return sessions.get(guildId)?.connection?.joinConfig?.channelId || null;
 }
 
-module.exports = { play, playFromProcess, stop, current, activeChannelId, saiSeCanalVazio };
+module.exports = { play, playFromProcess, stop, current, currentFonte, activeChannelId, saiSeCanalVazio };

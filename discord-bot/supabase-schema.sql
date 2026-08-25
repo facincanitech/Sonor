@@ -32,3 +32,18 @@ create index if not exists discord_radio_history_user_idx
   on discord_radio_history (discord_user_id, played_at desc);
 
 alter table discord_radio_history enable row level security;
+
+-- Favoritos do /youtube (separado dos favoritos de rádio porque a forma de
+-- tocar de volta é diferente — vídeo do YouTube via yt-dlp, não stream de
+-- rádio direto no ffmpeg).
+create table if not exists discord_youtube_favorites (
+  id bigint generated always as identity primary key,
+  discord_user_id text not null,
+  video_title text not null,
+  video_url text not null,
+  uploader text,
+  created_at timestamptz not null default now(),
+  unique (discord_user_id, video_url)
+);
+
+alter table discord_youtube_favorites enable row level security;

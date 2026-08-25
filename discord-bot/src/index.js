@@ -107,6 +107,38 @@ client.on('interactionCreate', async (interaction) => {
         return;
       }
 
+      if (sub === 'salvar') {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        const atual = player.current(interaction.guildId);
+        if (!atual || player.currentFonte(interaction.guildId) !== 'youtube') {
+          await interaction.editReply('Não tem nenhum vídeo do YouTube tocando aqui pra salvar.');
+          panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
+          return;
+        }
+        await youtube.salvarFavorita(interaction.user.id, atual);
+        await interaction.editReply({
+          embeds: [new EmbedBuilder().setColor(COR).setTitle('⭐ Salvo nos favoritos do YouTube').setDescription(`**${atual.name}**${atual.uploader ? ` — ${atual.uploader}` : ''}`)],
+        });
+        panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
+        return;
+      }
+
+      if (sub === 'favoritos') {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+        const favs = await youtube.listarFavoritas(interaction.user.id);
+        if (!favs.length) {
+          await interaction.editReply('Você ainda não salvou nenhum vídeo do YouTube. Usa `/youtube tocar` e depois `/youtube salvar`.');
+          panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
+          return;
+        }
+        const lista = favs.map((f, i) => `${i + 1}. **${f.name}**${f.uploader ? ` — ${f.uploader}` : ''}`).join('\n');
+        await interaction.editReply({
+          embeds: [new EmbedBuilder().setColor(COR).setTitle('⭐ Seus vídeos salvos').setDescription(lista)],
+        });
+        panel.agendarSumico(interaction, panel.SOME_LISTA_MS);
+        return;
+      }
+
       if (sub === 'parar') {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const parou = player.stop(interaction.guildId);
@@ -154,12 +186,19 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const atual = player.current(interaction.guildId);
       if (!atual) {
-        await interaction.editReply('Não tem nenhuma rádio tocando aqui pra salvar.');
+        await interaction.editReply('Não tem nada tocando aqui pra salvar.');
         panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
-      await radio.salvarFavorita(interaction.user.id, atual);
-      await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', atual)] });
+      if (player.currentFonte(interaction.guildId) === 'youtube') {
+        await youtube.salvarFavorita(interaction.user.id, atual);
+        await interaction.editReply({
+          embeds: [new EmbedBuilder().setColor(COR).setTitle('⭐ Salvo nos favoritos do YouTube').setDescription(`**${atual.name}**${atual.uploader ? ` — ${atual.uploader}` : ''}`)],
+        });
+      } else {
+        await radio.salvarFavorita(interaction.user.id, atual);
+        await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', atual)] });
+      }
       panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
     }

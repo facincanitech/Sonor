@@ -25,8 +25,16 @@ reaproveita o mesmo projeto Supabase pra guardar os favoritos.
   link) e toca o áudio na sua call. **Precisa de `YOUTUBE_COOKIES_FILE`
   configurado** (ver seção de deploy) — sem isso o YouTube costuma
   bloquear a extração vinda de IP de VPS/datacenter.
+- `/youtube salvar` — salva o vídeo que está tocando nos seus favoritos
+  do YouTube (tabela separada dos favoritos de rádio)
+- `/youtube favoritos` — lista seus vídeos salvos
 - `/youtube parar` — para e sai da call (mesmo comando de efeito que
   `/radio parar`, só uma sessão de voz por servidor)
+
+No painel (`/radio painel`) esses mesmos recursos aparecem como botões:
+"🎵 YouTube" abre uma busca por nome/link, "⭐ Salvar atual" detecta
+sozinho se é rádio ou YouTube tocando e salva no lugar certo, "⭐ Favoritos
+YT" lista os vídeos salvos pra tocar de novo.
 
 ## Passo a passo pra colocar no ar
 

@@ -16,6 +16,7 @@ const {
 const crypto = require('crypto');
 const radio = require('./radio');
 const player = require('./player');
+const youtube = require('./youtube');
 
 const COR = 0x45b8a8;
 const NOME_CANAL_PAINEL = '📻-painel';
@@ -106,12 +107,14 @@ function painelRows() {
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('radio_tocar').setLabel('🔍 Tocar').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('radio_aleatoria').setLabel('🎲 Aleatória').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('radio_youtube').setLabel('🎵 YouTube').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('radio_parar').setLabel('⏹ Parar').setStyle(ButtonStyle.Danger)
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('radio_salvar').setLabel('⭐ Salvar atual').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('radio_favoritos').setLabel('⭐ Favoritos').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('radio_historico').setLabel('📜 Histórico').setStyle(ButtonStyle.Secondary)
+      new ButtonBuilder().setCustomId('radio_historico').setLabel('📜 Histórico').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('youtube_favoritos').setLabel('⭐ Favoritos YT').setStyle(ButtonStyle.Secondary)
     ),
   ];
 }
@@ -205,6 +208,19 @@ async function handleInteraction(interaction) {
       return true;
     }
 
+    if (id === 'radio_youtube') {
+      const modal = new ModalBuilder().setCustomId('radio_youtube_modal').setTitle('Tocar do YouTube');
+      const input = new TextInputBuilder()
+        .setCustomId('busca')
+        .setLabel('Nome da música/vídeo ou link')
+        .setPlaceholder('Ex: nome da música, ou um link do YouTube...')
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
+      modal.addComponents(new ActionRowBuilder().addComponents(input));
+      await interaction.showModal(modal);
+      return true;
+    }
+
     if (id === 'radio_aleatoria') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const voiceChannel = interaction.member?.voice?.channel;
@@ -223,10 +239,31 @@ async function handleInteraction(interaction) {
     if (id === 'radio_salvar') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const atual = player.current(interaction.guildId);
-      if (!atual) { await interaction.editReply('Não tem nenhuma rádio tocando aqui pra salvar.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-      await radio.salvarFavorita(interaction.user.id, atual);
-      await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', atual)] });
+      if (!atual) { await interaction.editReply('Não tem nada tocando aqui pra salvar.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+      if (player.currentFonte(interaction.guildId) === 'youtube') {
+        await youtube.salvarFavorita(interaction.user.id, atual);
+        await interaction.editReply({
+          embeds: [new EmbedBuilder().setColor(COR).setTitle('⭐ Salvo nos favoritos do YouTube').setDescription(`**${atual.name}**${atual.uploader ? ` — ${atual.uploader}` : ''}`)],
+        });
+      } else {
+        await radio.salvarFavorita(interaction.user.id, atual);
+        await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', atual)] });
+      }
       agendarSumico(interaction, SOME_RAPIDO_MS);
+      return true;
+    }
+
+    if (id === 'youtube_favoritos') {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      const favs = await youtube.listarFavoritas(interaction.user.id);
+      if (!favs.length) { await interaction.editReply('Você ainda não salvou nenhum vídeo do YouTube.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+      const token = cacheLista(favs);
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId(`youtube_sel_favorito:${token}`)
+        .setPlaceholder('Seus vídeos salvos')
+        .addOptions(favs.slice(0, 25).map((f, i) => ({ label: f.name.slice(0, 100), description: f.uploader || undefined, value: String(i) })));
+      await interaction.editReply({ content: 'Escolhe um pra tocar:', components: [new ActionRowBuilder().addComponents(menu)] });
+      agendarSumico(interaction, SOME_LISTA_MS);
       return true;
     }
 
@@ -302,6 +339,26 @@ async function handleInteraction(interaction) {
     return true;
   }
 
+  if (interaction.isModalSubmit() && interaction.customId === 'radio_youtube_modal') {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const voiceChannel = interaction.member?.voice?.channel;
+    if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco lá.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    const ocupadoMsg = mensagemCanalOcupado(interaction.guildId, voiceChannel.id);
+    if (ocupadoMsg) { await interaction.editReply(ocupadoMsg); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    const busca = interaction.fields.getTextInputValue('busca');
+    try {
+      const item = await youtube.buscar(busca);
+      await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
+      await interaction.editReply({
+        embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
+      });
+    } catch (err) {
+      await interaction.editReply(`Deu ruim: ${err.message}`);
+    }
+    agendarSumico(interaction, SOME_RAPIDO_MS);
+    return true;
+  }
+
   if (interaction.isStringSelectMenu() && (interaction.customId.startsWith('radio_sel_favorito:') || interaction.customId.startsWith('radio_sel_historico:'))) {
     await interaction.deferUpdate();
     const voiceChannel = interaction.member?.voice?.channel;
@@ -313,6 +370,30 @@ async function handleInteraction(interaction) {
     const erroOcupado3 = await tocarEComRegistro(interaction.guildId, voiceChannel, interaction.user.id, est);
     if (erroOcupado3) { await interaction.editReply({ content: erroOcupado3, components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     await interaction.editReply({ content: null, embeds: [embedEstacao('📻 Tocando agora', est)], components: [] });
+    agendarSumico(interaction, SOME_RAPIDO_MS);
+    return true;
+  }
+
+  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('youtube_sel_favorito:')) {
+    await interaction.deferUpdate();
+    const voiceChannel = interaction.member?.voice?.channel;
+    if (!voiceChannel) { await interaction.editReply({ content: 'Entra numa call primeiro, aí eu toco lá.', components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    const token = interaction.customId.split(':')[1];
+    const lista = listCache.get(token);
+    const item = lista && lista[Number(interaction.values[0])];
+    if (!item) { await interaction.editReply({ content: 'Essa lista expirou, tenta abrir o painel de novo.', components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    const ocupadoMsg = mensagemCanalOcupado(interaction.guildId, voiceChannel.id);
+    if (ocupadoMsg) { await interaction.editReply({ content: ocupadoMsg, components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    try {
+      await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
+      await interaction.editReply({
+        content: null,
+        embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
+        components: [],
+      });
+    } catch (err) {
+      await interaction.editReply({ content: `Deu ruim: ${err.message}`, components: [] });
+    }
     agendarSumico(interaction, SOME_RAPIDO_MS);
     return true;
   }

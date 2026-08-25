@@ -28,6 +28,8 @@ const commands = [
         .setDescription('Busca no YouTube e toca o áudio na sua call')
         .addStringOption((opt) => opt.setName('busca').setDescription('Nome da música/vídeo ou link do YouTube').setRequired(true))
     )
+    .addSubcommand((sub) => sub.setName('salvar').setDescription('Salva o vídeo que está tocando agora nos seus favoritos do YouTube'))
+    .addSubcommand((sub) => sub.setName('favoritos').setDescription('Lista seus vídeos salvos do YouTube'))
     .addSubcommand((sub) => sub.setName('parar').setDescription('Para o áudio e sai da call'))
     .toJSON(),
 ];
