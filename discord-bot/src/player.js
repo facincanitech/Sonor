@@ -19,6 +19,15 @@ const prism = require('prism-media');
 // de novo.
 const sessions = new Map(); // guildId -> { connection, player, current, sourceProcess }
 
+// Trava de "só uma reconexão por vez, por servidor". Sem isso, o listener de
+// "Destroyed" inesperado, a vigia de stream travado e o retry de idle podem
+// disparar regenerar() ao mesmo tempo (uma queda real dispara vários
+// gatilhos juntos) — cada chamada cria uma sessão/joinVoiceChannel nova pro
+// MESMO canal, e as duas conexões brigam e se destroem uma à outra (bug
+// visto em produção: até rádios estáveis começaram a cair depois que os
+// três mecanismos de auto-reconexão foram adicionados no mesmo dia).
+const reconectando = new Set();
+
 // Log verboso de propósito — a 1ª versão disso ficava muda/parava sem
 // deixar rastro nenhum (handlers de erro vazios, stream "end" normal
 // nunca logado). Até identificar o padrão real de queda, loga tudo:
@@ -233,23 +242,33 @@ async function tocarComResource(voiceChannel, item, resource, sourceProcess, reg
 // sem ninguém esperando — erro ali só vai pro log, não tem quem avisar.
 async function play(voiceChannel, estacao) {
   const url = estacao.url_resolved || estacao.url;
+  const guildId = voiceChannel.guild.id;
   const regenerar = async () => {
+    if (reconectando.has(guildId)) return; // já tem uma reconexão em andamento, não duplica
+    reconectando.add(guildId);
     try {
       await tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar, 'radio');
     } catch (err) {
       console.error('[player] falha ao reconectar rádio travada:', err.message);
+    } finally {
+      reconectando.delete(guildId);
     }
   };
   return tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar, 'radio');
 }
 
 async function playFromProcess(voiceChannel, item, spawnSourceProcess) {
+  const guildId = voiceChannel.guild.id;
   const regenerar = async () => {
+    if (reconectando.has(guildId)) return;
+    reconectando.add(guildId);
     try {
       const sourceProcess = spawnSourceProcess();
       await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube');
     } catch (err) {
       console.error('[player] falha ao reconectar YouTube travado:', err.message);
+    } finally {
+      reconectando.delete(guildId);
     }
   };
   const sourceProcess = spawnSourceProcess();
@@ -260,6 +279,7 @@ function stop(guildId) {
   const session = sessions.get(guildId);
   if (!session) return false;
   session.saindoDeProposito = true;
+  reconectando.delete(guildId);
   limparTimerIdle(session);
   limparVigia(session);
   session.regenerar = null;
