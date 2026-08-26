@@ -45,6 +45,11 @@ function resourceFromUrl(url) {
       '-reconnect_at_eof', '1',
       '-analyzeduration', '0',
       '-loglevel', 'warning',
+      // Algumas rádios ShoutCast v1 antigas checam o User-Agent e recusam
+      // clientes "não-reconhecidos" (ex: "Star 98.3" — confirmado via curl
+      // que o servidor manda cabeçalho pedindo Winamp). Sem isso, essas
+      // estações especificamente derrubavam a conexão sem aviso.
+      '-user_agent', 'WinampMPEG/5.66',
       '-i', url,
       '-f', 's16le',
       '-ar', '48000',
@@ -129,18 +134,36 @@ function novaSessao(voiceChannel) {
     if (!session) return;
     if (newState.status === AudioPlayerStatus.Idle) {
       limparTimerIdle(session);
+      // Idle depois de já ter tocado (não é o /radio parar de propósito,
+      // guardado por saindoDeProposito) significa que o ffmpeg desistiu de
+      // vez do stream — algumas rádios velhas/ShoutCast v1 fecham a conexão
+      // de vez em quando e recusam reconectar rápido demais (visto na
+      // prática com a "Star 98.3"). Antes disso o bot só ficava mudo até o
+      // timeout de inatividade de 5min tirar ele da call sozinho. Agora
+      // tenta reconectar sozinho algumas vezes antes de desistir de vez.
+      const vinhaTocando = oldState.status === AudioPlayerStatus.Playing || oldState.status === AudioPlayerStatus.Buffering;
+      if (!session.saindoDeProposito && vinhaTocando && session.regenerar && (session.idleRetries || 0) < 5) {
+        session.idleRetries = (session.idleRetries || 0) + 1;
+        console.log(`[player] stream morreu sozinho, tentando reconectar (${session.idleRetries}/5)...`);
+        setTimeout(() => {
+          const atual = sessions.get(voiceChannel.guild.id);
+          if (atual === session && session.regenerar) session.regenerar();
+        }, 3_000);
+        return;
+      }
       session.idleTimer = setTimeout(() => {
         console.log('[player] parado há muito tempo sem tocar nada, saindo da call sozinho.');
         stop(voiceChannel.guild.id);
       }, IDLE_TIMEOUT_MS);
     } else {
       limparTimerIdle(session);
+      if (newState.status === AudioPlayerStatus.Playing) session.idleRetries = 0;
     }
   });
   connection.subscribe(player);
   const session = {
     connection, player, current: null, sourceProcess: null, idleTimer: null,
-    vigiaInterval: null, regenerar: null, fonte: null, saindoDeProposito: false,
+    vigiaInterval: null, regenerar: null, fonte: null, saindoDeProposito: false, idleRetries: 0,
   };
   connection.on('stateChange', (oldState, newState) => {
     console.log(`[player] conexão de voz mudou: ${oldState.status} -> ${newState.status}`);
