@@ -1,4 +1,4 @@
 {
-  "versionName": "4.86",
-  "notes": "Corrige rádio HLS (.m3u8) voltando no tempo sozinha, e texto de propaganda vazando no \"tocando agora\"."
+  "versionName": "4.87",
+  "notes": "Audiobook grátis ganhou biblioteca curada (~740 PDFs) organizada automaticamente em categorias."
 }
