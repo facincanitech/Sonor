@@ -126,6 +126,48 @@ function painelEmbed() {
     .setDescription('Toca rádio de verdade na sua call. Entra numa call e usa os botões abaixo.');
 }
 
+// Referência da mensagem fixa do painel por servidor (canal+id) — pra dar
+// editReply nela sempre que a rádio/vídeo tocando mudar, sem precisar que
+// ninguém clique em nada. Vive só em memória: some se o bot reiniciar, mas
+// aí é só rodar /radio painel de novo (ele já limpa a mensagem antiga).
+const painelMsgRef = new Map(); // guildId -> { channelId, messageId }
+function registrarPainel(guildId, message) {
+  painelMsgRef.set(guildId, { channelId: message.channelId, messageId: message.id });
+}
+
+// Embed "tocando agora" — mesma ideia da tela do player no app (capa +
+// nome), só que dentro do próprio painel fixo em vez de tela separada.
+function nowPlayingEmbed(guildId) {
+  const atual = player.current(guildId);
+  if (!atual) {
+    return painelEmbed();
+  }
+  const fonte = player.currentFonte(guildId);
+  const embed = new EmbedBuilder().setColor(COR);
+  if (fonte === 'youtube') {
+    embed.setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${atual.name}**${atual.uploader ? ` — ${atual.uploader}` : ''}`);
+  } else {
+    embed.setTitle('▶️ Tocando agora').setDescription(`**${atual.name}**${atual.country ? ` — ${atual.country}` : ''}`);
+    if (atual.favicon) embed.setThumbnail(atual.favicon);
+  }
+  return embed;
+}
+
+// Chamado depois de qualquer play/stop pra refletir no painel fixo, se
+// existir um postado nesse servidor. Silencioso de propósito (falha aqui
+// não deve quebrar o fluxo de tocar/parar em si — o painel é um bônus).
+async function atualizarPainelAoVivo(guildId, client) {
+  const ref = painelMsgRef.get(guildId);
+  if (!ref) return;
+  try {
+    const canal = await client.channels.fetch(ref.channelId);
+    const msg = await canal.messages.fetch(ref.messageId);
+    await msg.edit({ embeds: [nowPlayingEmbed(guildId)], components: painelRows() });
+  } catch {
+    painelMsgRef.delete(guildId); // mensagem/canal sumiu, para de tentar
+  }
+}
+
 function embedEstacao(titulo, est) {
   return new EmbedBuilder()
     .setColor(COR)
@@ -147,6 +189,7 @@ async function tocarEComRegistro(guildId, voiceChannel, userId, est) {
   if (ocupadoMsg) return ocupadoMsg;
   await player.play(voiceChannel, est);
   radio.registrarHistorico(userId, est).catch(() => {});
+  atualizarPainelAoVivo(guildId, voiceChannel.client).catch(() => {});
   return null;
 }
 
@@ -314,6 +357,7 @@ async function handleInteraction(interaction) {
     if (id === 'radio_parar') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const parou = player.stop(interaction.guildId);
+      if (parou) atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
       await interaction.editReply(parou ? '⏹ Parei e saí da call.' : 'Não tinha nenhuma rádio tocando aqui.');
       agendarSumico(interaction, SOME_RAPIDO_MS);
       return true;
@@ -355,6 +399,7 @@ async function handleInteraction(interaction) {
     try {
       const item = await youtube.buscar(busca);
       await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
+      atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
       await interaction.editReply({
         embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
       });
@@ -407,6 +452,7 @@ async function handleInteraction(interaction) {
     if (ocupadoMsg) { await interaction.editReply({ content: ocupadoMsg, components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     try {
       await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
+      atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
       await interaction.editReply({
         content: null,
         embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
@@ -432,6 +478,9 @@ module.exports = {
   canalDoPainel,
   agendarSumico,
   mensagemCanalOcupado,
+  registrarPainel,
+  atualizarPainelAoVivo,
+  nowPlayingEmbed,
   SOME_RAPIDO_MS,
   SOME_LISTA_MS,
 };

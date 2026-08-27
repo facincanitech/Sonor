@@ -12,7 +12,12 @@ reaproveita o mesmo projeto Supabase pra guardar os favoritos.
 - `/radio painel` — posta um painel com botões (tocar, aleatória, salvar,
   favoritos, histórico, parar), pra quem prefere clicar em vez de digitar
   comando. Favoritos/Histórico viram um menu suspenso pra escolher e já
-  toca. É o jeito mais fácil de usar no dia a dia.
+  toca. É o jeito mais fácil de usar no dia a dia. O próprio painel se
+  atualiza sozinho mostrando "▶️ Tocando agora" com capa (rádio) e nome
+  sempre que alguém troca de estação/vídeo ou para, sem precisar reabrir
+  nada — só não reflete automaticamente quando o bot sai sozinho por
+  inatividade/canal vazio (nesses casos o painel só atualiza no próximo
+  play/stop manual).
 - `/radio tocar nome:<busca>` — busca e toca a rádio na sua call
 - `/radio salvar` — salva a rádio que está tocando nos seus favoritos
 - `/radio favoritos` — lista suas rádios salvas

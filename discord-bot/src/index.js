@@ -100,6 +100,7 @@ client.on('interactionCreate', async (interaction) => {
         }
         const item = await youtube.buscar(busca);
         await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
+        panel.atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
         await interaction.editReply({
           embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
         });
@@ -142,6 +143,7 @@ client.on('interactionCreate', async (interaction) => {
       if (sub === 'parar') {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const parou = player.stop(interaction.guildId);
+        if (parou) panel.atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
         await interaction.editReply(parou ? '⏹ Parei e saí da call.' : 'Não tinha nada tocando aqui.');
         panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
@@ -162,7 +164,8 @@ client.on('interactionCreate', async (interaction) => {
     if (sub === 'painel') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const canal = await panel.canalDoPainel(interaction.guild);
-      await canal.send({ embeds: [panel.painelEmbed()], components: panel.painelRows() });
+      const msg = await canal.send({ embeds: [panel.nowPlayingEmbed(interaction.guildId)], components: panel.painelRows() });
+      panel.registrarPainel(interaction.guildId, msg);
       await interaction.editReply(`📻 Painel pronto em ${canal}.`);
       panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
@@ -243,6 +246,7 @@ client.on('interactionCreate', async (interaction) => {
       }
       await player.play(voiceChannel, est);
       radio.registrarHistorico(interaction.user.id, est).catch(() => {});
+      panel.atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
       await interaction.editReply({ embeds: [embedEstacao(`🎲 Aleatória (${origem})`, est)] });
       panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
@@ -267,6 +271,7 @@ client.on('interactionCreate', async (interaction) => {
     if (sub === 'parar') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const parou = player.stop(interaction.guildId);
+      if (parou) panel.atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
       await interaction.editReply(parou ? '⏹ Parei e saí da call.' : 'Não tinha nenhuma rádio tocando aqui.');
       panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
       return;
