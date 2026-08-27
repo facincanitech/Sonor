@@ -1,6 +1,10 @@
 // Busca e "aleatório" espelham a mesma lógica do app SonorHub (Rádio), pra
 // manter a mesma sensação de uso: radio-browser.info como fonte, pool de
-// descoberta pré-montado com as top ~5 estações de ~40 países.
+// descoberta com TODAS as estações cadastradas de ~40 países (a API não
+// tem teto de verdade — testado com limit=99999 só nos EUA e voltou ~7000
+// estações). Escolha de propósito, sabendo que isso puxa rádio bem menos
+// popular/mais propensa a cair no meio (ordenado por clickcount, mas sem
+// filtrar "toca e cai toda hora", só "já confirmada quebrada").
 const supabase = require('./supabase');
 
 const RADIO_API = 'https://de1.api.radio-browser.info/json/stations';
@@ -18,7 +22,7 @@ async function buildDiscoveryPool() {
   if (discoveryPoolCache) return discoveryPoolCache;
   const results = await Promise.all(
     DISCOVERY_COUNTRIES.map((cc) =>
-      fetch(`${RADIO_API}/search?limit=5&hidebroken=true&order=clickcount&reverse=true&countrycode=${cc}`)
+      fetch(`${RADIO_API}/search?limit=99999&hidebroken=true&order=clickcount&reverse=true&countrycode=${cc}`)
         .then((r) => (r.ok ? r.json() : []))
         .catch(() => [])
     )
