@@ -246,6 +246,7 @@ client.on('interactionCreate', async (interaction) => {
       }
       await player.play(voiceChannel, est);
       radio.registrarHistorico(interaction.user.id, est).catch(() => {});
+      panel.limparIcyCache(interaction.guildId);
       panel.atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
       await interaction.editReply({ embeds: [embedEstacao(`🎲 Aleatória (${origem})`, est)] });
       panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);

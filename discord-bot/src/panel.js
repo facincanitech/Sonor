@@ -139,6 +139,11 @@ function registrarPainel(guildId, message) {
 // SonorHub usa. guildId -> último título conhecido, pra só re-editar o
 // painel quando o nome realmente mudar (evita ficar redesenhando à toa).
 const icyTituloPorGuild = new Map();
+// Chamado por quem faz o bot começar a tocar uma estação nova, pra não
+// ficar mostrando a música da rádio anterior até o próximo ciclo de 20s.
+function limparIcyCache(guildId) {
+  icyTituloPorGuild.delete(guildId);
+}
 const ICY_CHECK_INTERVAL_MS = 20_000;
 setInterval(async () => {
   for (const [guildId, ref] of painelMsgRef) {
@@ -212,6 +217,10 @@ async function tocarEComRegistro(guildId, voiceChannel, userId, est) {
   if (ocupadoMsg) return ocupadoMsg;
   await player.play(voiceChannel, est);
   radio.registrarHistorico(userId, est).catch(() => {});
+  // Troca de estação — limpa o título ICY da rádio anterior na hora, senão
+  // ficava mostrando a música da rádio de antes até o próximo ciclo de
+  // checagem (até 20s depois), mesmo já tocando outra estação.
+  limparIcyCache(guildId);
   atualizarPainelAoVivo(guildId, voiceChannel.client).catch(() => {});
   return null;
 }
@@ -504,6 +513,7 @@ module.exports = {
   registrarPainel,
   atualizarPainelAoVivo,
   nowPlayingEmbed,
+  limparIcyCache,
   SOME_RAPIDO_MS,
   SOME_LISTA_MS,
 };
