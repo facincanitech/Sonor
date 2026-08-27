@@ -35,6 +35,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
         registerPlugin(SmsPlugin.class);
         registerPlugin(PlayerPipPlugin.class);
         registerPlugin(PhotoSyncPlugin.class);
+        registerPlugin(DeviceInfoPlugin.class);
         super.onCreate(savedInstanceState);
         // O WebView tem a própria trava de "mixed content" pra recurso carregado
         // dentro de uma página (independente do usesCleartextTraffic do Manifest,

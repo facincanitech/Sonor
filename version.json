@@ -1,4 +1,4 @@
 {
-  "versionName": "4.88",
-  "notes": "Audiobook/Ebook ganhou visual de estante de livraria (lombada colorida, prateleira, filtro por categoria) e progresso de vários livros."
+  "versionName": "4.89",
+  "notes": "Primeiro passo de suporte a Fire TV/Android TV: detecta a TV sozinho e destaca o foco pro controle remoto."
 }

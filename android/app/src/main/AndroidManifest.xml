@@ -23,6 +23,11 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <!-- Sem isso o launcher de TV (Android TV/Google TV; Fire TV
+                     também reconhece) não lista o app na tela inicial de TV
+                     — cai como "app de celular escondido", só acessível via
+                     ADB/gerenciador de arquivos. -->
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
 
             <!-- App Link pro MultiSonor — link de compartilhar com ?play=
@@ -77,6 +82,16 @@
             </intent-filter>
         </activity>
     </application>
+
+    <!-- Suporte a Fire TV/Android TV: sem o touchscreen "not required", a
+         Play Store/Amazon Appstore assume que todo app exige tela de toque e
+         nem mostra ele em aparelhos de TV (controle remoto, sem touch). O
+         leanback "not required" também é pra não travar em lojas que exigem
+         suporte completo à interface de TV pra listar como app de TV — aqui
+         ainda não tem essa interface completa (D-pad funciona parcial),
+         então fica como recomendado, não obrigatório. -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <uses-feature android:name="android.software.leanback" android:required="false" />
 
     <!-- Permissions -->
 
