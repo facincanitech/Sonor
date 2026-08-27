@@ -1,4 +1,4 @@
 {
-  "versionName": "4.83",
-  "notes": "Capa/favicon de rádio em http:// agora aparece no player e na notificação, em vez de cair na silhueta genérica."
+  "versionName": "4.84",
+  "notes": "Rádio: pool de descoberta sem limite e busca detecta nome de país (ex: \"Brasil\" traz rádios de lá também)."
 }
