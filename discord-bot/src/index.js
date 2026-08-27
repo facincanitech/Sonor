@@ -177,7 +177,8 @@ client.on('interactionCreate', async (interaction) => {
         panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;
       }
-      await interaction.editReply({ embeds: [panel.resultadosEmbed(estacoes, nome)], components: panel.resultadosComponents(estacoes) });
+      const token = panel.cachePesquisa(estacoes, nome);
+      await interaction.editReply({ embeds: [panel.resultadosEmbed(estacoes, nome, 0)], components: panel.resultadosComponents(token, estacoes, 0) });
       panel.agendarSumico(interaction, panel.SOME_LISTA_MS);
       return;
     }

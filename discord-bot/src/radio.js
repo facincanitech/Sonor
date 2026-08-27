@@ -32,11 +32,82 @@ async function buildDiscoveryPool() {
   return pool;
 }
 
+// Nome de país (PT/EN, sem acento) -> código de 2 letras. Cobre os mesmos
+// ~40 países do pool de descoberta. Se o termo digitado bater com um desses
+// nomes, a busca passa a incluir também as rádios DO país, além das que têm
+// esse termo no nome — ex: "brasil" traz rádios brasileiras, não só rádios
+// chamadas literalmente "Brasil".
+function normalizar(s) {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+const NOME_PAIS_PARA_CODIGO = {
+  brasil: 'BR', brazil: 'BR',
+  'estados unidos': 'US', eua: 'US', usa: 'US', 'united states': 'US',
+  portugal: 'PT',
+  espanha: 'ES', spain: 'ES',
+  argentina: 'AR',
+  mexico: 'MX',
+  colombia: 'CO',
+  chile: 'CL',
+  peru: 'PE',
+  uruguai: 'UY', uruguay: 'UY',
+  paraguai: 'PY', paraguay: 'PY',
+  'reino unido': 'GB', inglaterra: 'GB', uk: 'GB', 'united kingdom': 'GB',
+  franca: 'FR', france: 'FR',
+  alemanha: 'DE', germany: 'DE',
+  italia: 'IT', italy: 'IT',
+  holanda: 'NL', netherlands: 'NL', 'paises baixos': 'NL',
+  belgica: 'BE', belgium: 'BE',
+  suecia: 'SE', sweden: 'SE',
+  noruega: 'NO', norway: 'NO',
+  dinamarca: 'DK', denmark: 'DK',
+  finlandia: 'FI', finland: 'FI',
+  polonia: 'PL', poland: 'PL',
+  russia: 'RU',
+  turquia: 'TR', turkey: 'TR',
+  grecia: 'GR', greece: 'GR',
+  japao: 'JP', japan: 'JP',
+  coreia: 'KR', 'coreia do sul': 'KR', korea: 'KR',
+  china: 'CN',
+  india: 'IN',
+  indonesia: 'ID',
+  tailandia: 'TH', thailand: 'TH',
+  filipinas: 'PH', philippines: 'PH',
+  vietna: 'VN', vietnam: 'VN',
+  australia: 'AU',
+  'nova zelandia': 'NZ', 'new zealand': 'NZ',
+  canada: 'CA',
+  'africa do sul': 'ZA', 'south africa': 'ZA',
+  egito: 'EG', egypt: 'EG',
+  nigeria: 'NG',
+  'arabia saudita': 'SA', 'saudi arabia': 'SA',
+};
+
+// Busca até 200 rádios (a API não filtra "confiável", só "confirmada
+// quebrada" — mais que isso vira ruído). Se o termo bater com um país
+// conhecido, junta busca por país + busca por nome, sem duplicar (usa
+// stationuuid, que é único por estação no radio-browser).
 async function buscarRadios(termo) {
   if (!termo) return [];
-  const resp = await fetch(`${RADIO_API}/search?name=${encodeURIComponent(termo)}&limit=10&hidebroken=true&order=clickcount&reverse=true`);
-  if (!resp.ok) throw new Error(`Radio Browser respondeu erro ${resp.status}.`);
-  return resp.json();
+  const base = { limit: '200', hidebroken: 'true', order: 'clickcount', reverse: 'true' };
+  const codigoPais = NOME_PAIS_PARA_CODIGO[normalizar(termo)];
+  if (!codigoPais) {
+    const resp = await fetch(`${RADIO_API}/search?${new URLSearchParams({ ...base, name: termo })}`);
+    if (!resp.ok) throw new Error(`Radio Browser respondeu erro ${resp.status}.`);
+    return resp.json();
+  }
+  const [porPais, porNome] = await Promise.all([
+    fetch(`${RADIO_API}/search?${new URLSearchParams({ ...base, countrycode: codigoPais })}`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+    fetch(`${RADIO_API}/search?${new URLSearchParams({ ...base, name: termo })}`).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+  ]);
+  const vistos = new Set();
+  const combinado = [];
+  for (const e of [...porPais, ...porNome]) {
+    if (vistos.has(e.stationuuid)) continue;
+    vistos.add(e.stationuuid);
+    combinado.push(e);
+  }
+  return combinado;
 }
 
 async function estacaoAleatoriaGlobal() {

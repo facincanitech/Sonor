@@ -150,27 +150,46 @@ async function tocarEComRegistro(guildId, voiceChannel, userId, est) {
   return null;
 }
 
-// Resultado de busca (/radio tocar): lista até 5, cada uma com botão de
-// tocar e de salvar direto, sem precisar escolher e confirmar em 2 passos.
-function resultadosEmbed(lista, termo) {
-  const desc = lista
-    .slice(0, 5)
-    .map((e, i) => `${i + 1}. **${e.name}**${e.country ? ` — ${e.country}` : ''}`)
-    .join('\n');
-  return new EmbedBuilder().setColor(COR).setTitle(`🔎 Resultados pra "${termo}"`).setDescription(desc);
+// Resultado de busca (/radio tocar): pode vir bem mais que 5 agora (nome +
+// país juntos, até 200) — pagina de 10 em 10 com menu suspenso + botões de
+// anterior/próxima, em vez do formato antigo (1 botão de tocar+salvar por
+// linha, que só cabia 5 por causa do teto de 5 linhas de componente do
+// Discord). O cache guarda a lista inteira e o termo buscado; cada página
+// só recorta o pedaço que mostra.
+const RESULTADOS_POR_PAGINA = 10;
+const pesquisaCache = new Map(); // token -> { lista, termo }
+function cachePesquisa(lista, termo) {
+  const token = crypto.randomBytes(4).toString('hex');
+  pesquisaCache.set(token, { lista, termo });
+  setTimeout(() => pesquisaCache.delete(token), 10 * 60 * 1000);
+  return token;
 }
 
-function resultadosComponents(lista) {
-  const token = cacheLista(lista);
-  return lista.slice(0, 5).map((est, i) =>
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`radio_res_play:${token}:${i}`)
-        .setLabel(`▶️ ${est.name}`.slice(0, 80))
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId(`radio_res_save:${token}:${i}`).setEmoji('⭐').setStyle(ButtonStyle.Secondary)
-    )
+function resultadosEmbed(lista, termo, pagina = 0) {
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / RESULTADOS_POR_PAGINA));
+  return new EmbedBuilder()
+    .setColor(COR)
+    .setTitle(`🔎 Resultados pra "${termo}"`)
+    .setDescription(`${lista.length} rádio${lista.length === 1 ? '' : 's'} encontrada${lista.length === 1 ? '' : 's'} — página ${pagina + 1} de ${totalPaginas}`);
+}
+
+function resultadosComponents(token, lista, pagina = 0) {
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / RESULTADOS_POR_PAGINA));
+  const inicio = pagina * RESULTADOS_POR_PAGINA;
+  const pageItems = lista.slice(inicio, inicio + RESULTADOS_POR_PAGINA);
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId(`radio_res_sel:${token}:${pagina}`)
+    .setPlaceholder('Escolhe uma pra tocar')
+    .addOptions(pageItems.map((est, i) => ({
+      label: est.name.slice(0, 100),
+      description: est.country || undefined,
+      value: String(inicio + i),
+    })));
+  const nav = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId(`radio_res_page:${token}:${pagina - 1}`).setLabel('◀ Anterior').setStyle(ButtonStyle.Secondary).setDisabled(pagina <= 0),
+    new ButtonBuilder().setCustomId(`radio_res_page:${token}:${pagina + 1}`).setLabel('Próxima ▶').setStyle(ButtonStyle.Secondary).setDisabled(pagina >= totalPaginas - 1)
   );
+  return [new ActionRowBuilder().addComponents(menu), nav];
 }
 
 function selectMenuDeLista(customIdPrefix, lista, placeholder) {
@@ -300,28 +319,15 @@ async function handleInteraction(interaction) {
       return true;
     }
 
-    if (id.startsWith('radio_res_play:') || id.startsWith('radio_res_save:')) {
-      const [, token, idxStr] = id.split(':');
-      const lista = listCache.get(token);
-      const est = lista && lista[Number(idxStr)];
-      const salvar = id.startsWith('radio_res_save:');
-
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-      if (!est) { await interaction.editReply('Essa lista expirou, busca de novo com `/radio tocar` ou o painel.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-
-      if (salvar) {
-        await radio.salvarFavorita(interaction.user.id, est);
-        await interaction.editReply({ embeds: [embedEstacao('⭐ Salva nos favoritos', est)] });
-        agendarSumico(interaction, SOME_RAPIDO_MS);
-        return true;
-      }
-
-      const voiceChannel = interaction.member?.voice?.channel;
-      if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco a rádio lá.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-      const erroOcupado2 = await tocarEComRegistro(interaction.guildId, voiceChannel, interaction.user.id, est);
-      if (erroOcupado2) { await interaction.editReply(erroOcupado2); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-      await interaction.editReply({ embeds: [embedEstacao('📻 Tocando agora', est)] });
-      agendarSumico(interaction, SOME_RAPIDO_MS);
+    if (id.startsWith('radio_res_page:')) {
+      const [, token, paginaStr] = id.split(':');
+      const cache = pesquisaCache.get(token);
+      if (!cache) { await interaction.reply({ content: 'Essa busca expirou, tenta de novo com `/radio tocar` ou o painel.', flags: MessageFlags.Ephemeral }); return true; }
+      const pagina = Number(paginaStr);
+      await interaction.update({
+        embeds: [resultadosEmbed(cache.lista, cache.termo, pagina)],
+        components: resultadosComponents(token, cache.lista, pagina),
+      });
       return true;
     }
 
@@ -333,7 +339,8 @@ async function handleInteraction(interaction) {
     const nome = interaction.fields.getTextInputValue('nome');
     const estacoes = await radio.buscarRadios(nome);
     if (!estacoes.length) { await interaction.editReply(`Não achei nenhuma rádio com "${nome}".`); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
-    await interaction.editReply({ embeds: [resultadosEmbed(estacoes, nome)], components: resultadosComponents(estacoes) });
+    const token = cachePesquisa(estacoes, nome);
+    await interaction.editReply({ embeds: [resultadosEmbed(estacoes, nome, 0)], components: resultadosComponents(token, estacoes, 0) });
     agendarSumico(interaction, SOME_LISTA_MS);
     return true;
   }
@@ -354,6 +361,21 @@ async function handleInteraction(interaction) {
     } catch (err) {
       await interaction.editReply(`Deu ruim: ${err.message}`);
     }
+    agendarSumico(interaction, SOME_RAPIDO_MS);
+    return true;
+  }
+
+  if (interaction.isStringSelectMenu() && interaction.customId.startsWith('radio_res_sel:')) {
+    await interaction.deferUpdate();
+    const token = interaction.customId.split(':')[1];
+    const cache = pesquisaCache.get(token);
+    const est = cache && cache.lista[Number(interaction.values[0])];
+    if (!est) { await interaction.editReply({ content: 'Essa busca expirou, tenta de novo com `/radio tocar` ou o painel.', embeds: [], components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    const voiceChannel = interaction.member?.voice?.channel;
+    if (!voiceChannel) { await interaction.editReply({ content: 'Entra numa call primeiro, aí eu toco a rádio lá.', embeds: [], components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    const erroOcupado4 = await tocarEComRegistro(interaction.guildId, voiceChannel, interaction.user.id, est);
+    if (erroOcupado4) { await interaction.editReply({ content: erroOcupado4, embeds: [], components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
+    await interaction.editReply({ content: null, embeds: [embedEstacao('📻 Tocando agora', est)], components: [] });
     agendarSumico(interaction, SOME_RAPIDO_MS);
     return true;
   }
@@ -406,6 +428,7 @@ module.exports = {
   handleInteraction,
   resultadosEmbed,
   resultadosComponents,
+  cachePesquisa,
   canalDoPainel,
   agendarSumico,
   mensagemCanalOcupado,
