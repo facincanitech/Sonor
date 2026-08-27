@@ -9,6 +9,27 @@ const supabase = require('./supabase');
 
 const RADIO_API = 'https://de1.api.radio-browser.info/json/stations';
 
+// Metadado ICY (StreamTitle) — mesma Edge Function que o app SonorHub usa
+// (radio-nowplaying), reaproveitada aqui pro bot também mostrar "tocando
+// agora" no painel. Usa a mesma SUPABASE_URL/SERVICE_ROLE_KEY já configuradas
+// pro resto do bot (favoritos/histórico), só precisa de um JWT válido no
+// Authorization, não precisa ser especificamente a anon key.
+async function buscarMusicaAtualIcy(streamUrl) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || !streamUrl) return null;
+  try {
+    const resp = await fetch(`${url}/functions/v1/radio-nowplaying?url=${encodeURIComponent(streamUrl)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.title || null;
+  } catch {
+    return null;
+  }
+}
+
 const DISCOVERY_COUNTRIES = [
   'BR', 'US', 'PT', 'ES', 'AR', 'MX', 'CO', 'CL', 'PE', 'UY',
   'PY', 'GB', 'FR', 'DE', 'IT', 'NL', 'BE', 'SE', 'NO', 'DK',
@@ -199,4 +220,5 @@ module.exports = {
   registrarHistorico,
   listarHistorico,
   streamUrl,
+  buscarMusicaAtualIcy,
 };

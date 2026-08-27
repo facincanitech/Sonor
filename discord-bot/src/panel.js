@@ -130,16 +130,36 @@ function painelEmbed() {
 // editReply nela sempre que a rádio/vídeo tocando mudar, sem precisar que
 // ninguém clique em nada. Vive só em memória: some se o bot reiniciar, mas
 // aí é só rodar /radio painel de novo (ele já limpa a mensagem antiga).
-const painelMsgRef = new Map(); // guildId -> { channelId, messageId }
+const painelMsgRef = new Map(); // guildId -> { channelId, messageId, client }
 function registrarPainel(guildId, message) {
-  painelMsgRef.set(guildId, { channelId: message.channelId, messageId: message.id });
+  painelMsgRef.set(guildId, { channelId: message.channelId, messageId: message.id, client: message.client });
 }
+
+// Nome da música tocando agora (ICY StreamTitle) — mesma fonte que o app
+// SonorHub usa. guildId -> último título conhecido, pra só re-editar o
+// painel quando o nome realmente mudar (evita ficar redesenhando à toa).
+const icyTituloPorGuild = new Map();
+const ICY_CHECK_INTERVAL_MS = 20_000;
+setInterval(async () => {
+  for (const [guildId, ref] of painelMsgRef) {
+    if (player.currentFonte(guildId) !== 'radio') continue;
+    const atual = player.current(guildId);
+    const streamUrl = atual && (atual.url_resolved || atual.url);
+    if (!streamUrl) continue;
+    const novoTitulo = await radio.buscarMusicaAtualIcy(streamUrl);
+    if (novoTitulo !== (icyTituloPorGuild.get(guildId) || null)) {
+      icyTituloPorGuild.set(guildId, novoTitulo);
+      atualizarPainelAoVivo(guildId, ref.client).catch(() => {});
+    }
+  }
+}, ICY_CHECK_INTERVAL_MS);
 
 // Embed "tocando agora" — mesma ideia da tela do player no app (capa +
 // nome), só que dentro do próprio painel fixo em vez de tela separada.
 function nowPlayingEmbed(guildId) {
   const atual = player.current(guildId);
   if (!atual) {
+    icyTituloPorGuild.delete(guildId);
     return painelEmbed();
   }
   const fonte = player.currentFonte(guildId);
@@ -147,7 +167,10 @@ function nowPlayingEmbed(guildId) {
   if (fonte === 'youtube') {
     embed.setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${atual.name}**${atual.uploader ? ` — ${atual.uploader}` : ''}`);
   } else {
-    embed.setTitle('▶️ Tocando agora').setDescription(`**${atual.name}**${atual.country ? ` — ${atual.country}` : ''}`);
+    const icyTitulo = icyTituloPorGuild.get(guildId);
+    embed.setTitle('▶️ Tocando agora').setDescription(
+      `**${atual.name}**${atual.country ? ` — ${atual.country}` : ''}` + (icyTitulo ? `\n🎵 ${icyTitulo}` : '')
+    );
     if (atual.favicon) embed.setThumbnail(atual.favicon);
   }
   return embed;
