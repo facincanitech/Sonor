@@ -1,4 +1,4 @@
 {
-  "versionName": "4.84",
-  "notes": "Rádio: pool de descoberta sem limite e busca detecta nome de país (ex: \"Brasil\" traz rádios de lá também)."
+  "versionName": "4.85",
+  "notes": "Rádio: mostra o nome da música tocando agora, quando a emissora manda esse dado (~91% das mais populares mandam)."
 }

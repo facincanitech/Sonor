@@ -13,6 +13,7 @@ import android.os.PowerManager;
 
 import androidx.media.session.MediaButtonReceiver;
 
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
@@ -64,7 +65,23 @@ public class PlayerForegroundService extends Service {
                     .setState(PlayerPipPlugin.isNowPaused() ? PlaybackStateCompat.STATE_PAUSED : PlaybackStateCompat.STATE_PLAYING, 0, 1f)
                     .build()
             );
+            mediaSession.setMetadata(buildMetadata());
         }
+    }
+
+    // Sem isso, a MediaSession fica "muda" de título — o Android só manda
+    // nome/capa pra tela de carro via Bluetooth (AVRCP) e pra outros
+    // consumidores de MediaSession (relógios, etc.) se o metadata for
+    // preenchido de verdade, não basta só o playback state.
+    private MediaMetadataCompat buildMetadata() {
+        MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder()
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, PlayerPipPlugin.getNowTitle())
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, PlayerPipPlugin.getNowSubtitle())
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "SonorHub");
+        if (PlayerPipPlugin.getNowImage() != null) {
+            builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, PlayerPipPlugin.getNowImage());
+        }
+        return builder.build();
     }
 
     @Override
