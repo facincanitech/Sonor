@@ -1,4 +1,4 @@
 {
-  "versionName": "4.90",
-  "notes": "Premium ganhou o visual de estante do grátis, e a biblioteca curada agora gera capa real da 1ª página compartilhada entre todo mundo."
+  "versionName": "4.91",
+  "notes": "Corrigido: login do Google no app nativo não deslogava mais sozinho ao fechar o app de vez."
 }
