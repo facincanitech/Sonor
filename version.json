@@ -1,4 +1,4 @@
 {
-  "versionName": "4.91",
-  "notes": "Corrigido: login do Google no app nativo não deslogava mais sozinho ao fechar o app de vez."
+  "versionName": "4.92",
+  "notes": "Rádio: clique no nome da estação abre um cartão com a música tocando, com atalho pra buscar no YouTube ou salvar a rádio."
 }
