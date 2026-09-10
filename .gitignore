@@ -11,6 +11,7 @@ android/app/release/
 android/app/debug/
 *.keystore
 *.jks
+android/keystore.properties
 
 # Lista de tarefas pessoal, não é código do projeto
 fazer.json

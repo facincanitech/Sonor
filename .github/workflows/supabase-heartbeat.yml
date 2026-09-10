@@ -1,0 +1,23 @@
+name: Supabase heartbeat
+
+# Projeto Supabase no plano gratuito pausa sozinho depois de ~7 dias sem
+# nenhuma atividade — se ninguém abrir o app/bot por uma semana, o projeto
+# cai e a próxima pessoa que abrir vê tudo quebrado até alguém reativar
+# manualmente no painel. Isso só chama uma function pública e inofensiva
+# (mesma que o app já usa) de tempos em tempos pra contar como atividade.
+# Ideia veio do projeto irmão Ferus, que tinha o mesmo problema.
+
+on:
+  schedule:
+    - cron: '0 3 */6 * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase (premium-status, e-mail fake, só pra contar como atividade)
+        run: |
+          curl -sf -o /dev/null \
+            "https://xtdydmfxqxsujrqdtrkn.supabase.co/functions/v1/premium-status?email=heartbeat@example.com" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0ZHlkbWZ4cXhzdWpycWR0cmtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcwMjI4MjMsImV4cCI6MjEwMjU5ODgyM30.16DYgh8unDuQXsxyj071uq2gKWeH-47QQ-Nq8UY0hdw"
