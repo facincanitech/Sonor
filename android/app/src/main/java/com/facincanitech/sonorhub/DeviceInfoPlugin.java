@@ -24,4 +24,15 @@ public class DeviceInfoPlugin extends Plugin {
         ret.put("value", isTv);
         call.resolve(ret);
     }
+
+    // Build da Play Store esconde a assinatura Premium (cobrança direta via
+    // Mercado Pago dentro do app não é permitida lá pra conteúdo digital —
+    // exigem Google Play Billing) até isso ser resolvido de verdade. Vem do
+    // flavor do Gradle (BuildConfig.IS_PLAY_BUILD), não muda em runtime.
+    @PluginMethod
+    public void isPlayBuild(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("value", BuildConfig.IS_PLAY_BUILD);
+        call.resolve(ret);
+    }
 }

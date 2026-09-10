@@ -1,4 +1,4 @@
 {
-  "versionName": "4.95",
-  "notes": "SOS: envio por SMS desativado por enquanto (em breve), evita risco de reprovação na Google Play. E-mail do SOS continua normal."
+  "versionName": "4.96",
+  "notes": "Bastidores: build da Google Play esconde a assinatura Premium temporariamente (política deles exige Google Play Billing pra cobrança de conteúdo digital). App de sempre continua igual."
 }
