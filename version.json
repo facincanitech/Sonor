@@ -1,4 +1,4 @@
 {
-  "versionName": "4.93",
-  "notes": "Apagar conta agora remove de verdade no servidor e cancela assinatura Premium ativa — passo necessário pra publicação na Google Play."
+  "versionName": "4.94",
+  "notes": "Texto do \"Apagar conta\" corrigido pra refletir que também apaga no servidor e cancela assinatura Premium ativa."
 }
