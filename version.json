@@ -1,4 +1,4 @@
 {
-  "versionName": "4.94",
-  "notes": "Texto do \"Apagar conta\" corrigido pra refletir que também apaga no servidor e cancela assinatura Premium ativa."
+  "versionName": "4.95",
+  "notes": "SOS: envio por SMS desativado por enquanto (em breve), evita risco de reprovação na Google Play. E-mail do SOS continua normal."
 }
