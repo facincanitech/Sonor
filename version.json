@@ -1,4 +1,4 @@
 {
-  "versionName": "4.98",
-  "notes": "Visual refeito (paleta nova, layout de desktop mais largo, Audiobook em estante de streaming) e correção no clima por voz (cidade com pontuação no final não era encontrada)."
+  "versionName": "4.99",
+  "notes": "Download de atualização pelo sininho agora vem com o número da versão no nome do arquivo."
 }
