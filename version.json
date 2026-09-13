@@ -1,4 +1,4 @@
 {
-  "versionName": "4.97",
-  "notes": "Aviso de atualização virou um sininho com painel de dicas sobre recursos do app (mesma ideia do ThothChat/projeto irmão)."
+  "versionName": "4.98",
+  "notes": "Visual refeito (paleta nova, layout de desktop mais largo, Audiobook em estante de streaming) e correção no clima por voz (cidade com pontuação no final não era encontrada)."
 }
