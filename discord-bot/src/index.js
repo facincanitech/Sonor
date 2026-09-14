@@ -5,7 +5,7 @@ const player = require('./player');
 const youtube = require('./youtube');
 const { commands, commandsSoRadio } = require('./commands');
 const panel = require('./panel');
-const { youtubeLiberado, GUILD_ID_YOUTUBE_LIBERADO } = require('./config');
+const { youtubeLiberado, GUILDS_YOUTUBE_LIBERADO } = require('./config');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -37,7 +37,7 @@ function embedEstacao(titulo, est) {
 
 client.once('ready', async () => {
   console.log(`Bot online como ${client.user.tag}`);
-  console.log(`Servidor liberado pro YouTube: ${GUILD_ID_YOUTUBE_LIBERADO}`);
+  console.log(`Servidores liberados pro YouTube: ${GUILDS_YOUTUBE_LIBERADO.join(', ')}`);
   console.log(`Em ${client.guilds.cache.size} servidor(es):`);
   for (const guild of client.guilds.cache.values()) {
     console.log(`  - ${guild.name} (${guild.id})${youtubeLiberado(guild.id) ? '  <-- YouTube liberado aqui' : ''}`);
