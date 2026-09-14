@@ -42,9 +42,13 @@ async function buscar(query) {
 }
 
 // Retorna o processo yt-dlp já rodando, escrevendo o áudio bruto em stdout
-// — quem chama liga esse stdout no ffmpeg (ver player.js).
+// — quem chama liga esse stdout no ffmpeg (ver player.js). "bestaudio/best"
+// (em vez de só "bestaudio") porque alguns vídeos só têm formato combinado
+// (vídeo+áudio juntos, sem trilha de áudio separada) — sem o fallback,
+// yt-dlp falhava com "Requested format is not available" nesses casos. O
+// ffmpeg do lado do player.js já ignora o vídeo sozinho, só usa o áudio.
 function spawnAudioStream(videoUrl) {
-  return spawn('yt-dlp', [...cookiesArgs(), '-f', 'bestaudio', '--no-playlist', '-o', '-', videoUrl]);
+  return spawn('yt-dlp', [...cookiesArgs(), '-f', 'bestaudio/best', '--no-playlist', '-o', '-', videoUrl]);
 }
 
 // Favoritos do YouTube — tabela separada dos favoritos de rádio (mesmo
