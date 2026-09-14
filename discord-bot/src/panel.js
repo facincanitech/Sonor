@@ -17,6 +17,7 @@ const crypto = require('crypto');
 const radio = require('./radio');
 const player = require('./player');
 const youtube = require('./youtube');
+const supabase = require('./supabase');
 
 const COR = 0x45b8a8;
 const NOME_CANAL_PAINEL = '📻-painel';
@@ -128,11 +129,44 @@ function painelEmbed() {
 
 // Referência da mensagem fixa do painel por servidor (canal+id) — pra dar
 // editReply nela sempre que a rádio/vídeo tocando mudar, sem precisar que
-// ninguém clique em nada. Vive só em memória: some se o bot reiniciar, mas
-// aí é só rodar /radio painel de novo (ele já limpa a mensagem antiga).
+// ninguém clique em nada. Fica em memória pra uso rápido (evita ir no
+// Supabase a cada troca de música), mas TAMBÉM é persistida na tabela
+// discord_radio_panel — um restart do PM2 não apaga mais a referência,
+// carregarPaineisSalvos() recarrega tudo no boot (ver index.js, evento
+// "ready"). Antes disso o painel ficava "órfão" depois de qualquer restart:
+// a rádio continuava trocando normal, só que a mensagem antiga nunca mais
+// era editada (sintoma: painel preso mostrando a rádio/música de antes do
+// bot reiniciar).
 const painelMsgRef = new Map(); // guildId -> { channelId, messageId, client }
 function registrarPainel(guildId, message) {
   painelMsgRef.set(guildId, { channelId: message.channelId, messageId: message.id, client: message.client });
+  if (supabase) {
+    supabase
+      .from('discord_radio_panel')
+      .upsert({ guild_id: guildId, channel_id: message.channelId, message_id: message.id, updated_at: new Date().toISOString() }, { onConflict: 'guild_id' })
+      .then(({ error }) => { if (error) console.error('[panel] falha ao salvar referência do painel:', error.message); });
+  }
+}
+
+// Chamado uma vez no boot (client "ready") pra repopular painelMsgRef com o
+// que foi salvo no Supabase, sem precisar ninguém rodar /radio painel de
+// novo depois de um restart.
+async function carregarPaineisSalvos(client) {
+  if (!supabase) return;
+  const { data, error } = await supabase.from('discord_radio_panel').select('guild_id, channel_id, message_id');
+  if (error) { console.error('[panel] falha ao carregar painéis salvos:', error.message); return; }
+  for (const row of data || []) {
+    painelMsgRef.set(row.guild_id, { channelId: row.channel_id, messageId: row.message_id, client });
+  }
+  if (data && data.length) console.log(`[panel] ${data.length} painel(is) recarregado(s) do Supabase.`);
+}
+
+function removerPainelSalvo(guildId) {
+  painelMsgRef.delete(guildId);
+  if (supabase) {
+    supabase.from('discord_radio_panel').delete().eq('guild_id', guildId)
+      .then(({ error }) => { if (error) console.error('[panel] falha ao remover referência do painel:', error.message); });
+  }
 }
 
 // Nome da música tocando agora (ICY StreamTitle) — mesma fonte que o app
@@ -192,7 +226,7 @@ async function atualizarPainelAoVivo(guildId, client) {
     const msg = await canal.messages.fetch(ref.messageId);
     await msg.edit({ embeds: [nowPlayingEmbed(guildId)], components: painelRows() });
   } catch {
-    painelMsgRef.delete(guildId); // mensagem/canal sumiu, para de tentar
+    removerPainelSalvo(guildId); // mensagem/canal sumiu, para de tentar (e limpa do Supabase também)
   }
 }
 
@@ -511,6 +545,7 @@ module.exports = {
   agendarSumico,
   mensagemCanalOcupado,
   registrarPainel,
+  carregarPaineisSalvos,
   atualizarPainelAoVivo,
   nowPlayingEmbed,
   limparIcyCache,

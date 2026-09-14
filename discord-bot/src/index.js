@@ -38,6 +38,7 @@ client.once('ready', async () => {
   for (const guild of client.guilds.cache.values()) {
     await registrarComandosNoServidor(guild.id);
   }
+  await panel.carregarPaineisSalvos(client);
 });
 
 client.on('guildCreate', (guild) => {

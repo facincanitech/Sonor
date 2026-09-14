@@ -47,3 +47,19 @@ create table if not exists discord_youtube_favorites (
 );
 
 alter table discord_youtube_favorites enable row level security;
+
+-- Referência do painel fixo (/radio painel) por servidor. Antes só vivia em
+-- memória (Map no processo do bot) — um restart do PM2 (crash, deploy, etc.)
+-- apagava a referência e o painel já postado ficava "órfão": a rádio
+-- continuava trocando normal, só que ninguém mais editava aquela mensagem
+-- (sintoma visto na prática: painel preso mostrando a rádio/música de antes
+-- do restart, mesmo já tocando outra coisa). Persistindo aqui, o bot recarrega
+-- todos os painéis no evento "ready" e volta a editá-los normalmente.
+create table if not exists discord_radio_panel (
+  guild_id text primary key,
+  channel_id text not null,
+  message_id text not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table discord_radio_panel enable row level security;
