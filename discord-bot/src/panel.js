@@ -18,6 +18,7 @@ const radio = require('./radio');
 const player = require('./player');
 const youtube = require('./youtube');
 const supabase = require('./supabase');
+const { youtubeLiberado } = require('./config');
 
 const COR = 0x45b8a8;
 const NOME_CANAL_PAINEL = '📻-painel';
@@ -103,21 +104,27 @@ function cacheLista(lista) {
   return token;
 }
 
-function painelRows() {
-  return [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('radio_tocar').setLabel('🔍 Tocar').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('radio_aleatoria').setLabel('🎲 Aleatória').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('radio_youtube').setLabel('🎵 YouTube').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('radio_parar').setLabel('⏹ Parar').setStyle(ButtonStyle.Danger)
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('radio_salvar').setLabel('⭐ Salvar atual').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('radio_favoritos').setLabel('⭐ Favoritos').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('radio_historico').setLabel('📜 Histórico').setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder().setCustomId('youtube_favoritos').setLabel('⭐ Favoritos YT').setStyle(ButtonStyle.Secondary)
-    ),
+// guildId opcional (compatibilidade com chamadas antigas): sem ele, mostra
+// os botões de YouTube por padrão. Passando o guildId, some com "🎵 YouTube"
+// e "⭐ Favoritos YT" em qualquer servidor que não seja o liberado (ver
+// config.js) — servidor de terceiro só vê os botões de rádio de verdade.
+function painelRows(guildId) {
+  const comYoutube = guildId === undefined || youtubeLiberado(guildId);
+  const linha1 = [
+    new ButtonBuilder().setCustomId('radio_tocar').setLabel('🔍 Tocar').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId('radio_aleatoria').setLabel('🎲 Aleatória').setStyle(ButtonStyle.Secondary),
   ];
+  if (comYoutube) linha1.push(new ButtonBuilder().setCustomId('radio_youtube').setLabel('🎵 YouTube').setStyle(ButtonStyle.Primary));
+  linha1.push(new ButtonBuilder().setCustomId('radio_parar').setLabel('⏹ Parar').setStyle(ButtonStyle.Danger));
+
+  const linha2 = [
+    new ButtonBuilder().setCustomId('radio_salvar').setLabel('⭐ Salvar atual').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId('radio_favoritos').setLabel('⭐ Favoritos').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId('radio_historico').setLabel('📜 Histórico').setStyle(ButtonStyle.Secondary),
+  ];
+  if (comYoutube) linha2.push(new ButtonBuilder().setCustomId('youtube_favoritos').setLabel('⭐ Favoritos YT').setStyle(ButtonStyle.Secondary));
+
+  return [new ActionRowBuilder().addComponents(...linha1), new ActionRowBuilder().addComponents(...linha2)];
 }
 
 function painelEmbed() {
@@ -224,7 +231,7 @@ async function atualizarPainelAoVivo(guildId, client) {
   try {
     const canal = await client.channels.fetch(ref.channelId);
     const msg = await canal.messages.fetch(ref.messageId);
-    await msg.edit({ embeds: [nowPlayingEmbed(guildId)], components: painelRows() });
+    await msg.edit({ embeds: [nowPlayingEmbed(guildId)], components: painelRows(guildId) });
   } catch {
     removerPainelSalvo(guildId); // mensagem/canal sumiu, para de tentar (e limpa do Supabase também)
   }
@@ -337,6 +344,10 @@ async function handleInteraction(interaction) {
     }
 
     if (id === 'radio_youtube') {
+      if (!youtubeLiberado(interaction.guildId)) {
+        await interaction.reply({ content: '🔒 YouTube só tá liberado no servidor principal. Aqui só tem rádio de verdade mesmo.', flags: MessageFlags.Ephemeral });
+        return true;
+      }
       const modal = new ModalBuilder().setCustomId('radio_youtube_modal').setTitle('Tocar do YouTube');
       const input = new TextInputBuilder()
         .setCustomId('busca')
@@ -381,6 +392,10 @@ async function handleInteraction(interaction) {
     }
 
     if (id === 'youtube_favoritos') {
+      if (!youtubeLiberado(interaction.guildId)) {
+        await interaction.reply({ content: '🔒 YouTube só tá liberado no servidor principal. Aqui só tem rádio de verdade mesmo.', flags: MessageFlags.Ephemeral });
+        return true;
+      }
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const favs = await youtube.listarFavoritas(interaction.user.id);
       if (!favs.length) { await interaction.editReply('Você ainda não salvou nenhum vídeo do YouTube.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
@@ -456,6 +471,10 @@ async function handleInteraction(interaction) {
   }
 
   if (interaction.isModalSubmit() && interaction.customId === 'radio_youtube_modal') {
+    if (!youtubeLiberado(interaction.guildId)) {
+      await interaction.reply({ content: '🔒 YouTube só tá liberado no servidor principal.', flags: MessageFlags.Ephemeral });
+      return true;
+    }
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const voiceChannel = interaction.member?.voice?.channel;
     if (!voiceChannel) { await interaction.editReply('Entra numa call primeiro, aí eu toco lá.'); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
@@ -507,6 +526,10 @@ async function handleInteraction(interaction) {
   }
 
   if (interaction.isStringSelectMenu() && interaction.customId.startsWith('youtube_sel_favorito:')) {
+    if (!youtubeLiberado(interaction.guildId)) {
+      await interaction.reply({ content: '🔒 YouTube só tá liberado no servidor principal.', flags: MessageFlags.Ephemeral });
+      return true;
+    }
     await interaction.deferUpdate();
     const voiceChannel = interaction.member?.voice?.channel;
     if (!voiceChannel) { await interaction.editReply({ content: 'Entra numa call primeiro, aí eu toco lá.', components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }

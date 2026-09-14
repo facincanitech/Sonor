@@ -3,8 +3,9 @@ const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, MessageFlags } = 
 const radio = require('./radio');
 const player = require('./player');
 const youtube = require('./youtube');
-const { commands } = require('./commands');
+const { commands, commandsSoRadio } = require('./commands');
 const panel = require('./panel');
+const { youtubeLiberado, GUILD_ID_YOUTUBE_LIBERADO } = require('./config');
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -19,8 +20,9 @@ const COR = 0x45b8a8; // mesmo teal do SonorHub
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 async function registrarComandosNoServidor(guildId) {
   try {
-    await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, guildId), { body: commands });
-    console.log(`Comandos registrados no servidor ${guildId}.`);
+    const body = youtubeLiberado(guildId) ? commands : commandsSoRadio;
+    await rest.put(Routes.applicationGuildCommands(process.env.DISCORD_CLIENT_ID, guildId), { body });
+    console.log(`Comandos registrados no servidor ${guildId} (${youtubeLiberado(guildId) ? 'com YouTube' : 'só rádio'}).`);
   } catch (err) {
     console.error(`Falha ao registrar comandos no servidor ${guildId}:`, err.message);
   }
@@ -35,7 +37,10 @@ function embedEstacao(titulo, est) {
 
 client.once('ready', async () => {
   console.log(`Bot online como ${client.user.tag}`);
+  console.log(`Servidor liberado pro YouTube: ${GUILD_ID_YOUTUBE_LIBERADO}`);
+  console.log(`Em ${client.guilds.cache.size} servidor(es):`);
   for (const guild of client.guilds.cache.values()) {
+    console.log(`  - ${guild.name} (${guild.id})${youtubeLiberado(guild.id) ? '  <-- YouTube liberado aqui' : ''}`);
     await registrarComandosNoServidor(guild.id);
   }
   await panel.carregarPaineisSalvos(client);
@@ -83,6 +88,10 @@ client.on('interactionCreate', async (interaction) => {
   // somem sozinhas depois de um tempo — evita lotar o canal de tralha. O
   // painel fixo (/radio painel) é a exceção, ele fica.
   if (interaction.commandName === 'youtube') {
+    if (!youtubeLiberado(interaction.guildId)) {
+      await interaction.reply({ content: '🔒 YouTube só tá liberado no servidor principal. Aqui só tem rádio de verdade mesmo.', flags: MessageFlags.Ephemeral });
+      return;
+    }
     try {
       if (sub === 'tocar') {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -165,7 +174,7 @@ client.on('interactionCreate', async (interaction) => {
     if (sub === 'painel') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const canal = await panel.canalDoPainel(interaction.guild);
-      const msg = await canal.send({ embeds: [panel.nowPlayingEmbed(interaction.guildId)], components: panel.painelRows() });
+      const msg = await canal.send({ embeds: [panel.nowPlayingEmbed(interaction.guildId)], components: panel.painelRows(interaction.guildId) });
       panel.registrarPainel(interaction.guildId, msg);
       await interaction.editReply(`📻 Painel pronto em ${canal}.`);
       panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
