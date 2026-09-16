@@ -97,6 +97,78 @@ async function buscar(query) {
   return buscarViaYtDlp(query);
 }
 
+// Link de PLAYLIST de verdade (?list=PL.../UU.../OLAK...), diferente de um
+// link de vídeo avulso que também carrega um "list=RD..." (o mix/autoplay
+// automático que o próprio YouTube gera pra aquele vídeo — não é uma
+// playlist que o usuário montou, é gerado na hora, então não conta aqui:
+// esse caso já é tratado por buscarProximoDoMix).
+function extrairPlaylistIdDeLink(texto) {
+  const m = texto.match(/[?&]list=(?!RD)([\w-]+)/);
+  return m ? m[1] : null;
+}
+
+// Lê os vídeos de uma playlist em modo "flat" (só id/título/canal, rápido —
+// não baixa metadado completo de cada vídeo um por um). Limitado aos 50
+// primeiros pra não sobrecarregar a fila/VPS com uma playlist gigante de
+// uma vez.
+async function buscarPlaylist(playlistId) {
+  const out = await run([
+    ...cookiesArgs(),
+    '--flat-playlist',
+    '--playlist-end', '50',
+    '--print', '%(id)s',
+    '--print', '%(title)s',
+    '--print', '%(uploader)s',
+    `https://www.youtube.com/playlist?list=${playlistId}`,
+  ]);
+  const linhas = out.split('\n');
+  const itens = [];
+  for (let i = 0; i + 2 < linhas.length; i += 3) {
+    const [id, title, uploader] = [linhas[i], linhas[i + 1], linhas[i + 2]];
+    if (id) itens.push({ name: title || id, url: `https://www.youtube.com/watch?v=${id}`, uploader: uploader && uploader !== 'NA' ? uploader : '' });
+  }
+  if (!itens.length) throw new Error('Não consegui abrir essa playlist.');
+  return itens;
+}
+
+// Um vídeo avulso (busca por nome ou link direto, sem playlist) que termina
+// de tocar não devia simplesmente parar — no site do YouTube isso continua
+// sozinho com o "Autoplay" (a lista "a seguir"/mix automático, tecnicamente
+// uma playlist "RD<id do vídeo>" que o próprio YouTube monta na hora com
+// vídeos parecidos/do mesmo artista). Reaproveita a mesma ideia aqui: pega
+// só o PRÓXIMO item dessa lista (o primeiro item da RD normalmente é o
+// próprio vídeo que acabou de tocar, por isso pula ele).
+async function buscarProximoDoMix(videoUrlOuId) {
+  const videoId = extrairVideoIdDeLink(videoUrlOuId) || videoUrlOuId;
+  const out = await run([
+    ...cookiesArgs(),
+    '--flat-playlist',
+    '--playlist-end', '5',
+    '--print', '%(id)s',
+    '--print', '%(title)s',
+    '--print', '%(uploader)s',
+    `https://www.youtube.com/watch?v=${videoId}&list=RD${videoId}`,
+  ]).catch(() => '');
+  const linhas = out.split('\n');
+  for (let i = 0; i + 2 < linhas.length; i += 3) {
+    const id = linhas[i];
+    if (id && id !== videoId) {
+      const uploader = linhas[i + 2];
+      return { name: linhas[i + 1] || id, url: `https://www.youtube.com/watch?v=${id}`, uploader: uploader && uploader !== 'NA' ? uploader : '' };
+    }
+  }
+  return null;
+}
+
+// Ponto de entrada único pra "tocar isso": se for link de playlist, devolve
+// a fila inteira; senão devolve uma fila de 1 item só (busca normal), que o
+// player.js estende sozinho com o autoplay/mix quando ela acabar.
+async function resolverFila(entrada) {
+  const playlistId = extrairPlaylistIdDeLink(entrada);
+  if (playlistId) return buscarPlaylist(playlistId);
+  return [await buscar(entrada)];
+}
+
 // Retorna o processo yt-dlp já rodando, escrevendo o áudio bruto em stdout
 // — quem chama liga esse stdout no ffmpeg (ver player.js). "bestaudio/best"
 // (em vez de só "bestaudio") porque alguns vídeos só têm formato combinado
@@ -135,4 +207,11 @@ async function listarFavoritas(discordUserId) {
   return (data || []).map((f) => ({ name: f.video_title, url: f.video_url, uploader: f.uploader }));
 }
 
-module.exports = { buscar, spawnAudioStream, salvarFavorita, listarFavoritas };
+module.exports = {
+  buscar,
+  resolverFila,
+  buscarProximoDoMix,
+  spawnAudioStream,
+  salvarFavorita,
+  listarFavoritas,
+};

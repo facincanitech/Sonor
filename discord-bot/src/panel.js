@@ -482,11 +482,17 @@ async function handleInteraction(interaction) {
     if (ocupadoMsg) { await interaction.editReply(ocupadoMsg); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     const busca = interaction.fields.getTextInputValue('busca');
     try {
-      const item = await youtube.buscar(busca);
-      await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
-      atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
+      const fila = await youtube.resolverFila(busca);
+      const { item } = await player.playYoutubeQueue(voiceChannel, fila, {
+        aoTrocarFaixa: () => atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {}),
+      });
       await interaction.editReply({
-        embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
+        embeds: [
+          new EmbedBuilder()
+            .setColor(COR)
+            .setTitle('▶️ Tocando agora (YouTube)')
+            .setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}${fila.length > 1 ? `\n📃 +${fila.length - 1} na fila` : ''}`),
+        ],
       });
     } catch (err) {
       await interaction.editReply(`Deu ruim: ${err.message}`);
@@ -540,8 +546,9 @@ async function handleInteraction(interaction) {
     const ocupadoMsg = mensagemCanalOcupado(interaction.guildId, voiceChannel.id);
     if (ocupadoMsg) { await interaction.editReply({ content: ocupadoMsg, components: [] }); agendarSumico(interaction, SOME_RAPIDO_MS); return true; }
     try {
-      await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
-      atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
+      await player.playYoutubeQueue(voiceChannel, [item], {
+        aoTrocarFaixa: () => atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {}),
+      });
       await interaction.editReply({
         content: null,
         embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],

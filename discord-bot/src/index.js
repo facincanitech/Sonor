@@ -108,11 +108,17 @@ client.on('interactionCreate', async (interaction) => {
           panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
           return;
         }
-        const item = await youtube.buscar(busca);
-        await player.playFromProcess(voiceChannel, item, () => youtube.spawnAudioStream(item.url));
-        panel.atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {});
+        const fila = await youtube.resolverFila(busca);
+        const { item } = await player.playYoutubeQueue(voiceChannel, fila, {
+          aoTrocarFaixa: () => panel.atualizarPainelAoVivo(interaction.guildId, interaction.client).catch(() => {}),
+        });
         await interaction.editReply({
-          embeds: [new EmbedBuilder().setColor(COR).setTitle('▶️ Tocando agora (YouTube)').setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}`)],
+          embeds: [
+            new EmbedBuilder()
+              .setColor(COR)
+              .setTitle('▶️ Tocando agora (YouTube)')
+              .setDescription(`**${item.name}**${item.uploader ? ` — ${item.uploader}` : ''}${fila.length > 1 ? `\n📃 +${fila.length - 1} na fila` : ''}`),
+          ],
         });
         panel.agendarSumico(interaction, panel.SOME_RAPIDO_MS);
         return;

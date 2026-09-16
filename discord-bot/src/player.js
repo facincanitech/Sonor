@@ -8,6 +8,7 @@ const {
   entersState,
 } = require('@discordjs/voice');
 const prism = require('prism-media');
+const youtube = require('./youtube');
 
 // Usa o ffmpeg do sistema (apt install ffmpeg), não o pacote ffmpeg-static:
 // o binário empacotado do ffmpeg-static crashava (segfault) decodificando
@@ -77,7 +78,14 @@ function resourceFromProcess(sourceProcess) {
   });
   sourceProcess.stdout.pipe(transcoder);
   sourceProcess.on('error', (err) => console.error('[player:youtube] erro no processo de origem (yt-dlp):', err.message));
-  sourceProcess.on('close', (code) => console.log(`[player:youtube] yt-dlp encerrou, código ${code}`));
+  sourceProcess.on('close', (code) => {
+    // Guardado no próprio processo pra o handler de Idle lá embaixo saber
+    // diferenciar "vídeo acabou de verdade" (código 0, toca o próximo da
+    // fila/autoplay) de "yt-dlp quebrou no meio" (código != 0, tenta
+    // reconectar o MESMO vídeo, não avança a fila).
+    sourceProcess._codigoSaida = code;
+    console.log(`[player:youtube] yt-dlp encerrou, código ${code}`);
+  });
   return opusStreamFromTranscoder(transcoder, 'youtube');
 }
 
@@ -151,6 +159,18 @@ function novaSessao(voiceChannel) {
       // timeout de inatividade de 5min tirar ele da call sozinho. Agora
       // tenta reconectar sozinho algumas vezes antes de desistir de vez.
       const vinhaTocando = oldState.status === AudioPlayerStatus.Playing || oldState.status === AudioPlayerStatus.Buffering;
+      // YouTube (diferente da rádio, que é um stream ao vivo sem fim) tem um
+      // fim NATURAL esperado: o vídeo simplesmente acabou (yt-dlp saiu com
+      // código 0). Isso não é uma queda pra tentar reconectar o mesmo vídeo
+      // de novo — é hora de avançar a fila/autoplay (ver aoTerminarNormalmente,
+      // setado por playYoutubeQueue). Só cai no retry de "travou/quebrou"
+      // logo abaixo quando o yt-dlp morreu com erro de verdade.
+      const terminouVideoNormal = session.fonte === 'youtube' && vinhaTocando && session.sourceProcess?._codigoSaida === 0;
+      if (!session.saindoDeProposito && terminouVideoNormal && session.aoTerminarNormalmente) {
+        session.idleRetries = 0;
+        session.aoTerminarNormalmente().catch((err) => console.error('[player] falha ao avançar fila/autoplay do YouTube:', err.message));
+        return;
+      }
       if (!session.saindoDeProposito && vinhaTocando && session.regenerar && (session.idleRetries || 0) < 5) {
         session.idleRetries = (session.idleRetries || 0) + 1;
         console.log(`[player] stream morreu sozinho, tentando reconectar (${session.idleRetries}/5)...`);
@@ -172,7 +192,8 @@ function novaSessao(voiceChannel) {
   connection.subscribe(player);
   const session = {
     connection, player, current: null, sourceProcess: null, idleTimer: null,
-    vigiaInterval: null, regenerar: null, fonte: null, saindoDeProposito: false, idleRetries: 0,
+    vigiaInterval: null, regenerar: null, aoTerminarNormalmente: null, fonte: null,
+    saindoDeProposito: false, idleRetries: 0,
   };
   connection.on('stateChange', (oldState, newState) => {
     console.log(`[player] conexão de voz mudou: ${oldState.status} -> ${newState.status}`);
@@ -215,7 +236,7 @@ function novaSessao(voiceChannel) {
   return session;
 }
 
-async function tocarComResource(voiceChannel, item, resource, sourceProcess, regenerar, fonte) {
+async function tocarComResource(voiceChannel, item, resource, sourceProcess, regenerar, fonte, aoTerminarNormalmente) {
   const guildId = voiceChannel.guild.id;
   let session = sessions.get(guildId);
   if (!session) {
@@ -230,6 +251,7 @@ async function tocarComResource(voiceChannel, item, resource, sourceProcess, reg
   session.current = item;
   session.sourceProcess = sourceProcess || null;
   session.regenerar = regenerar || null;
+  session.aoTerminarNormalmente = aoTerminarNormalmente || null;
   session.fonte = fonte || null;
   await entersState(session.player, AudioPlayerStatus.Playing, 15_000);
   iniciarVigia(session, guildId);
@@ -257,22 +279,57 @@ async function play(voiceChannel, estacao) {
   return tocarComResource(voiceChannel, estacao, resourceFromUrl(url), null, regenerar, 'radio');
 }
 
-async function playFromProcess(voiceChannel, item, spawnSourceProcess) {
+// Toca uma fila de vídeos do YouTube um atrás do outro. `fila` é sempre pelo
+// menos 1 item (o que toca agora); o resto (playlist colada, ou nada — busca
+// avulsa) é consumido conforme cada vídeo termina. Quando a fila explícita
+// acaba, continua sozinho com o "mix"/autoplay do YouTube a partir do último
+// vídeo tocado (ver youtube.buscarProximoDoMix) — só para de vez se nem isso
+// achar continuação, ou se alguém mandar `/radio parar`.
+// `aoTrocarFaixa(item, filaRestante)` é chamado toda vez que uma faixa nova
+// começa (a 1ª e cada autoplay seguinte) — quem chama usa isso pra manter o
+// painel fixo atualizado sem precisar ficar checando de fora.
+async function playYoutubeQueue(voiceChannel, fila, { aoTrocarFaixa } = {}) {
   const guildId = voiceChannel.guild.id;
-  const regenerar = async () => {
-    if (reconectando.has(guildId)) return;
-    reconectando.add(guildId);
-    try {
-      const sourceProcess = spawnSourceProcess();
-      await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube');
-    } catch (err) {
-      console.error('[player] falha ao reconectar YouTube travado:', err.message);
-    } finally {
-      reconectando.delete(guildId);
-    }
-  };
-  const sourceProcess = spawnSourceProcess();
-  return tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube');
+
+  async function tocarProximo(filaRestante) {
+    const item = filaRestante.shift();
+    const spawnSourceProcess = () => youtube.spawnAudioStream(item.url);
+
+    const aoTerminarNormalmente = async () => {
+      let proximo = filaRestante.shift();
+      if (!proximo) {
+        proximo = await youtube.buscarProximoDoMix(item.url).catch((err) => {
+          console.error('[player] autoplay do YouTube: não achou continuação:', err.message);
+          return null;
+        });
+      }
+      if (!proximo) return; // acabou de vez — deixa o timeout de idle normal cuidar de sair da call
+      await tocarProximo([proximo, ...filaRestante]);
+    };
+
+    const regenerar = async () => {
+      if (reconectando.has(guildId)) return;
+      reconectando.add(guildId);
+      try {
+        const sourceProcess = spawnSourceProcess();
+        await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube', aoTerminarNormalmente);
+      } catch (err) {
+        console.error('[player] falha ao reconectar YouTube travado:', err.message);
+      } finally {
+        reconectando.delete(guildId);
+      }
+    };
+
+    const sourceProcess = spawnSourceProcess();
+    const session = await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube', aoTerminarNormalmente);
+    if (aoTrocarFaixa) aoTrocarFaixa(item, filaRestante);
+    return session;
+  }
+
+  const filaCopia = [...fila];
+  const item = filaCopia[0];
+  const session = await tocarProximo(filaCopia);
+  return { session, item };
 }
 
 function stop(guildId) {
@@ -320,4 +377,4 @@ function activeChannelId(guildId) {
   return sessions.get(guildId)?.connection?.joinConfig?.channelId || null;
 }
 
-module.exports = { play, playFromProcess, stop, current, currentFonte, activeChannelId, saiSeCanalVazio };
+module.exports = { play, playYoutubeQueue, stop, current, currentFonte, activeChannelId, saiSeCanalVazio };
