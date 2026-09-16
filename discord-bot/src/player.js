@@ -290,15 +290,24 @@ async function play(voiceChannel, estacao) {
 // painel fixo atualizado sem precisar ficar checando de fora.
 async function playYoutubeQueue(voiceChannel, fila, { aoTrocarFaixa } = {}) {
   const guildId = voiceChannel.guild.id;
+  // IDs já tocados nesse autoplay (só os últimos, ver buscarProximoDoMix) —
+  // evita repetir música toda hora quando o "mix" do YouTube pra aquele
+  // artista é curto (2-3 vídeos só, alternando de volta rapidinho).
+  const idsRecentes = [];
 
   async function tocarProximo(filaRestante) {
     const item = filaRestante.shift();
+    const idAtual = youtube.extrairVideoIdDeLink(item.url);
+    if (idAtual) {
+      idsRecentes.push(idAtual);
+      if (idsRecentes.length > 4) idsRecentes.shift(); // só as últimas — mix curto eventualmente pode repetir de novo
+    }
     const spawnSourceProcess = () => youtube.spawnAudioStream(item.url);
 
     const aoTerminarNormalmente = async () => {
       let proximo = filaRestante.shift();
       if (!proximo) {
-        proximo = await youtube.buscarProximoDoMix(item.url).catch((err) => {
+        proximo = await youtube.buscarProximoDoMix(item.url, idsRecentes).catch((err) => {
           console.error('[player] autoplay do YouTube: não achou continuação:', err.message);
           return null;
         });

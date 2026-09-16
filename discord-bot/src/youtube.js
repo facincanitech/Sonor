@@ -186,28 +186,33 @@ async function buscarPlaylist(playlistId) {
 // sozinho com o "Autoplay" (a lista "a seguir"/mix automático, tecnicamente
 // uma playlist "RD<id do vídeo>" que o próprio YouTube monta na hora com
 // vídeos parecidos/do mesmo artista). Reaproveita a mesma ideia aqui: pega
-// só o PRÓXIMO item dessa lista (o primeiro item da RD normalmente é o
-// próprio vídeo que acabou de tocar, por isso pula ele).
-async function buscarProximoDoMix(videoUrlOuId) {
+// o próximo item dessa lista que ainda não tocou nessa sessão — pra alguns
+// artistas o mix gerado é bem curto (2-3 músicas) e alternaria voltando pra
+// mesma música rapidinho se só pulasse o vídeo atual; `idsRecentes` (as
+// últimas músicas já tocadas nesse autoplay, ver player.js) evita repetir
+// enquanto tiver opção nova na lista.
+async function buscarProximoDoMix(videoUrlOuId, idsRecentes = []) {
   const videoId = extrairVideoIdDeLink(videoUrlOuId) || videoUrlOuId;
   const out = await run([
     ...(await extracaoArgs()),
     '--flat-playlist',
-    '--playlist-end', '5',
+    '--playlist-end', '10',
     '--print', '%(id)s',
     '--print', '%(title)s',
     '--print', '%(uploader)s',
     `https://www.youtube.com/watch?v=${videoId}&list=RD${videoId}`,
   ]).catch(() => '');
   const linhas = out.split('\n');
+  const candidatos = [];
   for (let i = 0; i + 2 < linhas.length; i += 3) {
     const id = linhas[i];
-    if (id && id !== videoId) {
-      const uploader = linhas[i + 2];
-      return { name: linhas[i + 1] || id, url: `https://www.youtube.com/watch?v=${id}`, uploader: uploader && uploader !== 'NA' ? uploader : '' };
-    }
+    if (!id || id === videoId) continue;
+    const uploader = linhas[i + 2];
+    candidatos.push({ name: linhas[i + 1] || id, url: `https://www.youtube.com/watch?v=${id}`, uploader: uploader && uploader !== 'NA' ? uploader : '' });
   }
-  return null;
+  if (!candidatos.length) return null;
+  const inedito = candidatos.find((c) => !idsRecentes.includes(extrairVideoIdDeLink(c.url)));
+  return inedito || candidatos[0]; // se o mix é curto demais e já tocou tudo, repete mesmo assim (melhor que parar)
 }
 
 // Ponto de entrada único pra "tocar isso": se for link de playlist, devolve
@@ -262,6 +267,7 @@ module.exports = {
   buscar,
   resolverFila,
   buscarProximoDoMix,
+  extrairVideoIdDeLink,
   spawnAudioStream,
   salvarFavorita,
   listarFavoritas,
