@@ -311,7 +311,7 @@ async function playYoutubeQueue(voiceChannel, fila, { aoTrocarFaixa } = {}) {
       if (reconectando.has(guildId)) return;
       reconectando.add(guildId);
       try {
-        const sourceProcess = spawnSourceProcess();
+        const sourceProcess = await spawnSourceProcess();
         await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube', aoTerminarNormalmente);
       } catch (err) {
         console.error('[player] falha ao reconectar YouTube travado:', err.message);
@@ -320,7 +320,7 @@ async function playYoutubeQueue(voiceChannel, fila, { aoTrocarFaixa } = {}) {
       }
     };
 
-    const sourceProcess = spawnSourceProcess();
+    const sourceProcess = await spawnSourceProcess();
     const session = await tocarComResource(voiceChannel, item, resourceFromProcess(sourceProcess), sourceProcess, regenerar, 'youtube', aoTerminarNormalmente);
     if (aoTrocarFaixa) aoTrocarFaixa(item, filaRestante);
     return session;

@@ -12,6 +12,7 @@
 // yt-dlp. Reduz o uso da conta cookies só pra extração (a parte que não tem
 // outro jeito), em vez de também usá-la pra toda busca por nome.
 const { spawn } = require('child_process');
+const net = require('net');
 const supabase = require('./supabase');
 
 const COOKIES_FILE = process.env.YOUTUBE_COOKIES_FILE || '';
@@ -19,6 +20,43 @@ const API_KEY = process.env.YOUTUBE_API_KEY || '';
 
 function cookiesArgs() {
   return COOKIES_FILE ? ['--cookies', COOKIES_FILE] : [];
+}
+
+// Túnel SSH reverso (rodando no PC/notebook de casa do dono, ver README) —
+// quando ligado, abre um proxy SOCKS só em localhost nessa porta, saindo
+// pela internet residencial de casa em vez do IP de datacenter da VPS. IP
+// residencial não sofre a desconfiança de bot do YouTube (confirmado em
+// teste: extração passou sem cookie nenhum por esse caminho) — bem mais
+// estável que ficar reexportando cookie toda vez que a conta rotaciona.
+// Só é usado quando está de fato escutando; se o notebook estiver
+// desligado, cai pro esquema de cookies de sempre.
+const PROXY_HOST = '127.0.0.1';
+const PROXY_PORT = Number(process.env.YOUTUBE_PROXY_PORT || 1080);
+
+function proxyDisponivel(timeoutMs = 800) {
+  return new Promise((resolve) => {
+    const socket = net.connect({ host: PROXY_HOST, port: PROXY_PORT });
+    const finalizar = (ok) => {
+      try { socket.destroy(); } catch {}
+      resolve(ok);
+    };
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => finalizar(true));
+    socket.once('timeout', () => finalizar(false));
+    socket.once('error', () => finalizar(false));
+  });
+}
+
+// Args de conexão pra passar pro yt-dlp: proxy residencial (se o túnel de
+// casa estiver ligado) tem prioridade sobre cookies — não sofre rotação e
+// não depende de conta nenhuma. Cookies continuam de reserva pra quando o
+// notebook estiver desligado.
+async function extracaoArgs() {
+  if (await proxyDisponivel()) {
+    console.log('[youtube] túnel residencial ativo — extraindo pelo IP de casa (sem cookie).');
+    return ['--proxy', `socks5://${PROXY_HOST}:${PROXY_PORT}`];
+  }
+  return cookiesArgs();
 }
 
 function run(args) {
@@ -47,7 +85,7 @@ function extrairVideoIdDeLink(texto) {
 
 async function metadadoPorId(videoId) {
   const out = await run([
-    ...cookiesArgs(),
+    ...(await extracaoArgs()),
     '--no-playlist',
     '--print', '%(title)s',
     '--print', '%(webpage_url)s',
@@ -75,7 +113,7 @@ async function buscarViaDataApi(query) {
 
 async function buscarViaYtDlp(query) {
   const out = await run([
-    ...cookiesArgs(),
+    ...(await extracaoArgs()),
     '--no-playlist',
     '--print', '%(title)s',
     '--print', '%(webpage_url)s',
@@ -113,7 +151,7 @@ function extrairPlaylistIdDeLink(texto) {
 // uma vez.
 async function buscarPlaylist(playlistId) {
   const out = await run([
-    ...cookiesArgs(),
+    ...(await extracaoArgs()),
     '--flat-playlist',
     '--playlist-end', '50',
     '--print', '%(id)s',
@@ -141,7 +179,7 @@ async function buscarPlaylist(playlistId) {
 async function buscarProximoDoMix(videoUrlOuId) {
   const videoId = extrairVideoIdDeLink(videoUrlOuId) || videoUrlOuId;
   const out = await run([
-    ...cookiesArgs(),
+    ...(await extracaoArgs()),
     '--flat-playlist',
     '--playlist-end', '5',
     '--print', '%(id)s',
@@ -175,8 +213,9 @@ async function resolverFila(entrada) {
 // (vídeo+áudio juntos, sem trilha de áudio separada) — sem o fallback,
 // yt-dlp falhava com "Requested format is not available" nesses casos. O
 // ffmpeg do lado do player.js já ignora o vídeo sozinho, só usa o áudio.
-function spawnAudioStream(videoUrl) {
-  return spawn('yt-dlp', [...cookiesArgs(), '-f', 'bestaudio/best', '--no-playlist', '-o', '-', videoUrl]);
+async function spawnAudioStream(videoUrl) {
+  const args = await extracaoArgs();
+  return spawn('yt-dlp', [...args, '-f', 'bestaudio/best', '--no-playlist', '-o', '-', videoUrl]);
 }
 
 // Favoritos do YouTube — tabela separada dos favoritos de rádio (mesmo
