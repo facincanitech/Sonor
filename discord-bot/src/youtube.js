@@ -54,7 +54,19 @@ function proxyDisponivel(timeoutMs = 800) {
 async function extracaoArgs() {
   if (await proxyDisponivel()) {
     console.log('[youtube] túnel residencial ativo — extraindo pelo IP de casa (sem cookie).');
-    return ['--proxy', `socks5://${PROXY_HOST}:${PROXY_PORT}`];
+    return [
+      '--proxy', `socks5://${PROXY_HOST}:${PROXY_PORT}`,
+      // O cliente "android" é o único que, testado na prática por esse
+      // túnel, baixa o áudio de verdade sem 403 — os outros (web/ios/tv)
+      // exigem um PO Token que teria que ser gerado pela MESMA conexão que
+      // baixa o arquivo (o processo separado que gera o token sai pelo IP
+      // da VPS, não pelo túnel, e essa mistura de IPs é rejeitada pelo
+      // Google mesmo a URL tendo sido gerada certinho). O formato do
+      // android é sempre um vídeo+áudio combinado (nunca audio-only puro),
+      // mas não importa aqui: o ffmpeg do player.js já descarta o vídeo e
+      // só usa o áudio, e a qualidade sobra pra voz do Discord de qualquer jeito.
+      '--extractor-args', 'youtube:player_client=android',
+    ];
   }
   return cookiesArgs();
 }
